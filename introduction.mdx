@@ -1,0 +1,136 @@
+---
+title: "Hydrafetch"
+description: "Turn any URL into clean, LLM-ready data through one API."
+mode: "custom"
+---
+
+<div className="hf-wrap">
+
+<div className="hf-hero">
+  <span className="hf-eyebrow">The web, LLM-ready</span>
+
+  <h1 className="hf-title">
+    Turn any URL into <span className="hf-acc">clean, LLM-ready data</span>.
+  </h1>
+
+  <p className="hf-sub">
+    One API for scraping, crawling, search, and structured extraction. Point it at a
+    link, a whole site, or a query. Get back Markdown, JSON, and structured entities a
+    model can use right away.
+  </p>
+
+  <div className="hf-cta">
+    <a className="hf-btn hf-btn-primary" href="/quickstart">Quickstart →</a>
+    <a className="hf-btn hf-btn-ghost" href="https://app.hydrafetch.com">$ Get an API key</a>
+  </div>
+</div>
+
+<CardGroup cols={3}>
+  <Card title="Scrape" icon="/icons/markdown.svg" href="/endpoints/scrape">
+    One URL in, clean Markdown and structured data out. The core primitive.
+  </Card>
+  <Card title="Map" icon="/icons/route.svg" href="/endpoints/map">
+    Discover every URL on a site, fast, before you decide what to pull.
+  </Card>
+  <Card title="Crawl" icon="/icons/spider-web.svg" href="/endpoints/crawl">
+    Walk a whole site and scrape every page as one asynchronous job.
+  </Card>
+  <Card title="Search" icon="/icons/globe-search.svg" href="/endpoints/search">
+    Run a query and get ranked results, each scraped to clean data.
+  </Card>
+  <Card title="Extract" icon="/icons/brackets-sparkle.svg" href="/endpoints/extract">
+    Pull schema-shaped JSON from pages, with per-field confidence and sources.
+  </Card>
+  <Card title="Media" icon="/icons/image.svg" href="/endpoints/media">
+    Capture a full-page screenshot or collect a page's images.
+  </Card>
+</CardGroup>
+
+## Why Hydrafetch
+
+<Columns cols={2}>
+  <Card title="LLM-ready by default" icon="/icons/markdown.svg" horizontal>
+    Output is clean Markdown and normalized structured data. No boilerplate, no
+    navigation cruft, no half-rendered pages.
+  </Card>
+  <Card title="One surface for the whole job" icon="/icons/layers.svg" horizontal>
+    Scrape, crawl, map, search, and extract share the same options and the same clean
+    response shape.
+  </Card>
+  <Card title="Trustworthy extraction" icon="/icons/target.svg" horizontal>
+    Structured extraction can return, per field, how confident it is and the exact
+    passage a value came from.
+  </Card>
+  <Card title="Predictable cost" icon="/icons/gauge.svg" horizontal>
+    Every call is billed in credits, charged only on success, and each response tells
+    you what it consumed.
+  </Card>
+</Columns>
+
+## Your first call
+
+Send a URL, get clean Markdown back.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://example.com" }'
+```
+
+```ts TypeScript
+const res = await fetch("https://api.hydrafetch.com/v1/web/scrape", {
+  method: "POST",
+  headers: {
+    "X-API-Key": process.env.HYDRAFETCH_API_KEY!,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ url: "https://example.com" }),
+});
+
+const { data } = await res.json();
+console.log(data.markdown);
+```
+
+```python Python
+import os, requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/scrape",
+    headers={"X-API-Key": os.environ["HYDRAFETCH_API_KEY"]},
+    json={"url": "https://example.com"},
+)
+print(res.json()["data"]["markdown"])
+```
+
+</CodeGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Get an API key">
+    Every request carries your key in the `X-API-Key` header. See [Authentication](/authentication).
+  </Step>
+  <Step title="Call an endpoint">
+    Send a URL, or a query, to the endpoint that fits your job. Most calls return clean
+    data synchronously.
+  </Step>
+  <Step title="Get clean data back">
+    Responses are LLM-ready: Markdown, structured entities, extracted JSON, links,
+    summaries, or images.
+  </Step>
+</Steps>
+
+## Base URL
+
+All endpoints live under a single versioned base URL:
+
+```
+https://api.hydrafetch.com/v1/web
+```
+
+Ready to make your first call? Head to the [Quickstart](/quickstart).
+
+</div>

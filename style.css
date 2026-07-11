@@ -1,0 +1,193 @@
+:root {
+  --hf-accent: #0891b2;
+  --hf-accent-bright: #34e0f2;
+  --hf-glow: rgba(52, 224, 242, 0.35);
+  --hf-ink: #080b0f;
+  --hf-panel: #0e141a;
+  --hf-border: #1b2530;
+  --hf-muted: #8595a1;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--hf-glow);
+  color: #fff;
+}
+
+.dark * {
+  scrollbar-width: thin;
+  scrollbar-color: #263341 transparent;
+}
+.dark *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: #263341;
+  border-radius: 999px;
+}
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: #33475a;
+}
+
+#topbar-cta-button a,
+#topbar-cta-button button {
+  box-shadow: 0 0 0 1px rgba(52, 224, 242, 0.25), 0 8px 24px -8px var(--hf-glow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+#topbar-cta-button a:hover,
+#topbar-cta-button button:hover {
+  box-shadow: 0 0 0 1px rgba(52, 224, 242, 0.5), 0 10px 30px -6px var(--hf-glow);
+  transform: translateY(-1px);
+}
+
+.hf-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 2.5rem 5rem;
+}
+
+.hf-wrap > * {
+  margin-top: 1.75rem !important;
+  margin-bottom: 0 !important;
+}
+.hf-wrap > *:first-child {
+  margin-top: 0 !important;
+}
+.hf-wrap > span {
+  display: block;
+}
+.hf-wrap > h2 {
+  margin-top: 4rem !important;
+  margin-bottom: 1rem !important;
+  padding-top: 0 !important;
+}
+.hf-wrap > h2 + * {
+  margin-top: 0 !important;
+}
+
+.hf-hero {
+  position: relative;
+  padding: 2.4rem 0 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.hf-hero::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: -12%;
+  width: 60%;
+  height: 340px;
+  background: radial-gradient(closest-side, var(--hf-glow), transparent 70%);
+  opacity: 0.55;
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+}
+.hf-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hf-accent-bright);
+  padding: 0.32rem 0.7rem;
+  border: 1px solid rgba(52, 224, 242, 0.25);
+  border-radius: 999px;
+  background: rgba(52, 224, 242, 0.06);
+}
+.hf-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--hf-accent-bright);
+  box-shadow: 0 0 8px var(--hf-accent-bright);
+}
+
+.hf-title {
+  font-family: "General Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.4rem, 5.2vw, 3.9rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 1.1rem 0 0;
+  text-wrap: balance;
+}
+.dark .hf-title {
+  color: #f3f8fb;
+}
+.hf-title .hf-acc {
+  background: linear-gradient(100deg, var(--hf-accent-bright), #7ff0fb 55%, var(--hf-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hf-sub {
+  max-width: 34rem;
+  margin: 1.1rem 0 1.6rem;
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--hf-muted);
+}
+
+.hf-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.hf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 0.7rem;
+  font-weight: 550;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.hf-btn-primary {
+  color: #04141a !important;
+  background: linear-gradient(180deg, var(--hf-accent-bright), var(--hf-accent));
+  box-shadow: 0 10px 30px -10px var(--hf-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.hf-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 38px -10px var(--hf-glow), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.hf-btn-ghost {
+  color: #cfe9f0 !important;
+  border: 1px solid var(--hf-border);
+  background: rgba(255, 255, 255, 0.02);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.86rem;
+}
+.hf-btn-ghost:hover {
+  border-color: rgba(52, 224, 242, 0.45);
+  color: #eafcff !important;
+}
+
+:root:not(.dark) .hf-title {
+  color: #0b1b26;
+}
+:root:not(.dark) .hf-sub {
+  color: #55636d;
+}
+:root:not(.dark) .hf-btn-ghost {
+  color: #0b1b26 !important;
+  border-color: #dbe4ea;
+}

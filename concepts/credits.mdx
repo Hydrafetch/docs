@@ -1,0 +1,82 @@
+---
+title: "Credits & billing"
+description: "One currency for every call, charged only on success — and every response tells you what it cost."
+---
+
+Everything in Hydrafetch is priced in **credits**. There are no per-endpoint plans or separate meters to reconcile: a scrape, a crawl, a search, and an extraction all draw down the same balance. Your **workspace** holds that balance, and any key in the workspace spends from it.
+
+## Charged only on success
+
+Credits are deducted only when a call actually returns you data. If a request fails — a bad key, an invalid body, an unreachable page, a timeout — it costs nothing.
+
+<Note>
+  Because failures are free, you can retry safely. You're never billed for a call that didn't produce a result.
+</Note>
+
+Insufficient balance is caught up front. If your workspace can't cover a call, Hydrafetch rejects it before doing any work and returns an insufficient-credits error — so you're never charged and no partial work runs.
+
+```json
+{
+  "statusCode": 402,
+  "code": "INSUFFICIENT_CREDITS",
+  "message": "Not enough credits to complete this request."
+}
+```
+
+## What each call costs
+
+<ParamField path="Scrape" type="1 credit base">
+  One credit for a standard scrape (Markdown, HTML, links, or structured data). Add **+1** if you request the `summary` format and **+4** if you request `json`. See [Formats](/concepts/formats).
+</ParamField>
+
+<ParamField path="Map" type="1 credit">
+  One credit to enumerate a site's URLs, regardless of how many come back.
+</ParamField>
+
+<ParamField path="Search" type="1 credit + 1 per result scraped">
+  One credit for the query, plus one credit for each result whose page is actually fetched and returned. Turn off result scraping to pay just the single query credit.
+</ParamField>
+
+<ParamField path="Extract" type="5 credits per page">
+  Five credits for each page that returns data. Pages that yield nothing aren't charged.
+</ParamField>
+
+<ParamField path="Crawl / Batch" type="1 credit per page">
+  One credit for each page scraped. The running total is reported on the job's `creditsUsed` as it progresses.
+</ParamField>
+
+<Note>
+  A crawl or batch that requests premium per-page formats is priced the same way a scrape is — the base page credit plus any format surcharge — for every page scraped.
+</Note>
+
+## Every response reports its cost
+
+Each scrape response carries a `usage` object telling you exactly what it consumed, how much you have left, and whether it came from cache:
+
+```json
+{
+  "usage": {
+    "creditsUsed": 1,
+    "creditsRemaining": 4999,
+    "freshness": "fresh"
+  }
+}
+```
+
+<ResponseField name="creditsUsed" type="number">
+  Credits this call consumed. The exact number that left your balance, charged only on success.
+</ResponseField>
+
+<ResponseField name="creditsRemaining" type="number">
+  Credits left in your workspace's balance after this call, so you can track spend without a separate lookup.
+</ResponseField>
+
+<ResponseField name="freshness" type="string">
+  `fresh` if the page was fetched for this call, or `cache` if it was served from a recent capture. Cached results are cheaper and faster. See [Caching](/concepts/caching).
+</ResponseField>
+
+For long-running jobs, poll the crawl or batch status and read `creditsUsed` for the total spent so far.
+
+<Card title="Next: Caching" icon="bolt" href="/concepts/caching">
+  Serve recent captures to cut cost and latency.
+</Card>

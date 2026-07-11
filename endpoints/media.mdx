@@ -1,0 +1,212 @@
+---
+title: "Media"
+description: "Harvest a page's images or capture a full-page screenshot."
+---
+
+Two endpoints turn a page into media instead of text: **Images** lists every image on a page with its metadata, and **Screenshot** captures the rendered page as a PNG. Both are synchronous and cost one credit.
+
+## Images
+
+`POST /v1/web/images` harvests every image on a page and returns it with its metadata — resolved absolute source, alt text, and declared dimensions. Use it to build an image index, pull product photos, or find the largest asset on a page.
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/images \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://example.com" }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/images", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ url: "https://example.com" }),
+});
+const { data } = await res.json();
+console.log(data.images);
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/images",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={"url": "https://example.com"},
+)
+print(res.json()["data"]["images"])
+```
+
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "finalUrl": "https://example.com/",
+    "images": [
+      {
+        "src": "https://example.com/logo.png",
+        "alt": "Company logo",
+        "width": 320,
+        "height": 240
+      }
+    ]
+  }
+}
+```
+
+### Options
+
+<ParamField body="url" type="string" required>
+  The URL to harvest images from. Must be `http(s)`.
+</ParamField>
+
+<ParamField body="maxAge" type="number">
+  Serve from a recent capture of this URL if it's younger than this many milliseconds. Omit for the default window; `0` always fetches fresh. Capped at 7 days (604800000 ms).
+</ParamField>
+
+### Response fields
+
+<ResponseField name="data.url" type="string">
+  The URL you requested.
+</ResponseField>
+
+<ResponseField name="data.finalUrl" type="string">
+  The final URL after any redirects.
+</ResponseField>
+
+<ResponseField name="data.images" type="object[]">
+  Every image found on the page. Each has `src` (resolved to absolute), plus `alt`, `width`, and `height` — any of which may be `null` when the page doesn't declare it.
+</ResponseField>
+
+---
+
+## Screenshot
+
+`POST /v1/web/screenshot` renders a page and captures it as a PNG, returned base64-encoded in the response. Use it for visual snapshots, archiving, or feeding a page's appearance to a vision model.
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/screenshot \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://example.com", "fullPage": true }'
+```
+
+```javascript Node
+import { writeFileSync } from "node:fs";
+
+const res = await fetch("https://api.hydrafetch.com/v1/web/screenshot", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ url: "https://example.com", fullPage: true }),
+});
+const { data } = await res.json();
+writeFileSync("page.png", Buffer.from(data.image, "base64"));
+```
+
+```python Python
+import base64
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/screenshot",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={"url": "https://example.com", "fullPage": True},
+)
+data = res.json()["data"]
+with open("page.png", "wb") as f:
+    f.write(base64.b64decode(data["image"]))
+```
+
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "finalUrl": "https://example.com/",
+    "status": 200,
+    "image": "iVBORw0KGgoAAAANSUhEUgAA..."
+  }
+}
+```
+
+<Note>
+  `image` is a base64-encoded PNG string. Decode it to bytes to write the file, as the examples above show.
+</Note>
+
+### Options
+
+<ParamField body="url" type="string" required>
+  The URL to screenshot. Must be `http(s)`.
+</ParamField>
+
+<ParamField body="fullPage" type="boolean" default="false">
+  Capture the entire scrollable page instead of just the viewport.
+</ParamField>
+
+<ParamField body="waitFor" type="number">
+  Extra milliseconds to let the page settle before capture. Up to 30000.
+</ParamField>
+
+<ParamField body="timeout" type="number">
+  Overall time budget for the request, in milliseconds. Between 1000 and 120000.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="data.url" type="string">
+  The URL you requested.
+</ResponseField>
+
+<ResponseField name="data.finalUrl" type="string">
+  The final URL after any redirects.
+</ResponseField>
+
+<ResponseField name="data.status" type="number">
+  HTTP status of the captured page.
+</ResponseField>
+
+<ResponseField name="data.image" type="string">
+  The screenshot as a base64-encoded PNG string.
+</ResponseField>
+
+## Billing
+
+Images and Screenshot each cost **1 credit**, charged only on success. Each response reports what it consumed. See [Credits](/concepts/credits).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Scrape" icon="file-lines" href="/endpoints/scrape">
+    Clean Markdown and structured data from a URL.
+  </Card>
+  <Card title="Caching" icon="clock-rotate-left" href="/concepts/caching">
+    How `maxAge` reuses a recent capture.
+  </Card>
+  <Card title="Credits" icon="coins" href="/concepts/credits">
+    Pricing and charge-on-success.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Full `/v1/web/images` and `/v1/web/screenshot` schemas.
+  </Card>
+</CardGroup>

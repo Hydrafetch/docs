@@ -1,0 +1,81 @@
+---
+title: "Caching"
+description: "Reuse recent captures to make scrapes faster and cheaper, or force a fresh fetch when you need the latest."
+---
+
+Hydrafetch keeps a recent capture of the pages it fetches. When you scrape a URL that already has a fresh capture, you can serve that instead of hitting the page again — the result comes back faster and cheaper. Three options on a scrape control this behavior.
+
+## `maxAge`
+
+Serve from cache if a capture of the URL is younger than this many **milliseconds**. If the newest capture is older, or there is none, Hydrafetch fetches the page fresh.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "maxAge": 3600000
+  }'
+```
+
+<ParamField body="maxAge" type="number">
+  Freshness window in milliseconds. `3600000` accepts any capture from the last hour. Set `0` to always fetch fresh. Omit it to use the default window. Capped at 7 days (`604800000`).
+</ParamField>
+
+<Note>
+  Higher `maxAge` means more cache hits — cheaper and faster, at the cost of freshness. Tune it to how fast the page you're reading actually changes.
+</Note>
+
+## `cacheOnly`
+
+Only serve from cache, and never fetch. If there is no fresh capture to satisfy the request, Hydrafetch returns a `404` instead of going out to the page.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "cacheOnly": true
+  }'
+```
+
+Use it when you want a cached copy or nothing — for backfills, replays, or cost-sensitive lookups where a live fetch isn't acceptable.
+
+<Warning>
+  With `cacheOnly`, a cache miss is a `404` — no page is fetched. Handle that status in your client.
+</Warning>
+
+## `storeInCache`
+
+Whether to persist this capture for later reuse. Defaults to `true`. Set it to `false` for one-off or sensitive fetches you don't want retained.
+
+<ParamField body="storeInCache" type="boolean" default="true">
+  Persist the capture so future calls can serve it. Keeping it on lets you re-read the same page later without paying to fetch it again.
+</ParamField>
+
+## Spotting a cache hit
+
+A result served from cache is flagged two ways on the response, so you always know what you got:
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "cached": true,
+    "usage": { "creditsUsed": 1, "creditsRemaining": 4999, "freshness": "cache" }
+  }
+}
+```
+
+- `data.cached` is `true`.
+- `data.usage.freshness` is `"cache"` (versus `"fresh"` for a live fetch).
+
+<Note>
+  `maxAge` also works on `extract` and `images` requests, with the same 7-day cap and the same `0`-means-fresh rule.
+</Note>
+
+<Card title="Next: Jobs & webhooks" icon="clock" href="/concepts/jobs-and-webhooks">
+  How synchronous scrapes, async jobs, and completion webhooks work.
+</Card>

@@ -1,0 +1,2469 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/web/scrape": {
+      "post": {
+        "description": "Fetch a single URL and return it in the formats you ask for. Waits for the result by default, returning a job id if it runs long; set `async` to always return a job id immediately.",
+        "operationId": "scrape",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The scraped page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The scrape is running; poll the job id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Scrape a URL",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/markdown": {
+      "post": {
+        "description": "Fetch a URL and return clean Markdown of its main content.",
+        "operationId": "markdown",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeFormatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Scrape to Markdown",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/html": {
+      "post": {
+        "description": "Fetch a URL and return its cleaned main-content HTML.",
+        "operationId": "html",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeFormatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Scrape to HTML",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/raw-html": {
+      "post": {
+        "description": "Fetch a URL and return its unmodified page HTML.",
+        "operationId": "rawHtml",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeFormatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Scrape raw HTML",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/links": {
+      "post": {
+        "description": "Fetch a URL and return its internal and external links.",
+        "operationId": "links",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeFormatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a page's links",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/structured": {
+      "post": {
+        "description": "Fetch a URL and return the page's own machine-authored structured data (JSON-LD, microdata, OpenGraph, RDFa), normalised.",
+        "operationId": "structured",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeFormatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get structured data",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/scrape/{id}": {
+      "get": {
+        "description": "Poll a scrape started with `async` (or one that ran past the synchronous wait).",
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The job id returned by the scrape call.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get scrape job status",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/map": {
+      "post": {
+        "description": "Quickly enumerate a site's URLs without scraping them. Returns synchronously and costs one credit.",
+        "operationId": "mapUrls",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The discovered URLs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Map a site",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/crawl": {
+      "post": {
+        "description": "Discover and scrape a whole site as one asynchronous job. Returns a crawl id immediately; poll it or register a webhook. One credit per page scraped.",
+        "operationId": "startCrawl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrawlRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The crawl was accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start a crawl",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/batch": {
+      "post": {
+        "description": "Scrape an explicit list of URLs as one asynchronous job. Returns a batch id immediately; poll it or register a webhook. One credit per URL scraped.",
+        "operationId": "startBatch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The batch was accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start a batch",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/crawl/{id}": {
+      "get": {
+        "description": "Poll a crawl for its progress and per-page results.",
+        "operationId": "crawlStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The crawl id returned when the crawl started.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get crawl status",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/batch/{id}": {
+      "get": {
+        "description": "Poll a batch for its progress and per-URL results.",
+        "operationId": "batchStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The batch id returned when the batch started.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get batch status",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/search": {
+      "post": {
+        "description": "Search the web for a query and get back ranked results. By default each result comes back with its page fetched and returned as clean data; set `scrapeResults` to false for just the ranked titles, urls, and snippets.",
+        "operationId": "run",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The ranked search results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Search the web",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/extract": {
+      "post": {
+        "description": "Pull schema-shaped JSON out of one or many pages in a single call. An LLM maps each page onto your schema and/or prompt. Point at a single page, a list, or a crawl scope with a trailing `/*` wildcard; optionally let web search find extra source pages, return per-field confidence with the source passage behind each value, and merge everything into one deduplicated collection of entities. Charged per page that returns data.",
+        "operationId": "run",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The extracted data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Extract structured data from URLs",
+        "tags": [
+          "Web Extraction"
+        ]
+      }
+    },
+    "/v1/web/images": {
+      "post": {
+        "description": "Harvest all images from a page with their metadata.",
+        "operationId": "images",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImagesRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImagesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Harvest a page's images",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    },
+    "/v1/web/screenshot": {
+      "post": {
+        "description": "Capture a full-page PNG screenshot of a rendered page.",
+        "operationId": "screenshot",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenshotRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenshotResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Screenshot a page",
+        "tags": [
+          "Web Scraping"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Hydrafetch API",
+    "description": "Hydrafetch turns any URL into clean, LLM-ready data through one API.\n\nGive us a link and get back Markdown, the page's own structured data, extracted JSON, links, a\nsummary, or a screenshot. Point us at a whole site and get every page. Ask a question and get\nanswers with per-field confidence and the passage each value came from. You describe the outcome\nyou want — the pipeline decides how to get it.\n\n## Authentication\n\nEvery request is authenticated with your API key in the `X-API-Key` header. Keys are scoped to a\nworkspace and carry its credit balance.\n\n## Credits\n\nCalls are billed in credits and charged only on success. A standard scrape is one credit; richer\nformats and the extraction tier cost more. Each response reports what it consumed.\n\n## Conventions\n\nAll timestamps are UTC ISO 8601. Long-running jobs (crawl, batch) return a job id you poll, or a\nwebhook you register. Errors return a structured body with a stable `code` and an HTTP status.",
+    "version": "1.0",
+    "contact": {
+      "name": "Hydrafetch",
+      "url": "https://hydrafetch.com",
+      "email": "team@hydrafetch.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "Web Scraping",
+      "description": "Turn URLs into clean, LLM-ready content: scrape a single page, crawl or batch-scrape a whole site, map its URLs, search the web, and capture screenshots or images."
+    },
+    {
+      "name": "Web Extraction",
+      "description": "Pull schema-shaped JSON out of one or many pages, with optional per-field confidence and the source passage behind each value."
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api.hydrafetch.com",
+      "description": "Production"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "UpdateEmailPreferencesViaTokenDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateOnboardingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdatePasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password (min 8 chars)",
+            "example": "SecurePass123!"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name",
+            "example": "Jane Doe"
+          },
+          "turnstileToken": {
+            "type": "string",
+            "description": "Cloudflare Turnstile token"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "name"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password",
+            "example": "password"
+          },
+          "turnstileToken": {
+            "type": "string",
+            "description": "Cloudflare Turnstile token"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "Verify2faDto": {
+        "type": "object",
+        "properties": {
+          "tempToken": {
+            "type": "string",
+            "description": "Temp token issued after password verification",
+            "example": "eyJ..."
+          },
+          "token": {
+            "type": "string",
+            "description": "6-digit TOTP code",
+            "example": "123456"
+          },
+          "backupCode": {
+            "type": "string",
+            "description": "8-char backup code"
+          }
+        },
+        "required": [
+          "tempToken"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "New password",
+            "example": "SecurePass123!"
+          },
+          "token": {
+            "type": "string",
+            "description": "Reset token from email",
+            "example": "eyJ..."
+          }
+        },
+        "required": [
+          "password",
+          "token"
+        ]
+      },
+      "CreateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Workspace display name",
+            "example": "Acme Inc"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Workspace display name"
+          }
+        }
+      },
+      "UpdateMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "CreateInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Invitee email",
+            "example": "colleague@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ],
+            "description": "Role to assign on accept"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ]
+      },
+      "AcceptInvitationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyTotpSetupDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyTotpDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RegenerateBackupCodesDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable label",
+            "example": "Production"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateKelviqCheckoutDto": {
+        "type": "object",
+        "properties": {
+          "planIdentifier": {
+            "type": "string",
+            "description": "Kelviq plan or pack identifier (e.g. \"growth\", \"payg\")"
+          },
+          "successUrl": {
+            "type": "string",
+            "description": "URL Kelviq redirects to after successful checkout"
+          },
+          "chargePeriod": {
+            "type": "string",
+            "description": "Charge period. MONTHLY for subscription plans, ONE_TIME for credit packs.",
+            "enum": [
+              "MONTHLY",
+              "ONE_TIME"
+            ],
+            "default": "MONTHLY"
+          }
+        },
+        "required": [
+          "planIdentifier",
+          "successUrl"
+        ]
+      },
+      "ChangePlanDto": {
+        "type": "object",
+        "properties": {
+          "planSlug": {
+            "type": "string",
+            "description": "Target subscription plan slug",
+            "enum": [
+              "starter",
+              "growth",
+              "scale"
+            ]
+          },
+          "endTrialNow": {
+            "type": "boolean",
+            "description": "End the trial immediately and activate the paid plan now. Ignored unless the subscription is currently on trial.",
+            "default": false
+          }
+        },
+        "required": [
+          "planSlug"
+        ]
+      },
+      "LocationDto": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "us",
+            "description": "ISO 3166 alpha-2 country to fetch the page as if from."
+          },
+          "languages": {
+            "example": [
+              "en-US",
+              "en"
+            ],
+            "description": "Preferred content languages, most-preferred first.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "JsonOptionsDto": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "JSON Schema describing the shape you want the `json` format to return."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "example": "Extract the product name, price, and availability.",
+            "description": "Natural-language instruction for the `json` format. Use with or instead of a schema."
+          }
+        }
+      },
+      "ScrapeRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL to scrape. Must be http(s)."
+          },
+          "maxAge": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 604800000,
+            "description": "Serve from cache if a capture of this URL is younger than this many milliseconds. Omit for the default window; 0 always fetches fresh. Capped at 7 days."
+          },
+          "cacheOnly": {
+            "type": "boolean",
+            "description": "Only serve from cache. If there is no fresh cached copy, return 404 instead of fetching."
+          },
+          "storeInCache": {
+            "type": "boolean",
+            "description": "Persist the capture for later re-extraction. Default true."
+          },
+          "preferStructure": {
+            "type": "boolean",
+            "description": "Preserve document structure (headings, lists, tables) over prose density — good for marketing and service pages. Default off."
+          },
+          "async": {
+            "type": "boolean",
+            "description": "Return a job id immediately instead of waiting for the result. Poll GET /v1/web/scrape/{id}."
+          },
+          "onlyMainContent": {
+            "type": "boolean",
+            "description": "Return only the main content, dropping nav/boilerplate. Default true."
+          },
+          "includeTags": {
+            "maxItems": 50,
+            "example": [
+              "article",
+              "main"
+            ],
+            "description": "CSS selectors to keep. When set, only matching elements are considered.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludeTags": {
+            "maxItems": 50,
+            "example": [
+              ".ad",
+              "#comments"
+            ],
+            "description": "CSS selectors to strip before extraction.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeBase64Images": {
+            "type": "boolean",
+            "description": "Strip inline base64 images from the output. Default true."
+          },
+          "blockAds": {
+            "type": "boolean",
+            "description": "Remove common ad and tracking elements. Default true."
+          },
+          "renderJs": {
+            "type": "boolean",
+            "description": "Force full page rendering for JavaScript-heavy pages. Left to the pipeline when omitted."
+          },
+          "waitFor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30000,
+            "description": "Extra milliseconds to let the page settle before capture."
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 120000,
+            "description": "Overall time budget for the request, in milliseconds."
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra request headers to send when fetching the page."
+          },
+          "formats": {
+            "type": "array",
+            "example": [
+              "markdown"
+            ],
+            "description": "What to return. Omit for Markdown only. `structured` is the page's own data (no LLM, cheapest); `summary` and `json` are LLM-backed and cost more.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "markdown",
+                "html",
+                "rawHtml",
+                "links",
+                "structured",
+                "summary",
+                "json"
+              ]
+            }
+          },
+          "jsonOptions": {
+            "description": "Schema and/or prompt for the `json` format. One is required when `json` is requested.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JsonOptionsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "WebScrapeMetadataDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "object",
+            "nullable": true,
+            "example": "Example Domain",
+            "description": "The page title."
+          },
+          "pageType": {
+            "type": "string",
+            "example": "article",
+            "description": "Coarse page classification (e.g. article, listing, forum, docs)."
+          },
+          "wordCount": {
+            "type": "number",
+            "example": 214,
+            "description": "Word count of the extracted main content."
+          }
+        },
+        "required": [
+          "title",
+          "pageType",
+          "wordCount"
+        ]
+      },
+      "WebUsageDto": {
+        "type": "object",
+        "properties": {
+          "creditsUsed": {
+            "type": "number",
+            "example": 1,
+            "description": "Credits this call consumed. Charged only on success."
+          },
+          "creditsRemaining": {
+            "type": "number",
+            "example": 4999,
+            "description": "Credits left in your workspace's balance after this call."
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "cache",
+              "fresh"
+            ],
+            "example": "fresh",
+            "description": "Whether the result was served from cache or freshly fetched."
+          }
+        },
+        "required": [
+          "creditsUsed",
+          "creditsRemaining",
+          "freshness"
+        ]
+      },
+      "WebLinksDto": {
+        "type": "object",
+        "properties": {
+          "internal": {
+            "description": "Links pointing to the same site.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "external": {
+            "description": "Links pointing to other sites.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "internal",
+          "external"
+        ]
+      },
+      "WebStructuredEntityDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "Product",
+            "description": "The schema.org type of the entity."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "json-ld",
+              "microdata",
+              "rdfa",
+              "opengraph"
+            ],
+            "description": "Which structured-data syntax the entity came from."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The entity's properties, as published."
+          }
+        },
+        "required": [
+          "type",
+          "source",
+          "properties"
+        ]
+      },
+      "WebStructuredDataDto": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "description": "The page's own structured data, normalised into one deduplicated list of typed entities.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebStructuredEntityDto"
+            }
+          },
+          "jsonLd": {
+            "description": "Raw JSON-LD blocks, as found on the page.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "microdata": {
+            "description": "Raw microdata items.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "opengraph": {
+            "description": "Raw OpenGraph/Twitter-card tags.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "rdfa": {
+            "description": "Raw RDFa items.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "appState": {
+            "description": "Names of embedded framework app-state blocks detected on the page.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "entities",
+          "jsonLd",
+          "microdata",
+          "opengraph",
+          "rdfa",
+          "appState"
+        ]
+      },
+      "WebScrapeDataDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL you requested."
+          },
+          "finalUrl": {
+            "type": "string",
+            "example": "https://example.com/",
+            "description": "The final URL after any redirects."
+          },
+          "status": {
+            "type": "number",
+            "example": 200,
+            "description": "HTTP status of the fetched page."
+          },
+          "cached": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether this result was served from cache."
+          },
+          "warning": {
+            "type": "string",
+            "description": "Set when the page was returned with a caveat (e.g. partial content)."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebScrapeMetadataDto"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/WebUsageDto"
+          },
+          "markdown": {
+            "type": "string",
+            "description": "Clean Markdown of the main content. Returned when `markdown` is requested."
+          },
+          "html": {
+            "type": "string",
+            "description": "Cleaned main-content HTML. Returned when `html` is requested."
+          },
+          "rawHtml": {
+            "type": "string",
+            "description": "The unmodified page HTML. Returned when `rawHtml` is requested."
+          },
+          "links": {
+            "description": "Returned when `links` is requested.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebLinksDto"
+              }
+            ]
+          },
+          "structured": {
+            "description": "Returned when `structured` is requested.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebStructuredDataDto"
+              }
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "description": "A concise factual summary. Returned when `summary` is requested (LLM-backed)."
+          },
+          "json": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Schema-shaped JSON. Returned when `json` is requested (LLM-backed)."
+          }
+        },
+        "required": [
+          "url",
+          "finalUrl",
+          "status",
+          "cached",
+          "metadata"
+        ]
+      },
+      "ScrapeResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WebScrapeDataDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ScrapeAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "example": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+            "description": "Poll this job id."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "processing"
+            ],
+            "example": "queued"
+          }
+        },
+        "required": [
+          "jobId",
+          "status"
+        ]
+      },
+      "ScrapeFormatRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL to scrape. Must be http(s)."
+          },
+          "maxAge": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 604800000,
+            "description": "Serve from cache if a capture of this URL is younger than this many milliseconds. Omit for the default window; 0 always fetches fresh. Capped at 7 days."
+          },
+          "cacheOnly": {
+            "type": "boolean",
+            "description": "Only serve from cache. If there is no fresh cached copy, return 404 instead of fetching."
+          },
+          "storeInCache": {
+            "type": "boolean",
+            "description": "Persist the capture for later re-extraction. Default true."
+          },
+          "preferStructure": {
+            "type": "boolean",
+            "description": "Preserve document structure (headings, lists, tables) over prose density — good for marketing and service pages. Default off."
+          },
+          "async": {
+            "type": "boolean",
+            "description": "Return a job id immediately instead of waiting for the result. Poll GET /v1/web/scrape/{id}."
+          },
+          "onlyMainContent": {
+            "type": "boolean",
+            "description": "Return only the main content, dropping nav/boilerplate. Default true."
+          },
+          "includeTags": {
+            "maxItems": 50,
+            "example": [
+              "article",
+              "main"
+            ],
+            "description": "CSS selectors to keep. When set, only matching elements are considered.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludeTags": {
+            "maxItems": 50,
+            "example": [
+              ".ad",
+              "#comments"
+            ],
+            "description": "CSS selectors to strip before extraction.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeBase64Images": {
+            "type": "boolean",
+            "description": "Strip inline base64 images from the output. Default true."
+          },
+          "blockAds": {
+            "type": "boolean",
+            "description": "Remove common ad and tracking elements. Default true."
+          },
+          "renderJs": {
+            "type": "boolean",
+            "description": "Force full page rendering for JavaScript-heavy pages. Left to the pipeline when omitted."
+          },
+          "waitFor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30000,
+            "description": "Extra milliseconds to let the page settle before capture."
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 120000,
+            "description": "Overall time budget for the request, in milliseconds."
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra request headers to send when fetching the page."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "ScrapeStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "active",
+              "completed",
+              "failed"
+            ],
+            "example": "completed",
+            "description": "Job state."
+          },
+          "data": {
+            "description": "Present when completed.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebScrapeDataDto"
+              }
+            ]
+          },
+          "error": {
+            "type": "string",
+            "description": "Present when the job failed."
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "MapRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The site whose URLs you want to enumerate. Must be http(s)."
+          },
+          "includeLinks": {
+            "type": "boolean",
+            "example": true,
+            "description": "Also include same-site links found on the starting page, not just the site's page list."
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5000,
+            "example": 1000,
+            "description": "Maximum number of URLs to return."
+          },
+          "search": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "pricing",
+            "description": "Keep only discovered URLs containing this term."
+          },
+          "sitemap": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "include",
+              "only"
+            ],
+            "example": "include",
+            "description": "Whether to use the site's published page list: skip it, include it alongside discovered links, or use it only."
+          },
+          "includeSubdomains": {
+            "type": "boolean",
+            "example": false,
+            "description": "Also include URLs on subdomains of the site. Default off."
+          },
+          "ignoreQueryParameters": {
+            "type": "boolean",
+            "example": false,
+            "description": "Treat URLs that differ only by query string as one. Default off."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "MapResultDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The site you requested."
+          },
+          "links": {
+            "example": [
+              "https://example.com/",
+              "https://example.com/pricing"
+            ],
+            "description": "The site's discovered URLs.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "count": {
+            "type": "number",
+            "example": 2,
+            "description": "How many URLs were returned."
+          }
+        },
+        "required": [
+          "url",
+          "links",
+          "count"
+        ]
+      },
+      "MapResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MapResultDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "WebhookDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://your-app.com/hooks/hydrafetch",
+            "description": "The URL to POST progress and completion events to. Must be http(s)."
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "Authorization": "Bearer your-token"
+            },
+            "description": "Extra headers to send with each callback, e.g. for authentication."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "OptLocationDto": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "us",
+            "description": "ISO 3166 alpha-2 country to fetch as if from."
+          },
+          "languages": {
+            "example": [
+              "en-US",
+              "en"
+            ],
+            "description": "Preferred content languages, most-preferred first.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ScrapeOptionsDto": {
+        "type": "object",
+        "properties": {
+          "formats": {
+            "type": "array",
+            "example": [
+              "markdown"
+            ],
+            "description": "What to return per page. Omit for Markdown only.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "markdown",
+                "html",
+                "rawHtml",
+                "links",
+                "structured"
+              ]
+            }
+          },
+          "onlyMainContent": {
+            "type": "boolean",
+            "description": "Return only the main content, dropping boilerplate. Default true."
+          },
+          "includeTags": {
+            "maxItems": 50,
+            "description": "CSS selectors to keep.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludeTags": {
+            "maxItems": 50,
+            "description": "CSS selectors to strip before extraction.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeBase64Images": {
+            "type": "boolean",
+            "description": "Strip inline base64 images. Default true."
+          },
+          "blockAds": {
+            "type": "boolean",
+            "description": "Remove common ad and tracking elements. Default true."
+          },
+          "renderJs": {
+            "type": "boolean",
+            "description": "Force full page rendering for JavaScript-heavy pages."
+          },
+          "waitFor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30000,
+            "description": "Extra milliseconds to let the page settle before capture."
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 120000,
+            "description": "Per-page time budget, in milliseconds."
+          },
+          "location": {
+            "$ref": "#/components/schemas/OptLocationDto"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra request headers to send when fetching each page."
+          },
+          "preferStructure": {
+            "type": "boolean",
+            "description": "Preserve document structure over prose density. Default off."
+          },
+          "maxAge": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 604800000,
+            "description": "Serve a page from cache if younger than this many milliseconds."
+          }
+        }
+      },
+      "CrawlRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The site to start from. Must be http(s)."
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5000,
+            "example": 100,
+            "description": "Maximum number of pages to scrape."
+          },
+          "maxDepth": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "example": 2,
+            "description": "How many links deep from the starting page to follow."
+          },
+          "includePaths": {
+            "maxItems": 50,
+            "example": [
+              "^/blog/.*"
+            ],
+            "description": "Only follow URLs whose path matches every one of these patterns.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludePaths": {
+            "maxItems": 50,
+            "example": [
+              "^/tag/.*"
+            ],
+            "description": "Skip URLs whose path matches any of these patterns.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowSubdomains": {
+            "type": "boolean",
+            "example": false,
+            "description": "Also follow links into subdomains of the starting site. Default off."
+          },
+          "allowExternalLinks": {
+            "type": "boolean",
+            "example": false,
+            "description": "Also follow links that lead off the starting site. Default off."
+          },
+          "ignoreQueryParameters": {
+            "type": "boolean",
+            "example": false,
+            "description": "Treat URLs that differ only by query string as the same page. Default off."
+          },
+          "sitemap": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "include"
+            ],
+            "example": "include",
+            "description": "Whether to seed discovery from the site's published page list. Default includes it."
+          },
+          "webhook": {
+            "description": "Register a callback to be notified as the crawl progresses instead of polling.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookDto"
+              }
+            ]
+          },
+          "scrapeOptions": {
+            "description": "How to scrape each page. Same options as a single scrape.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScrapeOptionsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "CrawlAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "crawlId": {
+            "type": "string",
+            "example": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+            "description": "Poll this crawl id for progress and results."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued"
+            ],
+            "example": "queued",
+            "description": "The job has been accepted."
+          }
+        },
+        "required": [
+          "crawlId",
+          "status"
+        ]
+      },
+      "BatchRequestDto": {
+        "type": "object",
+        "properties": {
+          "urls": {
+            "minItems": 1,
+            "maxItems": 1000,
+            "example": [
+              "https://example.com/a",
+              "https://example.com/b"
+            ],
+            "description": "The explicit list of URLs to scrape. Each must be http(s).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "webhook": {
+            "description": "Register a callback to be notified as the batch progresses instead of polling.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookDto"
+              }
+            ]
+          },
+          "scrapeOptions": {
+            "description": "How to scrape each URL. Same options as a single scrape.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScrapeOptionsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "urls"
+        ]
+      },
+      "BatchAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "example": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+            "description": "Poll this batch id for progress and results."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued"
+            ],
+            "example": "queued",
+            "description": "The job has been accepted."
+          }
+        },
+        "required": [
+          "batchId",
+          "status"
+        ]
+      },
+      "CrawlPageResultDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com/blog/post",
+            "description": "The page URL."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed"
+            ],
+            "example": "completed",
+            "description": "State of this page."
+          },
+          "depth": {
+            "type": "number",
+            "example": 1,
+            "description": "How many links deep this page was from the start."
+          },
+          "error": {
+            "type": "object",
+            "nullable": true,
+            "description": "Set when this page failed."
+          },
+          "data": {
+            "nullable": true,
+            "description": "The scraped page, once completed.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebScrapeDataDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "url",
+          "status",
+          "depth",
+          "error",
+          "data"
+        ]
+      },
+      "CrawlStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+            "description": "The crawl or batch id."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "crawl",
+              "batch"
+            ],
+            "example": "crawl",
+            "description": "Which kind of job this is."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "completed",
+              "failed",
+              "cancelled"
+            ],
+            "example": "running",
+            "description": "Overall job state."
+          },
+          "seedUrl": {
+            "type": "object",
+            "nullable": true,
+            "example": "https://example.com",
+            "description": "The starting URL, for a crawl."
+          },
+          "total": {
+            "type": "number",
+            "example": 100,
+            "description": "Total pages in this job."
+          },
+          "completed": {
+            "type": "number",
+            "example": 42,
+            "description": "Pages scraped so far."
+          },
+          "failed": {
+            "type": "number",
+            "example": 1,
+            "description": "Pages that failed."
+          },
+          "creditsUsed": {
+            "type": "number",
+            "example": 42,
+            "description": "Credits consumed so far. One per scraped page."
+          },
+          "pages": {
+            "description": "Per-page status and results.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CrawlPageResultDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "seedUrl",
+          "total",
+          "completed",
+          "failed",
+          "creditsUsed",
+          "pages"
+        ]
+      },
+      "SearchRequestDto": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "best open source vector databases",
+            "description": "What to search the web for."
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 15,
+            "example": 5,
+            "description": "How many ranked results to return. Omit for the default."
+          },
+          "scrapeResults": {
+            "type": "boolean",
+            "example": true,
+            "description": "When true (default), each result comes back with its page fetched and returned as clean data. When false, you get just the ranked title, url, and snippet."
+          },
+          "scrapeOptions": {
+            "$ref": "#/components/schemas/ScrapeOptionsDto"
+          },
+          "timeRange": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ],
+            "example": "week",
+            "description": "Restrict results to a recency window relative to now."
+          },
+          "country": {
+            "type": "string",
+            "example": "us",
+            "description": "ISO 3166 alpha-2 country code to bias results toward a region."
+          },
+          "includeDomains": {
+            "maxItems": 15,
+            "example": [
+              "github.com",
+              "arxiv.org"
+            ],
+            "description": "Only return results from these domains.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludeDomains": {
+            "maxItems": 15,
+            "example": [
+              "pinterest.com"
+            ],
+            "description": "Drop results from these domains.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "SearchResultItemDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Best open source vector databases",
+            "description": "The result title."
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/vector-databases",
+            "description": "The result URL."
+          },
+          "snippet": {
+            "type": "string",
+            "example": "A rundown of the leading open source vector databases and how they compare.",
+            "description": "A short snippet describing the result."
+          },
+          "rank": {
+            "type": "number",
+            "example": 1,
+            "description": "The result's position in the ranked list."
+          },
+          "data": {
+            "nullable": true,
+            "description": "The scraped page for this result, or null when scraping is off or unavailable.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebScrapeDataDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "snippet",
+          "rank",
+          "data"
+        ]
+      },
+      "SearchResultDto": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "example": "best open source vector databases",
+            "description": "The query you searched."
+          },
+          "engine": {
+            "type": "string",
+            "example": "web",
+            "description": "The search source the results came from."
+          },
+          "results": {
+            "description": "The ranked results.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResultItemDto"
+            }
+          }
+        },
+        "required": [
+          "query",
+          "engine",
+          "results"
+        ]
+      },
+      "SearchResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SearchResultDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ExtractRequestDto": {
+        "type": "object",
+        "properties": {
+          "urls": {
+            "maxItems": 10,
+            "example": [
+              "https://example.com/products/widget",
+              "https://example.com/products/*"
+            ],
+            "description": "The pages to extract from. Each must be an http(s) URL. A trailing `/*` marks a crawl scope: every page discovered under that path is extracted and merged into the result.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "JSON Schema describing the shape you want back. Optional if `prompt` is given; when both are present the schema fixes the field names and types while the prompt guides what to pull."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "example": "Pull the product name, price in USD, and whether it is in stock.",
+            "description": "Natural-language instruction for what to extract. Use with or instead of a schema."
+          },
+          "preferStructure": {
+            "type": "boolean",
+            "description": "Preserve document structure (headings, lists, tables) over prose density when reading the page — good for listing and catalog pages. Default off."
+          },
+          "enableWebSearch": {
+            "type": "boolean",
+            "description": "Pull in extra source pages by web-searching your prompt, to fill fields your URLs do not cover. Requires a `prompt`."
+          },
+          "showSources": {
+            "type": "boolean",
+            "description": "Return the concrete list of URLs that were actually extracted, after any wildcard and web-search expansion. Default off."
+          },
+          "showConfidence": {
+            "type": "boolean",
+            "description": "For each field, return a confidence score and the exact source passage the value was drawn from. Default off."
+          },
+          "mergeEntities": {
+            "type": "boolean",
+            "description": "Merge the per-page results into one deduplicated collection — one row per entity, with its contributing source URLs — instead of a separate result per page. Default off."
+          },
+          "maxAge": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 604800000,
+            "description": "Reuse a recent capture of each page if it is younger than this many milliseconds. Omit or 0 to always fetch fresh. Capped at 7 days."
+          }
+        },
+        "required": [
+          "urls"
+        ]
+      },
+      "FieldProvenanceDto": {
+        "type": "object",
+        "properties": {
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.92,
+            "description": "How certain the value is correct given the page, from 0 to 1."
+          },
+          "evidence": {
+            "type": "string",
+            "example": "Priced at $49.00 with free shipping.",
+            "description": "The exact short passage the value was drawn from, or an empty string if none."
+          }
+        },
+        "required": [
+          "confidence",
+          "evidence"
+        ]
+      },
+      "ExtractItemResultDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com/products/widget",
+            "description": "The page this result came from."
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "The extracted data, shaped by your schema and/or prompt. Null when nothing matched."
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldProvenanceDto"
+            },
+            "description": "Per-field confidence and source passage, keyed by field name. Present only when `showConfidence` is set."
+          },
+          "error": {
+            "type": "object",
+            "nullable": true,
+            "example": null,
+            "description": "Set when this page could not be extracted; null on success."
+          }
+        },
+        "required": [
+          "url",
+          "data",
+          "error"
+        ]
+      },
+      "MergedEntityDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The unioned data for one entity, filled across every contributing page."
+          },
+          "sources": {
+            "description": "Every source URL that contributed to this entity.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "data",
+          "sources"
+        ]
+      },
+      "ExtractResultDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "description": "One result per extracted page.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtractItemResultDto"
+            }
+          },
+          "sources": {
+            "description": "The concrete URLs actually extracted, after wildcard and web-search expansion. Present only when `showSources` is set.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "collection": {
+            "description": "The deduplicated collection, one row per entity. Present only when `mergeEntities` is set.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MergedEntityDto"
+            }
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "ExtractResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ExtractResultDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ImagesRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL to harvest images from. Must be http(s)."
+          },
+          "maxAge": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 604800000,
+            "description": "Serve from cache if a capture of this URL is younger than this many milliseconds. Omit for the default window; 0 always fetches fresh. Capped at 7 days."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "WebImageDto": {
+        "type": "object",
+        "properties": {
+          "src": {
+            "type": "string",
+            "example": "https://example.com/logo.png",
+            "description": "The image URL, resolved to absolute."
+          },
+          "alt": {
+            "type": "object",
+            "nullable": true,
+            "example": "Company logo",
+            "description": "The image alt text, if any."
+          },
+          "width": {
+            "type": "object",
+            "nullable": true,
+            "example": 320,
+            "description": "The image width in pixels, if declared."
+          },
+          "height": {
+            "type": "object",
+            "nullable": true,
+            "example": 240,
+            "description": "The image height in pixels, if declared."
+          }
+        },
+        "required": [
+          "src",
+          "alt",
+          "width",
+          "height"
+        ]
+      },
+      "WebImagesDataDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL you requested."
+          },
+          "finalUrl": {
+            "type": "string",
+            "example": "https://example.com/",
+            "description": "The final URL after any redirects."
+          },
+          "images": {
+            "description": "Every image found on the page, with its metadata.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebImageDto"
+            }
+          }
+        },
+        "required": [
+          "url",
+          "finalUrl",
+          "images"
+        ]
+      },
+      "ImagesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WebImagesDataDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ScreenshotRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL to screenshot. Must be http(s)."
+          },
+          "fullPage": {
+            "type": "boolean",
+            "example": true,
+            "description": "Capture the entire scrollable page instead of just the viewport. Default off."
+          },
+          "waitFor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30000,
+            "description": "Extra milliseconds to let the page settle before capture."
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 120000,
+            "description": "Overall time budget for the request, in milliseconds."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "WebScreenshotDataDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com",
+            "description": "The URL you requested."
+          },
+          "finalUrl": {
+            "type": "string",
+            "example": "https://example.com/",
+            "description": "The final URL after any redirects."
+          },
+          "status": {
+            "type": "number",
+            "example": 200,
+            "description": "HTTP status of the captured page."
+          },
+          "image": {
+            "type": "string",
+            "description": "The screenshot as a base64-encoded PNG string."
+          }
+        },
+        "required": [
+          "url",
+          "finalUrl",
+          "status",
+          "image"
+        ]
+      },
+      "ScreenshotResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WebScreenshotDataDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "GrantCreditsDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ScaleTestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RenderBenchmarkDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
+}

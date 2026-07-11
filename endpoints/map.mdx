@@ -1,0 +1,137 @@
+---
+title: "Map"
+description: "Fast, synchronous URL discovery for a site — without scraping content."
+---
+
+Map enumerates a site's URLs quickly, without scraping any of them. It returns synchronously and costs one credit — the fastest way to see what pages a site has before committing to a crawl.
+
+## When to use
+
+- You want to preview a [Crawl](/endpoints/crawl)'s scope before running it.
+- You need a list of a site's URLs to filter down and feed into a [Batch](/endpoints/batch).
+- You want to find pages matching a term (e.g. every URL containing `pricing`).
+
+Map returns URLs only — no page content. To get content, pass the URLs to Scrape, Batch, or Crawl.
+
+## Example request
+
+Send a `POST` to `/v1/web/map`. Narrow the results with `search`, `limit`, and discovery options.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/map \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "search": "pricing",
+    "limit": 1000
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/map", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: "https://example.com",
+    search: "pricing",
+    limit: 1000,
+  }),
+});
+const { data } = await res.json();
+console.log(data.links);
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/map",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={"url": "https://example.com", "search": "pricing", "limit": 1000},
+)
+print(res.json()["data"]["links"])
+```
+
+</CodeGroup>
+
+## Example response
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "links": [
+      "https://example.com/",
+      "https://example.com/pricing"
+    ],
+    "count": 2
+  }
+}
+```
+
+## Request options
+
+<ParamField body="url" type="string" required>
+  The site whose URLs you want to enumerate. Must be `http(s)`.
+</ParamField>
+
+<ParamField body="includeLinks" type="boolean" default="false">
+  Also include same-site links found on the starting page, not just the site's page list.
+</ParamField>
+
+<ParamField body="limit" type="number">
+  Maximum number of URLs to return. 1–5000.
+</ParamField>
+
+<ParamField body="search" type="string">
+  Keep only discovered URLs containing this term (e.g. `"pricing"`). Up to 200 characters.
+</ParamField>
+
+<ParamField body="sitemap" type="string">
+  Whether to use the site's published page list: `skip` it, `include` it alongside discovered links, or use it `only`.
+</ParamField>
+
+<ParamField body="includeSubdomains" type="boolean" default="false">
+  Also include URLs on subdomains of the site.
+</ParamField>
+
+<ParamField body="ignoreQueryParameters" type="boolean" default="false">
+  Treat URLs that differ only by query string as one.
+</ParamField>
+
+## Response fields
+
+<ResponseField name="data" type="object">
+  <Expandable title="MapResult">
+    <ResponseField name="url" type="string">The site you requested.</ResponseField>
+    <ResponseField name="links" type="string[]">The site's discovered URLs.</ResponseField>
+    <ResponseField name="count" type="number">How many URLs were returned.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  Map is one credit regardless of how many URLs come back, and it returns synchronously. It is the cheapest way to size up a site before a crawl or batch.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Map API reference" icon="code" href="/api-reference">
+    Full request and response schema with a live playground.
+  </Card>
+  <Card title="Crawl a whole site" icon="sitemap" href="/endpoints/crawl">
+    Turn a mapped scope into scraped pages.
+  </Card>
+  <Card title="Scrape a list of URLs" icon="list" href="/endpoints/batch">
+    Feed mapped URLs into a batch job.
+  </Card>
+  <Card title="Scrape one URL" icon="file-lines" href="/endpoints/scrape">
+    Scrape any single discovered URL.
+  </Card>
+</CardGroup>

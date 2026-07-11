@@ -1,0 +1,45 @@
+---
+title: "Authentication"
+description: "How API keys, workspaces, and credits fit together."
+---
+
+Every request to Hydrafetch is authenticated with an API key sent in the `X-API-Key` header. There are no other credentials to manage.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://example.com" }'
+```
+
+## Keys and workspaces
+
+A key belongs to a **workspace**, and the workspace holds the **credit balance** that your calls draw down. You can create multiple keys per workspace — for example, one per environment or per service — and revoke any of them from your [dashboard](https://app.hydrafetch.com) without affecting the others.
+
+Keys look like `hf_...`. Anyone with the key can spend your credits, so:
+
+<Warning>
+  Never expose your API key in client-side code, a public repository, or a browser request. Call Hydrafetch from your backend, and store the key in an environment variable or a secrets manager.
+</Warning>
+
+## Missing or invalid keys
+
+A request with a missing, malformed, or revoked key is rejected before any work is done:
+
+```json
+{
+  "statusCode": 401,
+  "code": "UNAUTHORIZED",
+  "message": "Invalid API key."
+}
+```
+
+Because the check happens up front, a rejected request never costs credits.
+
+## Rotating a key
+
+To rotate a key, create a new one, deploy it, then revoke the old one. Revocation takes effect immediately. Nothing else about your workspace — credits, usage history, other keys — is affected.
+
+<Card title="Next: Credits & billing" icon="coins" href="/concepts/credits">
+  How calls are priced and how charge-on-success works.
+</Card>

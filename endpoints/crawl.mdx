@@ -1,0 +1,222 @@
+---
+title: "Crawl"
+description: "Discover and scrape a whole site as one asynchronous job."
+---
+
+Crawl points Hydrafetch at a starting URL, discovers the site's pages for you, and scrapes each one. It runs as a single asynchronous job: you get a `crawlId` back immediately, then poll it or register a webhook to collect the per-page results. One credit per page scraped.
+
+## When to use
+
+- You want every page of a site (or a section of it) as clean data, and you do not have the URL list yourself.
+- The job is large enough that waiting on a single request is impractical.
+
+If you already have the exact URLs, use [Batch](/endpoints/batch) — no discovery needed. To preview which URLs a crawl would reach without scraping them, use [Map](/endpoints/map).
+
+## Example request
+
+Send a `POST` to `/v1/web/crawl`. Scope the crawl with `limit`, `maxDepth`, and path filters, and control how each page is scraped with `scrapeOptions`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/crawl \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "limit": 100,
+    "maxDepth": 2,
+    "includePaths": ["^/blog/.*"],
+    "excludePaths": ["^/tag/.*"],
+    "scrapeOptions": { "formats": ["markdown", "links"] }
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/crawl", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: "https://example.com",
+    limit: 100,
+    maxDepth: 2,
+    includePaths: ["^/blog/.*"],
+    excludePaths: ["^/tag/.*"],
+    scrapeOptions: { formats: ["markdown", "links"] },
+  }),
+});
+const { crawlId } = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/crawl",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={
+        "url": "https://example.com",
+        "limit": 100,
+        "maxDepth": 2,
+        "includePaths": ["^/blog/.*"],
+        "excludePaths": ["^/tag/.*"],
+        "scrapeOptions": {"formats": ["markdown", "links"]},
+    },
+)
+crawl_id = res.json()["crawlId"]
+```
+
+</CodeGroup>
+
+## Example response
+
+The crawl is accepted right away:
+
+```json
+{ "crawlId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
+```
+
+## Request options
+
+<ParamField body="url" type="string" required>
+  The site to start from. Must be `http(s)`.
+</ParamField>
+
+<ParamField body="limit" type="number" default="100">
+  Maximum number of pages to scrape. 1–5000.
+</ParamField>
+
+<ParamField body="maxDepth" type="number">
+  How many links deep from the starting page to follow. 0–10.
+</ParamField>
+
+<ParamField body="includePaths" type="string[]">
+  Only follow URLs whose path matches every one of these patterns (e.g. `["^/blog/.*"]`). Up to 50.
+</ParamField>
+
+<ParamField body="excludePaths" type="string[]">
+  Skip URLs whose path matches any of these patterns (e.g. `["^/tag/.*"]`). Up to 50.
+</ParamField>
+
+<ParamField body="allowSubdomains" type="boolean" default="false">
+  Also follow links into subdomains of the starting site.
+</ParamField>
+
+<ParamField body="allowExternalLinks" type="boolean" default="false">
+  Also follow links that lead off the starting site.
+</ParamField>
+
+<ParamField body="ignoreQueryParameters" type="boolean" default="false">
+  Treat URLs that differ only by query string as the same page.
+</ParamField>
+
+<ParamField body="sitemap" type="string" default="include">
+  Whether to seed discovery from the site's published page list: `skip` or `include`.
+</ParamField>
+
+<ParamField body="scrapeOptions" type="object">
+  How to scrape each page — `formats`, `onlyMainContent`, `includeTags`, `excludeTags`, `removeBase64Images`, `blockAds`, `renderJs`, `waitFor`, `timeout`, `location`, `headers`, `preferStructure`, `maxAge`. Same options as a single [Scrape](/endpoints/scrape), with per-page formats limited to `markdown`, `html`, `rawHtml`, `links`, and `structured`.
+</ParamField>
+
+<ParamField body="webhook" type="object">
+  Register a callback instead of polling. `webhook.url` receives progress and completion events; `webhook.headers` are extra headers sent with each callback (e.g. for authentication).
+</ParamField>
+
+## Poll for results
+
+Poll `GET /v1/web/crawl/{id}` for progress and per-page results.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+  -H "X-API-Key: hf_your_key_here"
+```
+
+```javascript Node
+const res = await fetch(
+  `https://api.hydrafetch.com/v1/web/crawl/${crawlId}`,
+  { headers: { "X-API-Key": "hf_your_key_here" } },
+);
+const status = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.get(
+    f"https://api.hydrafetch.com/v1/web/crawl/{crawl_id}",
+    headers={"X-API-Key": "hf_your_key_here"},
+)
+status = res.json()
+```
+
+</CodeGroup>
+
+```json
+{
+  "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "kind": "crawl",
+  "status": "running",
+  "seedUrl": "https://example.com",
+  "total": 100,
+  "completed": 42,
+  "failed": 1,
+  "creditsUsed": 42,
+  "pages": [
+    {
+      "url": "https://example.com/blog/post",
+      "status": "completed",
+      "depth": 1,
+      "error": null,
+      "data": {
+        "url": "https://example.com/blog/post",
+        "finalUrl": "https://example.com/blog/post",
+        "status": 200,
+        "cached": false,
+        "metadata": { "title": "A post", "pageType": "article", "wordCount": 812 },
+        "usage": { "creditsUsed": 1, "creditsRemaining": 4993, "freshness": "fresh" },
+        "markdown": "# A post\n\n..."
+      }
+    }
+  ]
+}
+```
+
+## Response fields
+
+<ResponseField name="id" type="string">The crawl id.</ResponseField>
+<ResponseField name="kind" type="string">`crawl` or `batch`.</ResponseField>
+<ResponseField name="status" type="string">Overall job state: `running`, `completed`, `failed`, or `cancelled`.</ResponseField>
+<ResponseField name="seedUrl" type="string">The starting URL.</ResponseField>
+<ResponseField name="total" type="number">Total pages in this job.</ResponseField>
+<ResponseField name="completed" type="number">Pages scraped so far.</ResponseField>
+<ResponseField name="failed" type="number">Pages that failed.</ResponseField>
+<ResponseField name="creditsUsed" type="number">Credits consumed so far. One per scraped page.</ResponseField>
+<ResponseField name="pages" type="object[]">
+  Per-page results, each with `url`, `status` (`queued`, `running`, `completed`, `failed`), `depth`, `error`, and `data` (the scraped page, once completed).
+</ResponseField>
+
+<Note>
+  A crawl costs one credit per page scraped, reflected in `creditsUsed`. Scope the job with `limit`, `maxDepth`, and path filters to keep spend predictable, and preview reach first with [Map](/endpoints/map).
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Crawl API reference" icon="code" href="/api-reference">
+    Full request and response schema with a live playground.
+  </Card>
+  <Card title="Map a site" icon="sitemap" href="/endpoints/map">
+    Preview a crawl's scope without scraping.
+  </Card>
+  <Card title="Scrape a list of URLs" icon="list" href="/endpoints/batch">
+    When you already have the URLs.
+  </Card>
+  <Card title="Scrape one URL" icon="file-lines" href="/endpoints/scrape">
+    The per-page primitive behind a crawl.
+  </Card>
+</CardGroup>

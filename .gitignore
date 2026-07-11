@@ -1,0 +1,3 @@
+# Mintlify CLI local cache + any local deps
+.mintlify/
+node_modules/

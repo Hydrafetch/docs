@@ -1,0 +1,169 @@
+---
+title: "Search"
+description: "Search the web and get ranked results, each scraped to clean data."
+---
+
+`POST /v1/web/search` runs a query against the web and returns ranked results. By default every result comes back with its page already fetched and cleaned, so a single call turns a question into a set of LLM-ready documents — no second round of scraping.
+
+## When to use it
+
+- You know what you're looking for but not the exact URLs — let a query find the pages.
+- You want the top few sources on a topic returned as clean Markdown, ready to feed a model.
+- You need to bias results to a region, a recency window, or a specific set of domains.
+
+Search is synchronous: send the query, get results back in one response.
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/search \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "best open source vector databases",
+    "limit": 3,
+    "timeRange": "month"
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/search", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    query: "best open source vector databases",
+    limit: 3,
+    timeRange: "month",
+  }),
+});
+const { data } = await res.json();
+for (const r of data.results) {
+  console.log(r.rank, r.title, r.url);
+  console.log(r.data?.markdown);
+}
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/search",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={
+        "query": "best open source vector databases",
+        "limit": 3,
+        "timeRange": "month",
+    },
+)
+for r in res.json()["data"]["results"]:
+    print(r["rank"], r["title"], r["url"])
+    print((r["data"] or {}).get("markdown"))
+```
+
+</CodeGroup>
+
+## Example response
+
+Each result carries its rank, the usual title/url/snippet, and a `data` object holding the scraped page. When scraping is off or a page can't be fetched, `data` is `null`.
+
+```json
+{
+  "data": {
+    "query": "best open source vector databases",
+    "engine": "web",
+    "results": [
+      {
+        "title": "Best open source vector databases",
+        "url": "https://example.com/vector-databases",
+        "snippet": "A rundown of the leading open source vector databases and how they compare.",
+        "rank": 1,
+        "data": {
+          "url": "https://example.com/vector-databases",
+          "finalUrl": "https://example.com/vector-databases",
+          "status": 200,
+          "metadata": { "title": "Best open source vector databases", "pageType": "article" },
+          "markdown": "# Best open source vector databases\n\n..."
+        }
+      }
+    ]
+  }
+}
+```
+
+## Key options
+
+<ParamField body="query" type="string" required>
+  What to search the web for. Up to 500 characters.
+</ParamField>
+
+<ParamField body="limit" type="number" default="engine default">
+  How many ranked results to return, from 1 to 15.
+</ParamField>
+
+<ParamField body="scrapeResults" type="boolean" default="true">
+  When `true`, each result comes back with its page fetched and returned as clean data. Set `false` to get just the ranked title, url, and snippet — useful when you only need to discover URLs.
+</ParamField>
+
+<ParamField body="scrapeOptions" type="object">
+  How to scrape each result, using the same options as [Scrape](/endpoints/scrape) — pick `formats`, force JavaScript rendering, set a per-page `timeout`, choose a `location`, and more. Applied to every result. Ignored when `scrapeResults` is `false`.
+</ParamField>
+
+<ParamField body="timeRange" type="string">
+  Restrict results to a recency window relative to now: `day`, `week`, `month`, or `year`.
+</ParamField>
+
+<ParamField body="country" type="string">
+  ISO 3166 alpha-2 country code (for example `us`, `de`) to bias results toward a region.
+</ParamField>
+
+<ParamField body="includeDomains" type="string[]">
+  Only return results from these domains. Up to 15.
+</ParamField>
+
+<ParamField body="excludeDomains" type="string[]">
+  Drop results from these domains. Up to 15.
+</ParamField>
+
+## Response fields
+
+<ResponseField name="data.query" type="string">
+  The query you searched.
+</ResponseField>
+
+<ResponseField name="data.engine" type="string">
+  The search source the results came from.
+</ResponseField>
+
+<ResponseField name="data.results" type="object[]">
+  The ranked results. Each item has `title`, `url`, `snippet`, `rank`, and `data` — the scraped page, or `null` when scraping is off or the page could not be fetched.
+</ResponseField>
+
+## Billing
+
+You're charged **1 credit for the search**, plus **1 credit for each result that is actually scraped**. A search with `scrapeResults` set to `false` costs just the 1 credit. As always, you're charged only on success, and the response reports what it consumed.
+
+<Note>
+  Richer `scrapeOptions` formats on each result can raise the per-result cost, the same way they do for a direct scrape. See [Credits](/concepts/credits).
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Scrape" icon="file-lines" href="/endpoints/scrape">
+    The per-result scrape engine behind search, on a single URL.
+  </Card>
+  <Card title="Extract" icon="table-cells" href="/endpoints/extract">
+    Turn found pages into schema-shaped JSON, or let extract run its own web search.
+  </Card>
+  <Card title="Formats" icon="layer-group" href="/concepts/formats">
+    Everything `scrapeOptions` can return per result.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Full `POST /v1/web/search` schema and a live playground.
+  </Card>
+</CardGroup>

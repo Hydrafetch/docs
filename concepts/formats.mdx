@@ -1,0 +1,139 @@
+---
+title: "Formats"
+description: "Choose exactly what a scrape returns — Markdown, HTML, links, the page's own structured data, a summary, or schema-shaped JSON."
+---
+
+A scrape returns whatever you ask for. Set the `formats` array on the request to pick one or more outputs; omit it and you get clean Markdown. Each format you request shows up as its own field on the response `data`, so you can request several at once and read them side by side.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "formats": ["markdown", "structured", "links"]
+  }'
+```
+
+## The formats
+
+<ParamField body="markdown" type="string" default="true">
+  Clean Markdown of the page's main content, with navigation, boilerplate, and cruft stripped. This is the default when `formats` is omitted. Returned on `data.markdown`.
+</ParamField>
+
+<ParamField body="html" type="string">
+  The main content as cleaned HTML — the same content selection as Markdown, but with tags preserved. Use it when you need structure Markdown can't carry. Returned on `data.html`.
+</ParamField>
+
+<ParamField body="rawHtml" type="string">
+  The page's unmodified HTML, exactly as delivered. Nothing is cleaned or dropped. Returned on `data.rawHtml`.
+</ParamField>
+
+<ParamField body="links" type="object">
+  Every link on the page, split into `internal` (same site) and `external` (other sites). Returned on `data.links`.
+</ParamField>
+
+<ParamField body="structured" type="object">
+  The page's own machine-authored data — JSON-LD, microdata, OpenGraph, and RDFa — normalized for you. Returned on `data.structured`. No LLM is involved, so it's the cheapest and highest-fidelity way to get typed data a page already publishes about itself. See below.
+</ParamField>
+
+<ParamField body="summary" type="string">
+  A concise, factual summary of the page, generated for you. Returned on `data.summary`. Adds one credit.
+</ParamField>
+
+<ParamField body="json" type="object">
+  Schema- or prompt-shaped JSON, produced by reading the page against the instructions in `jsonOptions`. Returned on `data.json`. Adds four credits.
+</ParamField>
+
+## Structured data, in depth
+
+The `structured` format reads the data a page publishes about itself and hands it back in a consistent shape. Because it reflects what the page already declares, it's exact — no interpretation, no cost beyond the base scrape.
+
+You get both a normalized view and the raw source:
+
+<ResponseField name="entities" type="array">
+  One deduplicated list of typed entities gathered from every syntax on the page. Each entry has:
+
+  <Expandable title="entity">
+    <ResponseField name="type" type="string">
+      The entity's type, e.g. `Product`, `Article`, `Organization`.
+    </ResponseField>
+    <ResponseField name="source" type="string">
+      Where it came from: `json-ld`, `microdata`, `rdfa`, or `opengraph`.
+    </ResponseField>
+    <ResponseField name="properties" type="object">
+      The entity's properties, as published on the page.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="jsonLd / microdata / opengraph / rdfa" type="array">
+  The raw blocks for each syntax, exactly as found, for when you want the unmerged source.
+</ResponseField>
+
+```json
+{
+  "structured": {
+    "entities": [
+      {
+        "type": "Product",
+        "source": "json-ld",
+        "properties": { "name": "Widget", "price": "49.00", "priceCurrency": "USD" }
+      }
+    ],
+    "jsonLd": [],
+    "microdata": [],
+    "opengraph": [],
+    "rdfa": []
+  }
+}
+```
+
+<Note>
+  Prefer `structured` when a page already publishes what you need — product prices, article metadata, event details. Reach for `json` only when the data isn't declared on the page and has to be read out of the prose.
+</Note>
+
+## Shaping the `json` format
+
+When you request `json`, tell Hydrafetch what shape you want with `jsonOptions`. Provide a `schema`, a `prompt`, or both — the schema fixes field names and types while the prompt guides what to pull.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/products/widget",
+    "formats": ["json"],
+    "jsonOptions": {
+      "prompt": "Extract the product name, price, and availability.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "inStock": { "type": "boolean" }
+        }
+      }
+    }
+  }'
+```
+
+<Warning>
+  Requesting `json` without a `schema` or `prompt` in `jsonOptions` is a validation error. One of the two is required.
+</Warning>
+
+## Formats compose
+
+Request as many formats as you like in a single call. Each returns on its own field, and the credit cost is the base scrape plus the surcharge for any premium formats you included.
+
+| Format | Cost |
+| --- | --- |
+| `markdown`, `html`, `rawHtml`, `links`, `structured` | Base scrape (1 credit) |
+| `summary` | +1 credit |
+| `json` | +4 credits |
+
+So a call for `["markdown", "structured"]` costs 1 credit, `["markdown", "summary"]` costs 2, and `["markdown", "summary", "json"]` costs 6. Every response reports the exact total on `usage.creditsUsed`.
+
+<Card title="Next: Credits & billing" icon="coins" href="/concepts/credits">
+  How each format and endpoint is priced, and how charge-on-success works.
+</Card>

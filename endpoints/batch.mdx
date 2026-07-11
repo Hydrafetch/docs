@@ -1,0 +1,199 @@
+---
+title: "Batch"
+description: "Scrape an explicit list of URLs as one asynchronous job."
+---
+
+Batch scrapes a list of URLs you provide, together, as a single asynchronous job. There is no discovery — you supply the exact URLs. You get a `batchId` back immediately, then poll it or register a webhook to collect the results. One credit per URL scraped.
+
+## Batch vs. crawl
+
+<CardGroup cols={2}>
+  <Card title="Batch" icon="list">
+    You provide the URLs. No discovery. Best when you already know exactly which pages you want.
+  </Card>
+  <Card title="Crawl" icon="sitemap" href="/endpoints/crawl">
+    Hydrafetch discovers the URLs from a starting page. Best when you want a whole site or section.
+  </Card>
+</CardGroup>
+
+## When to use
+
+- You have a known set of URLs (from your own database, a sitemap, or a [Map](/endpoints/map) call) and want them all scraped in one job.
+- You want the same scrape options applied uniformly across every URL.
+
+## Example request
+
+Send a `POST` to `/v1/web/batch` with `urls` and, optionally, shared `scrapeOptions`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/batch \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": [
+      "https://example.com/a",
+      "https://example.com/b",
+      "https://example.com/c"
+    ],
+    "scrapeOptions": { "formats": ["markdown", "structured"] }
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/batch", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    urls: [
+      "https://example.com/a",
+      "https://example.com/b",
+      "https://example.com/c",
+    ],
+    scrapeOptions: { formats: ["markdown", "structured"] },
+  }),
+});
+const { batchId } = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/batch",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={
+        "urls": [
+            "https://example.com/a",
+            "https://example.com/b",
+            "https://example.com/c",
+        ],
+        "scrapeOptions": {"formats": ["markdown", "structured"]},
+    },
+)
+batch_id = res.json()["batchId"]
+```
+
+</CodeGroup>
+
+## Example response
+
+The batch is accepted right away:
+
+```json
+{ "batchId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
+```
+
+## Request options
+
+<ParamField body="urls" type="string[]" required>
+  The explicit list of URLs to scrape. Each must be `http(s)`. 1–1000 URLs.
+</ParamField>
+
+<ParamField body="scrapeOptions" type="object">
+  How to scrape each URL — `formats`, `onlyMainContent`, `includeTags`, `excludeTags`, `removeBase64Images`, `blockAds`, `renderJs`, `waitFor`, `timeout`, `location`, `headers`, `preferStructure`, `maxAge`. Same options as a single [Scrape](/endpoints/scrape), with per-page formats limited to `markdown`, `html`, `rawHtml`, `links`, and `structured`.
+</ParamField>
+
+<ParamField body="webhook" type="object">
+  Register a callback instead of polling. `webhook.url` receives progress and completion events; `webhook.headers` are extra headers sent with each callback (e.g. for authentication).
+</ParamField>
+
+## Poll for results
+
+Poll `GET /v1/web/batch/{id}` for progress and per-URL results. The response shares the same shape as a crawl status, with `kind` set to `batch`.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.hydrafetch.com/v1/web/batch/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+  -H "X-API-Key: hf_your_key_here"
+```
+
+```javascript Node
+const res = await fetch(
+  `https://api.hydrafetch.com/v1/web/batch/${batchId}`,
+  { headers: { "X-API-Key": "hf_your_key_here" } },
+);
+const status = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.get(
+    f"https://api.hydrafetch.com/v1/web/batch/{batch_id}",
+    headers={"X-API-Key": "hf_your_key_here"},
+)
+status = res.json()
+```
+
+</CodeGroup>
+
+```json
+{
+  "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "kind": "batch",
+  "status": "running",
+  "seedUrl": null,
+  "total": 3,
+  "completed": 2,
+  "failed": 0,
+  "creditsUsed": 2,
+  "pages": [
+    {
+      "url": "https://example.com/a",
+      "status": "completed",
+      "depth": 0,
+      "error": null,
+      "data": {
+        "url": "https://example.com/a",
+        "finalUrl": "https://example.com/a",
+        "status": 200,
+        "cached": false,
+        "metadata": { "title": "Page A", "pageType": "article", "wordCount": 512 },
+        "usage": { "creditsUsed": 1, "creditsRemaining": 4996, "freshness": "fresh" },
+        "markdown": "# Page A\n\n..."
+      }
+    }
+  ]
+}
+```
+
+## Response fields
+
+<ResponseField name="id" type="string">The batch id.</ResponseField>
+<ResponseField name="kind" type="string">`batch` for a batch job.</ResponseField>
+<ResponseField name="status" type="string">Overall job state: `running`, `completed`, `failed`, or `cancelled`.</ResponseField>
+<ResponseField name="seedUrl" type="string">`null` for a batch — there is no starting URL to discover from.</ResponseField>
+<ResponseField name="total" type="number">Total URLs in this job.</ResponseField>
+<ResponseField name="completed" type="number">URLs scraped so far.</ResponseField>
+<ResponseField name="failed" type="number">URLs that failed.</ResponseField>
+<ResponseField name="creditsUsed" type="number">Credits consumed so far. One per scraped URL.</ResponseField>
+<ResponseField name="pages" type="object[]">
+  Per-URL results, each with `url`, `status` (`queued`, `running`, `completed`, `failed`), `depth`, `error`, and `data` (the scraped page, once completed).
+</ResponseField>
+
+<Note>
+  A batch costs one credit per URL scraped, reflected in `creditsUsed`. Failed URLs do not consume a credit — you are only charged on success.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Batch API reference" icon="code" href="/api-reference">
+    Full request and response schema with a live playground.
+  </Card>
+  <Card title="Crawl a whole site" icon="sitemap" href="/endpoints/crawl">
+    When you want us to discover the URLs.
+  </Card>
+  <Card title="Map a site" icon="list" href="/endpoints/map">
+    Enumerate a site's URLs to feed into a batch.
+  </Card>
+  <Card title="Scrape one URL" icon="file-lines" href="/endpoints/scrape">
+    The per-page primitive behind a batch.
+  </Card>
+</CardGroup>

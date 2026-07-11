@@ -1,0 +1,55 @@
+---
+title: "Changelog"
+description: "What's new in the Hydrafetch API."
+---
+
+<Update label="July 2026" tags={["Web Extraction"]}>
+
+## Trustworthy extraction
+
+Structured extraction now returns, per field, how confident it is and the exact passage a value came from. Turn it on with `showConfidence` and `showSources`.
+
+- Extract across a whole site: pass a `/*` scope in `urls` and every discovered page is merged into one result.
+- New `entities` primitive returns normalized people, companies, and products found on a page.
+- Every response reports the credits it consumed and how fresh the data is.
+
+</Update>
+
+<Update label="July 2026" tags={["Web Scraping"]}>
+
+## Dedicated format endpoints
+
+Prefer a single, purpose-built route? Each output now has its own endpoint, alongside the flexible `/scrape`.
+
+- `POST /v1/web/markdown` for clean Markdown
+- `POST /v1/web/html` for cleaned main-content HTML
+- `POST /v1/web/raw-html` for unmodified page HTML
+- `POST /v1/web/links` for a page's links
+- `POST /v1/web/structured` for the page's own structured data
+
+They share every option and response shape with `/scrape`, so you can switch anytime.
+
+</Update>
+
+<Update label="June 2026" tags={["Web Scraping"]}>
+
+## Search, crawl, and media
+
+- **Search** the web and get ranked results, each scraped to clean data. Filter by time, domain, and country.
+- **Crawl** a whole site as one asynchronous job, with completion webhooks so you do not have to poll.
+- **Media**: capture a full-page screenshot or collect a page's images.
+
+</Update>
+
+<Update label="June 2026" tags={["Platform"]}>
+
+## Launch
+
+The first public version of the Hydrafetch API.
+
+- `POST /v1/web/scrape` takes one URL and returns clean Markdown and structured data.
+- `POST /v1/web/map` discovers every URL on a site.
+- Credit-based billing, charged only on success, with a live balance on every response.
+- API-key authentication through the `X-API-Key` header.
+
+</Update>

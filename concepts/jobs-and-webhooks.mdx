@@ -1,0 +1,159 @@
+---
+title: "Jobs & webhooks"
+description: "When calls return immediately, when they run as background jobs, and how to get results by polling or webhook."
+---
+
+Some calls finish in the moment; others run long enough to hand back a job you follow up on. Hydrafetch keeps the shape predictable: a synchronous result comes back as `{ data }`, and a job comes back as an id you poll — or a webhook that calls you when it's done.
+
+## Scrape: synchronous by default
+
+A scrape waits for the result and returns it inline. You get `{ data }` with the formats you asked for.
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "status": 200,
+    "markdown": "# Example Domain\n\n..."
+  }
+}
+```
+
+If a scrape runs past the synchronous wait — or if you set `async: true` — it returns a job id instead, with a `201`:
+
+```json
+{
+  "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "status": "queued"
+}
+```
+
+Poll it until it's done:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+  -H "X-API-Key: hf_your_key_here"
+```
+
+```javascript Node
+const res = await fetch(
+  "https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43",
+  { headers: { "X-API-Key": "hf_your_key_here" } },
+);
+const job = await res.json();
+```
+
+</CodeGroup>
+
+The status response reports the job state and, once finished, the page:
+
+<ResponseField name="status" type="string">
+  `waiting`, `active`, `completed`, or `failed`.
+</ResponseField>
+<ResponseField name="data" type="object">
+  The scraped page, present when `status` is `completed`.
+</ResponseField>
+<ResponseField name="error" type="string">
+  Set when `status` is `failed`.
+</ResponseField>
+
+<Note>
+  Set `async: true` up front when you know a page is heavy — a JavaScript-rendered app, a long settle time — so your request never blocks waiting for it.
+</Note>
+
+## Crawl and batch: always async
+
+A crawl (discover and scrape a whole site) and a batch (scrape an explicit list of URLs) always run as background jobs. Starting one returns an id immediately with a `201`:
+
+<CodeGroup>
+
+```json Crawl
+{
+  "crawlId": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "status": "queued"
+}
+```
+
+```json Batch
+{
+  "batchId": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "status": "queued"
+}
+```
+
+</CodeGroup>
+
+You then track it one of two ways.
+
+<Tabs>
+  <Tab title="Poll">
+    Request the job's status endpoint for live progress and per-page results:
+
+    ```bash
+    curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+      -H "X-API-Key: hf_your_key_here"
+    ```
+
+    Batches use `GET /v1/web/batch/{id}`. Both return the same status shape:
+
+    ```json
+    {
+      "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+      "kind": "crawl",
+      "status": "running",
+      "total": 100,
+      "completed": 42,
+      "failed": 1,
+      "creditsUsed": 42,
+      "pages": [
+        { "url": "https://example.com/blog/post", "status": "completed", "depth": 1, "data": { } }
+      ]
+    }
+    ```
+
+    `status` moves through `running` to `completed` (or `failed` / `cancelled`). Each entry in `pages` carries its own `status` and, once done, its scraped `data`.
+  </Tab>
+  <Tab title="Webhook">
+    Register a `webhook` when you start the job and Hydrafetch calls you as it progresses — including the full status when it finishes — so you don't have to poll.
+
+    ```bash
+    curl -X POST https://api.hydrafetch.com/v1/web/crawl \
+      -H "X-API-Key: hf_your_key_here" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://example.com",
+        "limit": 100,
+        "webhook": {
+          "url": "https://your-app.com/hooks/hydrafetch",
+          "headers": { "Authorization": "Bearer your-token" }
+        }
+      }'
+    ```
+
+    <ParamField body="webhook.url" type="string" required>
+      Where to POST progress and completion events. Must be http(s).
+    </ParamField>
+    <ParamField body="webhook.headers" type="object">
+      Extra headers sent with each callback — use them to authenticate the request to your endpoint.
+    </ParamField>
+
+    <Note>
+      The webhook and polling aren't exclusive. You can register a webhook and still poll the status endpoint whenever you want.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Which calls return what
+
+| Call | Default | Long-running |
+| --- | --- | --- |
+| Scrape | `{ data }` inline | `{ jobId, status }` — poll `GET /v1/web/scrape/{id}` |
+| Crawl | Always `{ crawlId, status }` | Poll `GET /v1/web/crawl/{id}` or register a webhook |
+| Batch | Always `{ batchId, status }` | Poll `GET /v1/web/batch/{id}` or register a webhook |
+| Map, Search, Extract | `{ data }` inline | — |
+
+<Card title="Next: Errors" icon="triangle-exclamation" href="/concepts/errors">
+  The structured error model and every status you'll see.
+</Card>

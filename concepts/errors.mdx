@@ -1,0 +1,113 @@
+---
+title: "Errors"
+description: "A single structured error shape, standard HTTP statuses, and stable codes you can branch on."
+---
+
+Every error returns the same JSON shape with a standard HTTP status. There's one thing to parse, whatever went wrong.
+
+```json
+{
+  "statusCode": 400,
+  "code": "VALIDATION_ERROR",
+  "message": "url must be a valid http(s) URL."
+}
+```
+
+<ResponseField name="statusCode" type="number">
+  The HTTP status, mirrored in the body for convenience.
+</ResponseField>
+<ResponseField name="code" type="string">
+  A stable, machine-readable code. Branch on this — the wording of `message` may change; the code won't.
+</ResponseField>
+<ResponseField name="message" type="string">
+  A human-readable explanation of what went wrong.
+</ResponseField>
+
+<Note>
+  Failed calls are free. Because credits are charged only on success, an error never costs you anything — see [Credits](/concepts/credits).
+</Note>
+
+## Statuses
+
+<AccordionGroup>
+  <Accordion title="400 — Validation error" icon="circle-exclamation">
+    The request body didn't pass validation — a missing `url`, a non-http scheme, an out-of-range `maxAge`, or requesting the `json` format without `jsonOptions`. Fix the request and retry.
+
+    ```json
+    {
+      "statusCode": 400,
+      "code": "VALIDATION_ERROR",
+      "message": "jsonOptions.schema or jsonOptions.prompt is required when requesting the json format."
+    }
+    ```
+  </Accordion>
+  <Accordion title="401 — Unauthorized" icon="key">
+    The `X-API-Key` header is missing, malformed, or revoked. The check runs before any work, so a rejected request never costs credits. See [Authentication](/authentication).
+
+    ```json
+    {
+      "statusCode": 401,
+      "code": "UNAUTHORIZED",
+      "message": "Invalid API key."
+    }
+    ```
+  </Accordion>
+  <Accordion title="402 — Insufficient credits" icon="coins">
+    Your workspace doesn't have enough credits to cover the call. It's rejected up front, before any work runs, so nothing is charged. Top up and retry.
+
+    ```json
+    {
+      "statusCode": 402,
+      "code": "INSUFFICIENT_CREDITS",
+      "message": "Not enough credits to complete this request."
+    }
+    ```
+  </Accordion>
+  <Accordion title="404 — Not found" icon="magnifying-glass">
+    The resource doesn't exist — an unknown job, crawl, or batch id — or a `cacheOnly` scrape found no fresh capture to serve. A `cacheOnly` miss is expected and never triggers a live fetch; see [Caching](/concepts/caching).
+
+    ```json
+    {
+      "statusCode": 404,
+      "code": "NOT_FOUND",
+      "message": "No cached capture available for this URL."
+    }
+    ```
+  </Accordion>
+  <Accordion title="429 — Rate limited" icon="gauge-high">
+    You've sent requests faster than your allowance. Back off and retry after a short delay, ideally with exponential backoff.
+
+    ```json
+    {
+      "statusCode": 429,
+      "code": "RATE_LIMITED",
+      "message": "Too many requests. Slow down and retry shortly."
+    }
+    ```
+  </Accordion>
+  <Accordion title="5xx — Server error" icon="server">
+    Something went wrong on our side, or the target page couldn't be delivered within the time budget. These are safe to retry — the failed call wasn't charged.
+
+    ```json
+    {
+      "statusCode": 500,
+      "code": "INTERNAL_ERROR",
+      "message": "An unexpected error occurred. Please retry."
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Handling errors
+
+Read `code` to decide what to do, not the HTTP status alone:
+
+- **`VALIDATION_ERROR`** — fix the request; retrying as-is won't help.
+- **`UNAUTHORIZED`** — check the key.
+- **`INSUFFICIENT_CREDITS`** — top up, then retry.
+- **`NOT_FOUND`** — for `cacheOnly`, fall back to a live fetch if you want the page.
+- **`RATE_LIMITED` and `5xx`** — retry with exponential backoff.
+
+<Warning>
+  Job-level failure is different from a request error. A crawl or batch returns `200` while individual pages may fail — check each page's `status` and `error` in the job's `pages` array, and the job's own `status` for `failed` or `cancelled`. See [Jobs & webhooks](/concepts/jobs-and-webhooks).
+</Warning>

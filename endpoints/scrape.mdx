@@ -1,0 +1,263 @@
+---
+title: "Scrape"
+description: "One URL in, clean LLM-ready data out — in the formats you ask for."
+---
+
+Scrape is the core primitive. Send a single URL and get it back the way a model wants to read it: clean Markdown, the page's own structured data, extracted JSON, links, or a summary. You describe the formats and how the page should be fetched; Hydrafetch handles the rest.
+
+## When to use
+
+- You have a specific URL and want clean content from it right now.
+- You need more than Markdown — the page's structured data, its links, or an LLM summary.
+- You want control over how the page is fetched: render JavaScript-heavy pages, wait for content to settle, or fetch as if from another country.
+
+For a whole site, use [Crawl](/endpoints/crawl). For an explicit list of URLs, use [Batch](/endpoints/batch).
+
+## Example request
+
+Send a `POST` to `/v1/web/scrape` with your key in the `X-API-Key` header. Omit `formats` for Markdown only.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "formats": ["markdown", "links", "structured"]
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/scrape", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: "https://example.com",
+    formats: ["markdown", "links", "structured"],
+  }),
+});
+const { data } = await res.json();
+console.log(data.markdown);
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/scrape",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={
+        "url": "https://example.com",
+        "formats": ["markdown", "links", "structured"],
+    },
+)
+print(res.json()["data"]["markdown"])
+```
+
+</CodeGroup>
+
+## Example response
+
+The response is `{ "data": ... }`. Only the formats you requested appear as fields; `metadata` and `usage` are always present.
+
+```json
+{
+  "data": {
+    "url": "https://example.com",
+    "finalUrl": "https://example.com/",
+    "status": 200,
+    "cached": false,
+    "metadata": {
+      "title": "Example Domain",
+      "pageType": "article",
+      "wordCount": 214
+    },
+    "usage": { "creditsUsed": 1, "creditsRemaining": 4999, "freshness": "fresh" },
+    "markdown": "# Example Domain\n\nThis domain is for use in illustrative examples...",
+    "links": {
+      "internal": ["https://example.com/about"],
+      "external": ["https://www.iana.org/domains/example"]
+    },
+    "structured": {
+      "entities": [
+        { "type": "Organization", "source": "json-ld", "properties": { "name": "Example" } }
+      ],
+      "jsonLd": [],
+      "microdata": [],
+      "opengraph": [],
+      "rdfa": [],
+      "appState": []
+    }
+  }
+}
+```
+
+## Request options
+
+### Content
+
+<ParamField body="url" type="string" required>
+  The URL to scrape. Must be `http(s)`.
+</ParamField>
+
+<ParamField body="formats" type="string[]" default="[&quot;markdown&quot;]">
+  What to return: `markdown`, `html`, `rawHtml`, `links`, `structured`, `summary`, `json`. `structured` is the page's own data (cheapest, no LLM); `summary` and `json` are LLM-backed and cost more. When you request `json`, supply `jsonOptions`.
+</ParamField>
+
+<ParamField body="jsonOptions" type="object">
+  Schema and/or prompt for the `json` format. Provide `jsonOptions.schema` (a JSON Schema describing the shape you want) and/or `jsonOptions.prompt` (a natural-language instruction). One is required when `json` is requested.
+</ParamField>
+
+<ParamField body="preferStructure" type="boolean" default="false">
+  Preserve document structure (headings, lists, tables) over prose density. Good for marketing and service pages.
+</ParamField>
+
+### Content filters
+
+<ParamField body="onlyMainContent" type="boolean" default="true">
+  Return only the main content, dropping nav and boilerplate.
+</ParamField>
+
+<ParamField body="includeTags" type="string[]">
+  CSS selectors to keep. When set, only matching elements are considered. Up to 50.
+</ParamField>
+
+<ParamField body="excludeTags" type="string[]">
+  CSS selectors to strip before extraction. Up to 50.
+</ParamField>
+
+<ParamField body="removeBase64Images" type="boolean" default="true">
+  Strip inline base64 images from the output.
+</ParamField>
+
+<ParamField body="blockAds" type="boolean" default="true">
+  Remove common ad and tracking elements.
+</ParamField>
+
+### Fetch controls
+
+<ParamField body="renderJs" type="boolean">
+  Force full page rendering for JavaScript-heavy pages. Left to Hydrafetch when omitted.
+</ParamField>
+
+<ParamField body="waitFor" type="number">
+  Extra milliseconds to let the page settle before capture. 0–30000.
+</ParamField>
+
+<ParamField body="timeout" type="number">
+  Overall time budget for the request, in milliseconds. 1000–120000.
+</ParamField>
+
+<ParamField body="location" type="object">
+  Fetch the page as if from a given region. `location.country` is an ISO 3166 alpha-2 code (e.g. `"us"`); `location.languages` is a list of preferred content languages, most-preferred first (e.g. `["en-US", "en"]`).
+</ParamField>
+
+<ParamField body="headers" type="object">
+  Extra request headers to send when fetching the page.
+</ParamField>
+
+### Caching
+
+<ParamField body="maxAge" type="number">
+  Serve from cache if a capture of this URL is younger than this many milliseconds. Omit for the default window; `0` always fetches fresh. Capped at 7 days (604800000).
+</ParamField>
+
+<ParamField body="cacheOnly" type="boolean" default="false">
+  Only serve from cache. If there is no fresh cached copy, return `404` instead of fetching.
+</ParamField>
+
+<ParamField body="storeInCache" type="boolean" default="true">
+  Persist the capture for later re-extraction.
+</ParamField>
+
+### Async
+
+<ParamField body="async" type="boolean" default="false">
+  Return a job id immediately instead of waiting for the result. Poll `GET /v1/web/scrape/{id}`.
+</ParamField>
+
+## Response fields
+
+<ResponseField name="data" type="object">
+  <Expandable title="WebScrapeData">
+    <ResponseField name="url" type="string">The URL you requested.</ResponseField>
+    <ResponseField name="finalUrl" type="string">The final URL after any redirects.</ResponseField>
+    <ResponseField name="status" type="number">HTTP status of the fetched page.</ResponseField>
+    <ResponseField name="cached" type="boolean">Whether this result was served from cache.</ResponseField>
+    <ResponseField name="warning" type="string">Set when the page was returned with a caveat (e.g. partial content).</ResponseField>
+    <ResponseField name="metadata" type="object">`title`, `pageType` (article, listing, forum, docs...), and `wordCount` of the main content.</ResponseField>
+    <ResponseField name="usage" type="object">`creditsUsed` (charged only on success), `creditsRemaining` (your balance after this call), and `freshness` (`cache` or `fresh`).</ResponseField>
+    <ResponseField name="markdown" type="string">Clean Markdown of the main content. Present when `markdown` is requested.</ResponseField>
+    <ResponseField name="html" type="string">Cleaned main-content HTML. Present when `html` is requested.</ResponseField>
+    <ResponseField name="rawHtml" type="string">The unmodified page HTML. Present when `rawHtml` is requested.</ResponseField>
+    <ResponseField name="links" type="object">`internal` and `external` link lists. Present when `links` is requested.</ResponseField>
+    <ResponseField name="structured" type="object">The page's own structured data, normalised into typed entities. Present when `structured` is requested.</ResponseField>
+    <ResponseField name="summary" type="string">A concise factual summary. Present when `summary` is requested.</ResponseField>
+    <ResponseField name="json" type="object">Schema-shaped JSON. Present when `json` is requested.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Synchronous vs. async
+
+By default, a scrape waits and returns `{ "data": ... }` with the page. If you set `async: true` — or if the fetch runs past the synchronous wait — you instead get a job id:
+
+```json
+{ "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
+```
+
+Poll it until it finishes:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+  -H "X-API-Key: hf_your_key_here"
+```
+
+```javascript Node
+const res = await fetch(
+  `https://api.hydrafetch.com/v1/web/scrape/${jobId}`,
+  { headers: { "X-API-Key": "hf_your_key_here" } },
+);
+const job = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.get(
+    f"https://api.hydrafetch.com/v1/web/scrape/{job_id}",
+    headers={"X-API-Key": "hf_your_key_here"},
+)
+job = res.json()
+```
+
+</CodeGroup>
+
+The status response carries `status` (`waiting`, `active`, `completed`, or `failed`), plus `data` once completed or `error` if it failed.
+
+<Note>
+  A standard scrape is one credit. LLM-backed formats (`summary`, `json`) cost more. Every response reports what it consumed in `usage.creditsUsed` and your balance in `usage.creditsRemaining`, and you are only charged on success.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Scrape API reference" icon="code" href="/api-reference">
+    Full request and response schema with a live playground.
+  </Card>
+  <Card title="Formats" icon="layer-group" href="/concepts/formats">
+    Markdown, structured data, extracted JSON, and more.
+  </Card>
+  <Card title="Crawl a whole site" icon="sitemap" href="/endpoints/crawl">
+    Discover and scrape every page as one job.
+  </Card>
+  <Card title="Scrape a list of URLs" icon="list" href="/endpoints/batch">
+    Provide an explicit set of URLs to scrape together.
+  </Card>
+</CardGroup>

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "luma",
+  "name": "Hydrafetch",
+  "colors": {
+    "primary": "#0891B2",
+    "light": "#34E0F2",
+    "dark": "#0E7490"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "background": {
+    "decoration": "grid",
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#080B0F"
+    }
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/lockup-light.svg",
+    "dark": "/logo/lockup-dark.svg"
+  },
+  "fonts": {
+    "heading": {
+      "family": "General Sans",
+      "source": "/fonts/GeneralSans-Semibold.woff2",
+      "format": "woff2",
+      "weight": 600
+    },
+    "body": {
+      "family": "General Sans",
+      "source": "/fonts/GeneralSans-Regular.woff2",
+      "format": "woff2",
+      "weight": 400
+    }
+  },
+  "styling": {
+    "eyebrows": "section",
+    "codeblocks": "dark"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get started",
+            "icon": "/icons/rocket.svg",
+            "pages": ["introduction", "quickstart", "authentication"]
+          },
+          {
+            "group": "Core concepts",
+            "icon": "/icons/book.svg",
+            "pages": [
+              "concepts/formats",
+              "concepts/credits",
+              "concepts/caching",
+              "concepts/jobs-and-webhooks",
+              "concepts/errors"
+            ]
+          },
+          {
+            "group": "Web Scraping",
+            "icon": "/icons/markdown.svg",
+            "pages": [
+              "endpoints/scrape",
+              "endpoints/map",
+              "endpoints/crawl",
+              "endpoints/batch",
+              "endpoints/search",
+              "endpoints/media"
+            ]
+          },
+          {
+            "group": "Web Extraction",
+            "icon": "/icons/brackets-sparkle.svg",
+            "pages": ["endpoints/extract"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.json"
+      },
+      {
+        "tab": "Changelog",
+        "pages": ["changelog"]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "type": "github",
+        "label": "GitHub",
+        "href": "https://github.com/hydrafetch"
+      },
+      { "label": "Support", "href": "mailto:team@hydrafetch.com" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get API key",
+      "href": "https://app.hydrafetch.com"
+    }
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/hydrafetch",
+      "x": "https://x.com/hydrafetch"
+    }
+  }
+}
