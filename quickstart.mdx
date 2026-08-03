@@ -52,7 +52,7 @@ print(res.json()["data"]["markdown"])
 
 ## 3. Read the response
 
-Every scrape returns the page plus metadata and what the call cost:
+Every scrape returns the page, the page's own metadata, how much to trust the extraction, and what the call cost:
 
 ```json
 {
@@ -61,12 +61,25 @@ Every scrape returns the page plus metadata and what the call cost:
     "finalUrl": "https://example.com/",
     "status": 200,
     "cached": false,
-    "metadata": { "title": "Example Domain", "pageType": "article", "wordCount": 19 },
+    "metadata": {
+      "title": "Example Domain",
+      "pageType": "article",
+      "wordCount": 19,
+      "description": "Illustrative examples in documents.",
+      "language": "en",
+      "author": null,
+      "siteName": null,
+      "publishedTime": null,
+      "image": null
+    },
+    "quality": { "confidence": 0.94, "complete": true, "blocked": false },
     "usage": { "creditsUsed": 1, "creditsRemaining": 4999, "freshness": "fresh" },
     "markdown": "# Example Domain\n\nThis domain is for use in illustrative examples..."
   }
 }
 ```
+
+`metadata` is what the page declares about itself — any field the page doesn't publish comes back `null`. `quality` tells you how much to trust the extraction; see [Extraction quality](/concepts/quality).
 
 ## 4. Ask for more
 

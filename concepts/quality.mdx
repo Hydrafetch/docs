@@ -1,0 +1,61 @@
+---
+title: "Extraction quality"
+description: "Every scrape tells you how much to trust it — a per-page confidence score, a completeness flag, and a blocked flag."
+---
+
+Scraping at scale means some pages come back perfect and some come back thin, gated, or empty — and a pipeline that can't tell the difference silently poisons everything downstream. Every scrape response carries a `quality` object so your code can decide, per page, whether to use the result, retry it, or route it for review.
+
+```json
+{
+  "data": {
+    "url": "https://example.com/article",
+    "quality": {
+      "confidence": 0.94,
+      "complete": true,
+      "blocked": false
+    }
+  }
+}
+```
+
+All three signals are computed deterministically from the extraction itself — no LLM is involved, so the same page always scores the same and the check adds no cost or latency.
+
+## `confidence`
+
+A number from `0` to `1`. Hydrafetch measures the page's content in independent ways and compares the results: when the independent measurements corroborate each other on substantial content, confidence is high. When the page yields almost nothing, or the measurements disagree sharply (a sign one of them failed), confidence drops.
+
+As a rule of thumb:
+
+- **≥ 0.8** — trust it. The content was substantial and corroborated.
+- **0.4 – 0.8** — usable, but worth a look if the page matters. Something about the page made it hard to read cleanly.
+- **< 0.4** — treat as unreliable. The result is thin, empty, or gated.
+
+## `complete`
+
+`true` when the result captured the bulk of the content available on the page; `false` when the result looks thin or truncated relative to what the page holds. A request for the whole page (`onlyMainContent: false`) is complete by definition — you asked for everything and got it.
+
+## `blocked`
+
+`true` when the page appeared to be behind a challenge or bot wall and no real content could be recovered. A blocked result always carries low `confidence` and `complete: false`, and is never cached — retrying later (or with different options) can succeed.
+
+<Note>
+  Low-quality results are not cached, so a retry always re-attempts the page rather than re-serving a bad capture.
+</Note>
+
+## Using it in a pipeline
+
+```python
+result = hydrafetch.scrape(url)
+q = result["data"]["quality"]
+
+if q["blocked"]:
+    retry_later(url)
+elif q["confidence"] < 0.4 or not q["complete"]:
+    flag_for_review(url, result)
+else:
+    ingest(result["data"]["markdown"])
+```
+
+<Card title="Next: Credits" icon="coins" href="/concepts/credits">
+  How usage is metered and what each operation costs.
+</Card>

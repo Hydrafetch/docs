@@ -127,23 +127,80 @@ You then track it one of two ways.
         "limit": 100,
         "webhook": {
           "url": "https://your-app.com/hooks/hydrafetch",
+          "events": ["page", "completed"],
+          "secret": "whsec_a_long_random_string",
           "headers": { "Authorization": "Bearer your-token" }
         }
       }'
     ```
 
+    Two events fire:
+
+    | Event | When |
+    | --- | --- |
+    | `crawl.page` / `batch.page` | Each time a page finishes — carries that page's `status` and scraped `data`. |
+    | `crawl.completed` / `batch.completed` | Once, when the job reaches a terminal state — carries the full status. |
+
     <ParamField body="webhook.url" type="string" required>
-      Where to POST progress and completion events. Must be http(s).
+      Where to POST events. Must be a **public** http(s) URL — private, loopback, and link-local addresses are rejected with a `400`.
+    </ParamField>
+    <ParamField body="webhook.events" type="string[]">
+      Which events to receive: `page`, `completed`, or both. Defaults to both. Use `["completed"]` if you only want the final result and not a call per page.
     </ParamField>
     <ParamField body="webhook.headers" type="object">
       Extra headers sent with each callback — use them to authenticate the request to your endpoint.
     </ParamField>
+    <ParamField body="webhook.secret" type="string">
+      A shared secret. When set, every callback is signed so you can verify it really came from Hydrafetch. See [Verifying a webhook](#verifying-a-webhook).
+    </ParamField>
+
+    <Note>
+      Deliveries are durable. If your endpoint is down or returns a non-2xx, we retry with exponential backoff (up to 6 attempts) rather than dropping the event.
+    </Note>
 
     <Note>
       The webhook and polling aren't exclusive. You can register a webhook and still poll the status endpoint whenever you want.
     </Note>
   </Tab>
 </Tabs>
+
+## Verifying a webhook
+
+Your webhook endpoint is a public URL, so anyone who finds it can POST to it. Set a `webhook.secret` and we sign every callback, letting you prove a request came from us and reject anything that didn't.
+
+Each signed delivery carries these headers:
+
+| Header | What it is |
+| --- | --- |
+| `X-Hydrafetch-Signature` | `t=<timestamp>,v1=<hmac>` — HMAC-SHA256 of `<timestamp>.<raw body>`, keyed with your secret |
+| `X-Hydrafetch-Timestamp` | Unix seconds at send time |
+| `X-Hydrafetch-Event` | The event, e.g. `crawl.completed` |
+| `X-Hydrafetch-Delivery` | Unique id for this delivery attempt |
+
+To verify, recompute the HMAC over the **raw request body** — not a re-serialized version of the parsed JSON, which may produce different bytes and never match:
+
+```python
+import hashlib, hmac, time
+
+def verify(raw_body: bytes, signature_header: str, secret: str, tolerance_s: int = 300) -> bool:
+    parts = dict(p.split("=", 1) for p in signature_header.split(","))
+    timestamp, received = parts["t"], parts["v1"]
+
+    # Reject anything too old — this is what stops a captured call being replayed at you later.
+    if abs(time.time() - int(timestamp)) > tolerance_s:
+        return False
+
+    expected = hmac.new(
+        secret.encode(), f"{timestamp}.".encode() + raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, received)  # constant-time
+```
+
+<Warning>
+  Compare signatures in constant time (`hmac.compare_digest`, `crypto.timingSafeEqual`) — a plain `==` leaks timing information. And always check the timestamp: a signature alone stays valid forever, so without a freshness window a captured delivery can be replayed at you.
+</Warning>
+
+The timestamp is signed along with the body, so an attacker cannot take a real delivery and re-send it under a fresh timestamp. If you don't set a secret, callbacks are still sent — just unsigned.
 
 ## Which calls return what
 
