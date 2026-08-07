@@ -1,29 +1,43 @@
 ---
 title: "Hydrafetch"
-description: "Turn any URL into clean, LLM-ready data through one API."
-mode: "custom"
+sidebarTitle: "Introduction"
+description: "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract — one API, one credit a page."
+mode: "wide"
+"og:image": "/images/og/home.png"
 ---
 
-<div className="hf-wrap">
+{/* `mode: "wide"` hides only the TOC panel and keeps the sidebar, footer and
+    next-page nav. `mode: "custom"` strips everything but the navbar, which is
+    what made an earlier version of this page look unfinished. */}
 
-<div className="hf-hero">
-  <span className="hf-eyebrow">The web, LLM-ready</span>
+Hydrafetch is a web data API for LLMs and agents. Send a URL and get back clean Markdown, the page's own structured data, schema-shaped JSON, links, or a summary. Both panels below are real responses from the live API — the same Wikipedia article, scraped two different ways.
 
-  <h1 className="hf-title">
-    Turn any URL into <span className="hf-acc">clean, LLM-ready data</span>.
-  </h1>
-
-  <p className="hf-sub">
-    One API for scraping, crawling, search, and structured extraction. Point it at a
-    link, a whole site, or a query. Get back Markdown, JSON, and structured entities a
-    model can use right away.
-  </p>
-
-  <div className="hf-cta">
-    <a className="hf-btn hf-btn-primary" href="/quickstart">Quickstart →</a>
-    <a className="hf-btn hf-btn-ghost" href="https://app.hydrafetch.com">$ Get an API key</a>
-  </div>
+<div className="hidden dark:block">
+<Columns cols={2}>
+  <Card title="Clean Markdown" img="/images/home/scrape-dark.png" href="/endpoints/scrape">
+    The page ships 59,769 tokens of nav, scripts and boilerplate. Your model reads
+    6,831 tokens of article.
+  </Card>
+  <Card title="Structured data" img="/images/home/structured-dark.png" href="/concepts/formats">
+    Every page also comes back as normalized fields — title, site, type, language,
+    published date — with no LLM involved.
+  </Card>
+</Columns>
 </div>
+<div className="block dark:hidden">
+<Columns cols={2}>
+  <Card title="Clean Markdown" img="/images/home/scrape-light.png" href="/endpoints/scrape">
+    The page ships 59,769 tokens of nav, scripts and boilerplate. Your model reads
+    6,831 tokens of article.
+  </Card>
+  <Card title="Structured data" img="/images/home/structured-light.png" href="/concepts/formats">
+    Every page also comes back as normalized fields — title, site, type, language,
+    published date — with no LLM involved.
+  </Card>
+</Columns>
+</div>
+
+## Start here
 
 <CardGroup cols={3}>
   <Card title="Scrape" icon="/icons/markdown.svg" href="/endpoints/scrape">
@@ -132,5 +146,3 @@ https://api.hydrafetch.com/v1/web
 ```
 
 Ready to make your first call? Head to the [Quickstart](/quickstart).
-
-</div>

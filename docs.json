@@ -1,20 +1,24 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "luma",
+  "theme": "aspen",
   "name": "Hydrafetch",
+  "description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract \u2014 one API, one credit a page.",
   "colors": {
     "primary": "#0891B2",
-    "light": "#34E0F2",
-    "dark": "#0E7490"
+    "light": "#22D3EE",
+    "dark": "#0891B2"
   },
   "appearance": {
     "default": "dark"
   },
   "background": {
-    "decoration": "grid",
+    "image": {
+      "light": "/images/bg/dither-light.png",
+      "dark": "/images/bg/dither-dark.png"
+    },
     "color": {
       "light": "#FFFFFF",
-      "dark": "#080B0F"
+      "dark": "#0A0F14"
     }
   },
   "favicon": "/favicon.svg",
@@ -37,8 +41,10 @@
     }
   },
   "styling": {
-    "eyebrows": "section",
-    "codeblocks": "dark"
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": "kanagawa-wave"
+    }
   },
   "navigation": {
     "tabs": [
@@ -48,7 +54,11 @@
           {
             "group": "Get started",
             "icon": "/icons/rocket.svg",
-            "pages": ["introduction", "quickstart", "authentication"]
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
           },
           {
             "group": "Core concepts",
@@ -77,7 +87,9 @@
           {
             "group": "Web Extraction",
             "icon": "/icons/brackets-sparkle.svg",
-            "pages": ["endpoints/extract"]
+            "pages": [
+              "endpoints/extract"
+            ]
           }
         ]
       },
@@ -87,7 +99,9 @@
       },
       {
         "tab": "Changelog",
-        "pages": ["changelog"]
+        "pages": [
+          "changelog"
+        ]
       }
     ]
   },
@@ -98,21 +112,76 @@
         "label": "GitHub",
         "href": "https://github.com/hydrafetch"
       },
-      { "label": "Support", "href": "mailto:team@hydrafetch.com" }
+      {
+        "label": "Support",
+        "href": "mailto:team@hydrafetch.com"
+      }
     ],
     "primary": {
       "type": "button",
-      "label": "Get API key",
+      "label": "Start for free",
       "href": "https://app.hydrafetch.com"
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "mcp"
+    ]
   },
   "footer": {
     "socials": {
       "github": "https://github.com/hydrafetch",
       "x": "https://x.com/hydrafetch"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          {
+            "label": "Dashboard",
+            "href": "https://app.hydrafetch.com"
+          },
+          {
+            "label": "Quickstart",
+            "href": "https://docs.hydrafetch.com/quickstart"
+          },
+          {
+            "label": "API reference",
+            "href": "https://docs.hydrafetch.com/api-reference"
+          }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "Changelog",
+            "href": "https://docs.hydrafetch.com/changelog"
+          },
+          {
+            "label": "Status",
+            "href": "https://api.hydrafetch.com/health"
+          },
+          {
+            "label": "Support",
+            "href": "mailto:team@hydrafetch.com"
+          }
+        ]
+      }
+    ]
+  },
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "og:type": "website",
+      "og:site_name": "Hydrafetch Docs",
+      "twitter:card": "summary_large_image",
+      "og:description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract \u2014 one API, one credit a page."
     }
   }
 }

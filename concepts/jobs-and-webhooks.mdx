@@ -202,6 +202,32 @@ def verify(raw_body: bytes, signature_header: str, secret: str, tolerance_s: int
 
 The timestamp is signed along with the body, so an attacker cannot take a real delivery and re-send it under a fresh timestamp. If you don't set a secret, callbacks are still sent — just unsigned.
 
+## Checking whether a delivery landed
+
+A webhook that never arrives is the hardest kind of bug to chase from your side, so we keep the delivery history and expose it. Every callback we attempted for a job is listed, with its status, how many attempts we made, and what your endpoint returned last.
+
+```bash
+curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43/deliveries \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY"
+```
+
+Batches use the same shape at `GET /v1/web/batch/{id}/deliveries`.
+
+<ResponseField name="deliveries" type="object[]">
+  <Expandable title="WebhookDelivery">
+    <ResponseField name="id" type="string">Delivery id.</ResponseField>
+    <ResponseField name="event" type="string">The event this delivery carried.</ResponseField>
+    <ResponseField name="status" type="string">`pending` while retries remain, `success` once delivered, `failed` once we gave up.</ResponseField>
+    <ResponseField name="attempts" type="number">How many delivery attempts have been made.</ResponseField>
+    <ResponseField name="responseStatus" type="number | null">The HTTP status your endpoint returned on the last attempt.</ResponseField>
+    <ResponseField name="error" type="string | null">Why the last attempt failed, if it did.</ResponseField>
+    <ResponseField name="deliveredAt" type="string | null">When the delivery succeeded (ISO 8601).</ResponseField>
+    <ResponseField name="createdAt" type="string">When the delivery was first created (ISO 8601).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+A `failed` row with a `responseStatus` of 5xx usually means your endpoint was down when we called; one with a 4xx means we reached you and you rejected it — check the signature verification above before assuming the payload is wrong.
+
 ## Which calls return what
 
 | Call | Default | Long-running |

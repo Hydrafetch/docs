@@ -3,6 +3,26 @@ title: "Changelog"
 description: "What's new in the Hydrafetch API."
 ---
 
+<Update label="August 2026" tags={["Web Scraping"]}>
+
+## See whether your webhooks landed
+
+Every callback we attempt for a crawl or batch is now recorded and readable, so a webhook that never arrives is something you can diagnose instead of guess at.
+
+- `GET /v1/web/crawl/{id}/deliveries` and `GET /v1/web/batch/{id}/deliveries`
+- Each delivery reports its status, attempt count, the HTTP status your endpoint returned, and why the last attempt failed
+- A `failed` row with a 5xx means we couldn't reach you; a 4xx means we did and you rejected it
+
+</Update>
+
+<Update label="August 2026" tags={["Platform"]}>
+
+## Errors you can branch on
+
+Every error now returns the same envelope with a stable, machine-readable `code`. Branch on the code — the wording of `message` may change, the code won't. Each response also carries a `requestId` to quote if you need us to look something up.
+
+</Update>
+
 <Update label="July 2026" tags={["Web Extraction"]}>
 
 ## Trustworthy extraction
