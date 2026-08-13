@@ -2,24 +2,14 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
   "name": "Hydrafetch",
-  "description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract \u2014 one API, one credit a page.",
+  "description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract with one API, one credit a page.",
   "colors": {
     "primary": "#0891B2",
     "light": "#22D3EE",
     "dark": "#0891B2"
   },
   "appearance": {
-    "default": "dark"
-  },
-  "background": {
-    "image": {
-      "light": "/images/bg/dither-light.png",
-      "dark": "/images/bg/dither-dark.png"
-    },
-    "color": {
-      "light": "#FFFFFF",
-      "dark": "#0A0F14"
-    }
+    "default": "system"
   },
   "favicon": "/favicon.svg",
   "logo": {
@@ -32,19 +22,10 @@
       "source": "/fonts/GeneralSans-Semibold.woff2",
       "format": "woff2",
       "weight": 600
-    },
-    "body": {
-      "family": "General Sans",
-      "source": "/fonts/GeneralSans-Regular.woff2",
-      "format": "woff2",
-      "weight": 400
     }
   },
   "styling": {
-    "eyebrows": "breadcrumbs",
-    "codeblocks": {
-      "theme": "kanagawa-wave"
-    }
+    "eyebrows": "breadcrumbs"
   },
   "navigation": {
     "tabs": [
@@ -94,6 +75,31 @@
         ]
       },
       {
+        "tab": "Help Center",
+        "groups": [
+          {
+            "group": "Your account",
+            "pages": [
+              "help/account",
+              "help/api-keys",
+              "help/team"
+            ]
+          },
+          {
+            "group": "Plans and billing",
+            "pages": [
+              "help/billing"
+            ]
+          },
+          {
+            "group": "Getting unstuck",
+            "pages": [
+              "help/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Reference",
         "openapi": "https://api.hydrafetch.com/openapi.json"
       },
@@ -107,11 +113,6 @@
   },
   "navbar": {
     "links": [
-      {
-        "type": "github",
-        "label": "GitHub",
-        "href": "https://github.com/hydrafetch"
-      },
       {
         "label": "Support",
         "href": "mailto:team@hydrafetch.com"
@@ -181,7 +182,7 @@
       "og:type": "website",
       "og:site_name": "Hydrafetch Docs",
       "twitter:card": "summary_large_image",
-      "og:description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract \u2014 one API, one credit a page."
+      "og:description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract with one API, one credit a page."
     }
   }
 }

@@ -1,0 +1,68 @@
+---
+title: "API keys"
+description: "Creating keys, rotating them, and what to do if one leaks."
+---
+
+An API key authenticates every call you make. Keys belong to the **workspace**, not to you personally, so a key keeps working when the person who created it leaves.
+
+## Creating a key
+
+Create keys from the dashboard. A key looks like this:
+
+```
+hf_9Qvu23K6KuBhWx0ppLu8Tk_v5qbNr
+```
+
+You see the full value once, at creation. We store only a hash, so we cannot show it to you again or recover it for you. If you lose it, create another and revoke the old one.
+
+A workspace can hold up to **25 active keys**. Revoked keys do not count against that.
+
+## Using a key
+
+Send it as the `X-API-Key` header:
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: hf_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+The same key also authenticates MCP, as a bearer token, so an agent can connect without a separate credential. See [integrations](https://hydrafetch.com/integrations/) for the config each client expects.
+
+## Rotating a key
+
+Rotation is create, migrate, revoke, in that order:
+
+1. Create the new key.
+2. Deploy it wherever the old one is used.
+3. Confirm traffic has moved. The dashboard shows when each key was last used.
+4. Revoke the old key.
+
+Revocation takes effect immediately, so revoking before step 3 will break whatever is still holding the old key.
+
+Rotate on a schedule you can actually keep, and rotate immediately whenever someone with access leaves.
+
+## If a key leaks
+
+Revoke it first, ask questions second. A revoked key cannot be used again, and revocation is instant.
+
+Then check usage in the dashboard for calls you do not recognise. If you find any, write to [team@hydrafetch.com](mailto:team@hydrafetch.com) with the key prefix and roughly when you think it leaked, and we will help you work out what was called.
+
+Keys committed to a public repository are found by scanners in minutes, so treat any key that has ever touched a commit as leaked, even if you removed it in a later commit. Git history keeps it.
+
+## Keeping keys out of your code
+
+Read the key from the environment rather than pasting it into source:
+
+```python
+import os, httpx
+
+res = httpx.post(
+    "https://api.hydrafetch.com/v1/web/scrape",
+    headers={"X-API-Key": os.environ["HYDRAFETCH_API_KEY"]},
+    json={"url": "https://example.com"},
+)
+```
+
+For a client-side application, do not ship the key at all. Call your own backend, and let it hold the key.

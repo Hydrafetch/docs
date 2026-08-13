@@ -1,0 +1,64 @@
+---
+title: "Troubleshooting"
+description: "The errors people actually hit, what each one means, and what to send us."
+---
+
+Most problems fall into one of a few buckets. Work down this page before writing in, and if you do write in, the last section says what to include.
+
+## My key is rejected
+
+A `401` means the key did not authenticate. In order of likelihood:
+
+- The key was revoked. Check the dashboard: revoked keys stay listed.
+- The header name is wrong. It is `X-API-Key`, not `Authorization`, for the REST API.
+- Whitespace crept in. A trailing newline from a shell variable is the classic one.
+- You are using the key from a different workspace than you think.
+
+For MCP the same key goes in an `Authorization: Bearer` header instead.
+
+## I am getting 402
+
+A `402` means the workspace cannot cover the call. We check the balance before doing any work, so nothing ran and you were not charged.
+
+Top up or upgrade in the dashboard. If the balance looks wrong, check whether the free credits expired: they are valid for 14 days from signup.
+
+## I am getting 429
+
+You are over your plan's requests-per-minute limit. Back off and retry: the response tells you how long to wait.
+
+If you are hitting the limit steadily rather than in bursts, that is a plan question rather than a retry question. The limit for each plan is on the [pricing page](https://hydrafetch.com/pricing/).
+
+## A page comes back empty or wrong
+
+First, check the `quality` object on the response. It carries a confidence figure and flags, and it usually says what happened before you have to guess.
+
+Some pages genuinely resist automated fetching. When we cannot deliver one, the response says so and **you are not billed for it**, so a failure costs you nothing but time.
+
+If a page that should work does not, send us the URL. This is the single most useful thing you can send us: extraction quality is measured against real pages, and a URL that comes back badly is what moves the number. Write to [support@hydrafetch.com](mailto:support@hydrafetch.com) with the URL, what you expected, and what came back.
+
+## My crawl is slower than I expected
+
+Crawls run as asynchronous jobs and pace themselves per host, because hammering one site is how you get blocked and how the site has a bad day. Depth, path rules and the page limit all affect how long a crawl takes.
+
+If you only need part of a site, `excludePaths` and a lower `maxDepth` will finish sooner and cost fewer credits. See [Crawl](/endpoints/crawl).
+
+Errors come back in one shape, and the request id is in it:
+
+```json
+{
+  "success": false,
+  "error": { "code": "UNAUTHORIZED", "message": "Missing X-API-Key header" },
+  "meta": { "requestId": "20a4290e-c4af-47c8-8eab-b05fdf6ff66e" }
+}
+```
+
+## What to send when you write in
+
+Include these and we can usually answer in one reply instead of three:
+
+- The request id. Every response carries an `x-request-id` header, and error bodies repeat it at `meta.requestId`. It lets us find the exact call in our logs.
+- The URL you were fetching, if the problem is about a specific page.
+- The workspace email you signed up with.
+- What you expected and what you got.
+
+Support goes to [support@hydrafetch.com](mailto:support@hydrafetch.com). Security reports go to [team@hydrafetch.com](mailto:team@hydrafetch.com) with "security" in the subject.

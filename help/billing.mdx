@@ -1,0 +1,44 @@
+---
+title: "Plans and billing"
+description: "Choosing a plan, what overage costs, and how refunds work."
+---
+
+Everything is priced in credits, and a page is one credit whatever it took to fetch. Failed requests are never billed. The full per-endpoint table lives in [Credits & billing](/concepts/credits).
+
+## Choosing a plan
+
+Plans differ in the credits included each month, the overage rate, the request rate limit, and how many people can be in the workspace. Every endpoint is on every plan: there are no feature gates.
+
+The [pricing page](https://hydrafetch.com/pricing/) has a slider. Put your expected pages a month into it and it names the plan that fits and what it would cost.
+
+If you are unsure, start lower than you think. Upgrading takes effect immediately and is prorated, so being on the wrong plan for a week costs very little. Being on too large a plan for a year does not.
+
+## What happens when credits run out
+
+Nothing breaks mid-job. Usage continues at your plan's overage rate, charged per 10,000 credits, and the rate is published on the pricing page for each plan.
+
+Overage always costs more per credit than the plan it sits on, and more than the plan above it. That is deliberate: if you are consistently in overage, upgrading is cheaper, and we would rather you upgrade than quietly pay more.
+
+## Changing plans
+
+| Change | When it applies | Credits |
+| --- | --- | --- |
+| Upgrade | Immediately, prorated | New allowance available at once |
+| Downgrade | Start of the next billing period | You keep what you have already paid for |
+| Cancel | End of the current period | Access continues until then |
+
+## Invoices and payment
+
+Payments and subscriptions are handled by [Kelviq](https://kelviq.com), our payment provider. Invoices arrive by email and are also available in the dashboard. We do not store full card numbers.
+
+## Refunds
+
+If a plan does not fit after your first charge, email [team@hydrafetch.com](mailto:team@hydrafetch.com) within **7 days of that charge** and we will review a refund. Unused credit packs are refundable within 7 days of purchase.
+
+After the first paid month we do not refund past periods, and overage is not refundable because it bills capacity you have already used. The full policy, including your statutory rights, is on the [refund policy](https://hydrafetch.com/refund-policy/) page.
+
+## Enterprise
+
+Past a million credits a month the published plans stop being the cheapest option. At that point pricing is quoted against your actual volume, alongside custom rate limits, invoicing and terms, and whatever your security review needs.
+
+[Book an enterprise call](https://hydrafetch.com/demo/?type=sales) and bring your expected volume.

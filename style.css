@@ -34,13 +34,3 @@ html {
 .tryit-button:hover {
   background: var(--hf-accent-hover) !important;
 }
-
-/* `background.image` renders as two `position: fixed; inset-0` spans inside
-   #body-content, AFTER #sidebar-content and with `z-index: auto` — so the image
-   paints over the sidebar and the nav disappears. They are pointer-events-none,
-   so hit-testing still finds the links and the DOM looks healthy; only the paint
-   is wrong. Mintlify's own #background-color span sits at -10; put these on the
-   same layer. */
-#body-content > span.fixed.inset-0.pointer-events-none {
-  z-index: -10;
-}

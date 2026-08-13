@@ -1,0 +1,37 @@
+---
+title: "Workspaces and team"
+description: "How workspaces hold credits and keys, and what each role can do."
+---
+
+A **workspace** is the unit that owns everything: the credit balance, the API keys, the subscription, and the usage history. People are members of a workspace.
+
+## Why workspaces matter
+
+Credits and keys belong to the workspace, not to individual members. That has two useful consequences:
+
+- Any key in the workspace draws from the same balance, so you do not have to top up per person.
+- A key keeps working after the person who created it leaves, so offboarding does not break production.
+
+Your data is logically isolated from other customers at the workspace boundary.
+
+## Roles
+
+| Role | Can do |
+| --- | --- |
+| Owner | Everything, including billing and deleting the workspace |
+| Admin | Manage members and API keys, view usage and billing |
+| Member | Use the API, create and revoke keys, view usage |
+
+There is one owner. Roles are set when you invite someone and can be changed later by an owner or admin.
+
+## Inviting people
+
+Invite from the dashboard using the email address they will sign in with. They get an invitation, create an account if they do not have one, and land in your workspace.
+
+How many members you can have depends on your plan. The [pricing page](https://hydrafetch.com/pricing/) lists the limit for each.
+
+## Removing someone
+
+Removing a member ends their access to the workspace immediately. It does **not** revoke keys they created, because those keys belong to the workspace and other systems may be using them.
+
+If the person had access to key values, rotate those keys as well. Removing the member and rotating the keys are two separate actions, and only doing the first is the common mistake.
