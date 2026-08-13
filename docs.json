@@ -48,6 +48,7 @@
               "concepts/formats",
               "concepts/quality",
               "concepts/credits",
+              "concepts/brand",
               "concepts/caching",
               "concepts/jobs-and-webhooks",
               "concepts/errors"

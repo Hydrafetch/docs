@@ -1,0 +1,73 @@
+---
+title: "Brand data"
+description: "Resolve a domain into the company ready to render: logos that survive a dark background, the palette the site actually uses, fonts, and socials. Every field says where it came from."
+---
+
+Give the API a domain and get back the company as something you can render. Not a favicon and a guessed hex code: logos with the background they are legible on, colours ranked by how much the site uses them, fonts, and socials.
+
+<Note>
+  Brand is in preview. The response shape is settled and it is billed like any other endpoint, but expect the field set to grow.
+</Note>
+
+## Why a favicon is not a logo
+
+Rendering another company inside your product needs three things a favicon cannot give you: a mark that survives a dark background, a colour that is genuinely theirs, and a name that matches. Scraping `/favicon.ico` and reading the first hex out of the stylesheet gets none of them.
+
+- Favicons are 32 pixels square and frequently a letter in a box.
+- The first colour in a stylesheet is usually a border, not the brand.
+- Nothing in the markup tells you which asset was drawn for a dark background.
+
+## Resolving a domain
+
+```bash
+curl "https://api.hydrafetch.com/v1/web/brand?domain=hydrafetch.com" \
+  -H "X-API-Key: hf_your_key"
+```
+
+Pass several domains at once by POSTing to the same path, or find a company by name with `/v1/web/brand/search`.
+
+## What comes back
+
+<ResponseField name="assets" type="array">
+  Logos, symbols, favicons and backdrops. Each carries a `kind`, a `variant` of `light`, `dark` or `mono` saying which background it is legible on, its `format` and `resolution`, the colours in the asset itself, and a `blurhash` so you can render a placeholder before the image lands.
+</ResponseField>
+
+<ResponseField name="colors" type="array">
+  The palette, each with a `hex`, the nearest CSS colour `name`, a `weight` for how much the site uses it, and sometimes a `role` of `primary`, `accent`, `background` or `text`. The weight is the point: it is what makes one of these the brand's colour rather than merely a colour on the page.
+</ResponseField>
+
+<ResponseField name="fonts" type="array">
+  Families with their `weight` and, where we can tell, a `role` of `heading` or `body`.
+</ResponseField>
+
+<ResponseField name="socials" type="array">
+  Platform, URL and the `handle` without the `@`, which is what makes a social row joinable against anything else you hold.
+</ResponseField>
+
+## Provenance is the point
+
+Every resolved field carries where it came from, because "their markup says this" and "a model guessed this" are not the same claim and should not look the same in your database.
+
+| Source | Means | Trust |
+| --- | --- | --- |
+| `declared` | The site said it, in JSON-LD, OpenGraph or microdata | Highest |
+| `harvested` | We processed the actual asset, or read it out of the site's own CSS | High |
+| `inferred` | A model produced it from the page | Useful, never presented as fact |
+| `external` | An enrichment source rather than the site itself | Depends on the source |
+
+Fields can also carry a `confidence`. Together these let you fall back rather than render something wrong: a low-confidence colour can defer to your own default, while a `declared` logo can be used without a second thought.
+
+## Design systems
+
+`/v1/web/styleguide` returns the design system behind the brand rather than the individual assets: the token-level view of how a site puts its colours and type together.
+
+```bash
+curl "https://api.hydrafetch.com/v1/web/styleguide?domain=hydrafetch.com" \
+  -H "X-API-Key: hf_your_key"
+```
+
+## What it costs
+
+A resolved domain is **5 credits**, the same as schema extraction, because the work behind it is model-backed and processes real binary assets. A domain we cannot resolve costs nothing.
+
+See [Credits & billing](/concepts/credits) for the full table, and the [Brand endpoints](/api-reference) for every parameter.
