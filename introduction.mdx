@@ -37,6 +37,26 @@ Hydrafetch is a web data API for LLMs and agents. Send a URL and get back clean 
 </Columns>
 </div>
 
+## Building with an agent
+
+These docs are written to be read by a model as well as a person. Every page is available as
+Markdown by appending `.md` to its URL, and the API describes itself at
+[`/mcp/tools`](https://api.hydrafetch.com/mcp/tools) and
+[`/openapi.json`](https://api.hydrafetch.com/openapi.json), both without a key.
+
+The fastest way to start is to let your agent read that and wire it up:
+
+```text Prompt
+Read https://hydrafetch.com/agents.md and set up Hydrafetch in this project.
+
+Use the HYDRAFETCH_API_KEY environment variable, never a hardcoded key. Then make one scrape call against a URL that is relevant to what this project does, and show me the markdown it returns and what it cost.
+```
+
+Published skills go further: [`where-to-use-hydrafetch`](https://hydrafetch.com/.well-known/agent-skills/where-to-use-hydrafetch/SKILL.md)
+audits a codebase for where we fit, and the
+[full index](https://hydrafetch.com/.well-known/agent-skills/index.json) covers scraping for
+context, company research, schema extraction and dataset building.
+
 ## Start here
 
 <CardGroup cols={3}>

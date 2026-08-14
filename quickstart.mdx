@@ -3,6 +3,22 @@ title: "Quickstart"
 description: "Make your first Hydrafetch call in under a minute."
 ---
 
+## Let your agent do the setup
+
+If you code with an agent, hand it this instead of reading the rest of this page. It reads our live endpoint list, looks at your project, and wires up the first call itself.
+
+```text Prompt
+Read https://hydrafetch.com/agents.md and set up Hydrafetch in this project.
+
+Use the HYDRAFETCH_API_KEY environment variable, never a hardcoded key. Then make one scrape call against a URL that is relevant to what this project does, and show me the markdown it returns and what it cost.
+```
+
+<Tip>
+  Already have a codebase and want to know where this belongs in it? Paste [this
+  prompt](https://hydrafetch.com/#where-it-fits) instead — it audits the repository and reports
+  which scraping code we would replace, with file paths and a credit estimate.
+</Tip>
+
 ## 1. Get your API key
 
 Your key lives in your [dashboard](https://app.hydrafetch.com). It looks like `hf_...` and is scoped to your workspace, which holds your credit balance. Keep it secret — treat it like a password.
