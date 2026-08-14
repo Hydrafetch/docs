@@ -5,6 +5,77 @@ description: "What's new in the Hydrafetch API."
 
 <Update label="August 2026" tags={["Web Scraping"]}>
 
+## One URL, one response shape
+
+A scrape used to wait, then hand back a job id if the page ran long. That meant a second code path most callers never wrote, appearing only on the rare slow page. It is gone.
+
+- A single URL is answered inline, always: `/scrape`, `/markdown`, `/html`, `/raw-html`, `/links` and `/structured`
+- The synchronous budget is 90 seconds. Past it you get `504` with code `REQUEST_TIMEOUT`, naming the budget
+- The fetch keeps running in the background after a timeout, so the capture usually lands in the cache and an immediate retry is fast
+- Want a job instead? Send `async: true`. It is opt-in now, never automatic
+- Crawl and batch are unchanged: they span many URLs and can genuinely run for minutes
+
+Set your own client timeout below 90 seconds if you want to give up sooner.
+
+</Update>
+
+<Update label="August 2026" tags={["MCP"]}>
+
+## Every sync endpoint is an MCP tool
+
+The MCP server now exposes the whole synchronous surface, and describes itself so you never have to guess what it can do.
+
+- New tools: `styleguide`, `screenshot` and `images`, joining `scrape`, `map`, `search`, `extract` and `brand`
+- `GET /mcp/tools` lists every tool with its description, credit cost and full JSON Schema — no authentication required, so a client can see the capabilities before connecting
+- Tools cost exactly what the equivalent REST call costs
+- The new tools sit under the existing `web:scrape` scope, so an existing grant needs no re-authorising
+
+Crawl and batch stay off MCP for now: they are jobs, and a tool call is not.
+
+</Update>
+
+<Update label="August 2026" tags={["Brand"]}>
+
+## Brand and styleguide
+
+Two endpoints that answer "what is this company" and "what does it look like" from nothing but a domain.
+
+- `GET /v1/web/brand` returns logos suited to light and dark backgrounds, the real brand colours, name, description and social profiles. Every field states whether the company declared it or we harvested it
+- `GET /v1/web/styleguide` reads the design system a site actually paints, from computed styles in a real browser, so a colour defined through four layers of CSS variables comes back as the hex it resolved to
+- Colours arrive by role with contrast ratios, so they drop into a theme without guesswork
+- `POST /v1/web/brand` resolves many domains in one call
+
+</Update>
+
+<Update label="August 2026" tags={["Platform"]}>
+
+## Billing that matches what you got
+
+Several cases where a call could be charged without delivering a usable page are now not billed at all.
+
+- An origin's own error page is no longer recorded as a delivered scrape
+- A response with no bytes is never treated as a success, whatever status the origin returned
+- A failed render no longer discards the static capture it was meant to improve on
+- Upstream failures surface as errors rather than empty `200`s
+
+Failures were always meant to be free. These were the paths where that promise leaked.
+
+</Update>
+
+<Update label="August 2026" tags={["Web Scraping"]}>
+
+## Ask for structure when you need it
+
+`preferStructure` keeps headings, lists and tables as real markdown. It was already on the REST API; it is now on the MCP tools too, so agents can ask for it.
+
+- `metadata.format` is now `metadata.structure`, reporting `markdown` or `plain`
+- `plain` is not a failure — the default extractor optimises for capturing every word and wins on listing and forum pages — but if you wanted headings, retry with `preferStructure: true`
+- Available on `scrape`, `search` and `extract` over both REST and MCP
+
+</Update>
+
+<Update label="August 2026" tags={["Web Scraping"]}>
+
 ## See whether your webhooks landed
 
 Every callback we attempt for a crawl or batch is now recorded and readable, so a webhook that never arrives is something you can diagnose instead of guess at.
