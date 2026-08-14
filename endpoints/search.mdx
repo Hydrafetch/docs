@@ -69,13 +69,13 @@ for r in res.json()["data"]["results"]:
 
 ## Example response
 
-Each result carries its rank, the usual title/url/snippet, and a `data` object holding the scraped page. When scraping is off or a page can't be fetched, `data` is `null`.
+Each result carries its rank and the usual title/url/snippet. Turn on `scrapeResults` and each one also carries a `data` object holding the scraped page; otherwise `data` is `null`.
 
 ```json
 {
   "data": {
     "query": "best open source vector databases",
-    "engine": "web",
+    "status": "ok",
     "results": [
       {
         "title": "Best open source vector databases",
@@ -101,12 +101,12 @@ Each result carries its rank, the usual title/url/snippet, and a `data` object h
   What to search the web for. Up to 500 characters.
 </ParamField>
 
-<ParamField body="limit" type="number" default="engine default">
+<ParamField body="limit" type="number" default="5">
   How many ranked results to return, from 1 to 15.
 </ParamField>
 
-<ParamField body="scrapeResults" type="boolean" default="true">
-  When `true`, each result comes back with its page fetched and returned as clean data. Set `false` to get just the ranked title, url, and snippet — useful when you only need to discover URLs.
+<ParamField body="scrapeResults" type="boolean" default="false">
+  When `true`, each result also comes back with its page fetched and returned as clean data, at **1 extra credit per page scraped**. Leave it off to get just the ranked title, url, and snippet for the flat search credit.
 </ParamField>
 
 <ParamField body="scrapeOptions" type="object">
@@ -135,17 +135,13 @@ Each result carries its rank, the usual title/url/snippet, and a `data` object h
   The query you searched.
 </ResponseField>
 
-<ResponseField name="data.engine" type="string">
-  The search source the results came from.
-</ResponseField>
-
 <ResponseField name="data.results" type="object[]">
-  The ranked results. Each item has `title`, `url`, `snippet`, `rank`, and `data` — the scraped page, or `null` when scraping is off or the page could not be fetched.
+  The ranked results. Each item has `title`, `url`, `snippet`, `rank`, and `data` — the scraped page when `scrapeResults` is on, otherwise `null`.
 </ResponseField>
 
 ## Billing
 
-You're charged **1 credit for the search**, plus **1 credit for each result that is actually scraped**. A search with `scrapeResults` set to `false` costs just the 1 credit. As always, you're charged only on success, and the response reports what it consumed.
+A search costs **1 credit**. If you turn on `scrapeResults`, each result that is actually scraped costs **1 more**, the same as scraping that page directly. Scraping is off by default, so a plain search is always 1 credit. As always, you're charged only on success, and the response reports what it consumed.
 
 <Note>
   Richer `scrapeOptions` formats on each result can raise the per-result cost, the same way they do for a direct scrape. See [Credits](/concepts/credits).

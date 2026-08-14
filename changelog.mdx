@@ -3,6 +3,22 @@ title: "Changelog"
 description: "What's new in the Hydrafetch API."
 ---
 
+<Update label="August 2026" tags={["Search"]}>
+
+## Search returns results; scraping them is opt-in
+
+`search` used to fetch every result's page by default, so a call that reads like one credit billed six. Scraping is now something you ask for.
+
+- A search costs **1 credit** and returns the ranked title, url and snippet
+- Set `scrapeResults: true` to also fetch each result, at **1 credit per page scraped**, the same as scraping that page yourself
+- `data` on each result is `null` unless you asked for the scrape
+
+If you were relying on the old default, add `scrapeResults: true` and the behaviour and cost are exactly what they were.
+
+The `engine` parameter and the `data.engine` response field are also gone. Which index answered is an implementation detail we route on for cost and availability, and pinning it stopped us falling back when an engine was unavailable.
+
+</Update>
+
 <Update label="August 2026" tags={["Web Scraping"]}>
 
 ## One URL, one response shape
