@@ -85,6 +85,22 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
+  <Accordion title="504 — Timed out" icon="clock">
+    The page ran past the 90-second synchronous budget. The fetch keeps going in the background, so
+    the capture usually lands in the cache and an immediate retry returns it quickly. Pages that hit
+    this are almost always behind heavy bot protection. If you would rather not wait at all, send
+    `async: true` and poll the job instead.
+
+    ```json
+    {
+      "statusCode": 504,
+      "code": "REQUEST_TIMEOUT",
+      "message": "Request exceeded its 90s budget and was cancelled.",
+      "details": { "budgetMs": 90000, "path": "scrape", "retryable": true }
+    }
+    ```
+  </Accordion>
+
   <Accordion title="5xx — Server error" icon="server">
     Something went wrong on our side, or the target page couldn't be delivered within the time budget. These are safe to retry — the failed call wasn't charged.
 
@@ -106,6 +122,7 @@ Read `code` to decide what to do, not the HTTP status alone:
 - **`UNAUTHORIZED`** — check the key.
 - **`INSUFFICIENT_CREDITS`** — top up, then retry.
 - **`NOT_FOUND`** — for `cacheOnly`, fall back to a live fetch if you want the page.
+- **`REQUEST_TIMEOUT`** — retry once; the background fetch usually makes the second call fast. Use `async: true` if you would rather not wait.
 - **`RATE_LIMITED` and `5xx`** — retry with exponential backoff.
 
 <Warning>

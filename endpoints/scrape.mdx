@@ -114,7 +114,9 @@ The response is `{ "data": ... }`. Only the formats you requested appear as fiel
 </ParamField>
 
 <ParamField body="preferStructure" type="boolean" default="false">
-  Preserve document structure (headings, lists, tables) over prose density. Good for marketing and service pages.
+  Preserve document structure (headings, lists, tables) over prose density. Good for marketing and service pages, where the headings *are* the content.
+
+  Leave it off and the extractor optimises for capturing every word, which scores better on articles but can return unstructured prose on listing-style pages. Check `metadata.structure` in the response: if it came back `plain` and you wanted markdown, retry with this on.
 </ParamField>
 
 ### Content filters
@@ -190,7 +192,8 @@ The response is `{ "data": ... }`. Only the formats you requested appear as fiel
     <ResponseField name="status" type="number">HTTP status of the fetched page.</ResponseField>
     <ResponseField name="cached" type="boolean">Whether this result was served from cache.</ResponseField>
     <ResponseField name="warning" type="string">Set when the page was returned with a caveat (e.g. partial content).</ResponseField>
-    <ResponseField name="metadata" type="object">`title`, `pageType` (article, listing, forum, docs...), and `wordCount` of the main content.</ResponseField>
+    <ResponseField name="metadata" type="object">`title`, `pageType` (article, listing, forum, docs...), `wordCount` of the main content, and `structure` — see below.</ResponseField>
+    <ResponseField name="metadata.structure" type="string">`markdown` when the content carries headings, lists and emphasis; `plain` when it is unstructured prose. `plain` is not an error: the default extractor optimises for capturing all the content and wins on listing and forum pages. If you need the structure, re-request with `preferStructure: true`.</ResponseField>
     <ResponseField name="usage" type="object">`creditsUsed` (charged only on success), `creditsRemaining` (your balance after this call), and `freshness` (`cache` or `fresh`).</ResponseField>
     <ResponseField name="markdown" type="string">Clean Markdown of the main content. Present when `markdown` is requested.</ResponseField>
     <ResponseField name="html" type="string">Cleaned main-content HTML. Present when `html` is requested.</ResponseField>
@@ -202,9 +205,18 @@ The response is `{ "data": ... }`. Only the formats you requested appear as fiel
   </Expandable>
 </ResponseField>
 
-## Synchronous vs. async
+## Synchronous by default
 
-By default, a scrape waits and returns `{ "data": ... }` with the page. If you set `async: true` — or if the fetch runs past the synchronous wait — you instead get a job id:
+A scrape waits and returns `{ "data": ... }` with the page. It never degrades to a job id on its own, so one URL means one response shape: the page, or an error explaining why not.
+
+The synchronous budget is **90 seconds**. A page that runs past it returns `504` with code `REQUEST_TIMEOUT`. The fetch keeps going in the background, so the capture usually lands in the cache and an immediate retry is fast and cheap.
+
+<Note>
+  Set your own client timeout below 90s if you want to give up sooner. Anything above it will never
+  fire, because ours cuts in first.
+</Note>
+
+If you would rather not wait at all, set `async: true` and get a job id instead:
 
 ```json
 { "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }

@@ -230,12 +230,16 @@ A `failed` row with a `responseStatus` of 5xx usually means your endpoint was do
 
 ## Which calls return what
 
-| Call | Default | Long-running |
+| Call | Response | If you ask for a job instead |
 | --- | --- | --- |
-| Scrape | `{ data }` inline | `{ jobId, status }` — poll `GET /v1/web/scrape/{id}` |
+| Scrape | `{ data }` inline, or `504` past 90s | `async: true` returns `{ jobId, status }` — poll `GET /v1/web/scrape/{id}` |
+| Map, Search, Extract | `{ data }` inline | — |
 | Crawl | Always `{ crawlId, status }` | Poll `GET /v1/web/crawl/{id}` or register a webhook |
 | Batch | Always `{ batchId, status }` | Poll `GET /v1/web/batch/{id}` or register a webhook |
-| Map, Search, Extract | `{ data }` inline | — |
+
+A single URL is always answered inline unless you opt out. Crawl and batch are jobs because they
+span many URLs and can run for minutes; one page cannot, so it does not get a second response shape
+you have to write code for.
 
 <Card title="Next: Errors" icon="triangle-exclamation" href="/concepts/errors">
   The structured error model and every status you'll see.
