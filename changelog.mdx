@@ -3,6 +3,20 @@ title: "Changelog"
 description: "What's new in the Hydrafetch API."
 ---
 
+<Update label="August 2026" tags={["Web Scraping"]}>
+
+## Rendering is ours to decide
+
+`renderJs` is gone from the API. Whether a page needs a browser is something we work out per page, and the flat one-credit price already assumes we get that right.
+
+- Nothing to change if you never sent it: behaviour is identical
+- If you did send `renderJs: true`, drop it. Pages that need rendering still render, automatically
+- Pages that do not need it are no longer rendered because a caller guessed they might
+
+Deciding this per URL was never something a caller could do accurately, because whether a page needs JavaScript is a property of the site and changes without warning. Guessing high wasted time on pages that did not need it; guessing low put empty shells in your index.
+
+</Update>
+
 <Update label="August 2026" tags={["Search"]}>
 
 ## Search returns results; scraping them is opt-in
