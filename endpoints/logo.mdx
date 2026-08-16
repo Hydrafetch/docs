@@ -1,0 +1,112 @@
+---
+title: "Logo"
+description: "A company's logo as an image URL you can drop straight into an img tag."
+---
+
+`GET https://img.hydrafetch.com/logo/{domain}` returns a company's logo as image bytes — not JSON, not a link to fetch afterwards. It is the brand engine's visible tip: the same pipeline behind [brand data](/concepts/brand), reduced to the one thing most people want from it.
+
+```html
+<img src="https://img.hydrafetch.com/logo/stripe.com?token=pk_your_publishable_key" alt="Stripe" />
+```
+
+Two things about this endpoint are different from every other one, and both are deliberate.
+
+<Card title="Logo serves never spend credits" icon="coins">
+  They are metered on their own per-cycle allowance. A page rendering forty logos costs you forty logo serves and zero credits.
+</Card>
+
+<Card title="The key goes in your markup" icon="key">
+  An `<img>` tag cannot send a header, so this endpoint takes a **publishable key** in the query string. It is designed to be public and reaches this endpoint and nothing else.
+</Card>
+
+## Publishable keys
+
+Create one in the dashboard alongside your secret keys. They start with `hf_pk_` and are safe to commit and safe to ship in client-side HTML.
+
+A publishable key **cannot** call `/v1/web/scrape`, `/v1/web/crawl`, or any other endpoint — those return `401`. It serves logos. That boundary is the reason it is safe to publish.
+
+You can lock a key to a list of domains. When you do, requests are checked against the `Referer`/`Origin` header and anything else is refused.
+
+<Warning>
+  **Domain locking is not access control.** `Referer` is set by the client, so anyone can send whatever value they like. It stops a key lifted from your page source being casually reused on someone else's site — a real and useful thing — but it will not stop someone determined.
+
+  It also does not apply to images already in the CDN cache. Once a URL has been served to an allowed domain, that exact URL is served from the edge without the check running, until its cache entry expires (up to 24 hours). For the same reason, revoking a key does not immediately stop already-cached URLs.
+
+  Your allowance and our anomaly detection are what actually bound abuse.
+</Warning>
+
+If you lock a key, make sure your pages actually send a referrer. A `Referrer-Policy` of `no-referrer` will get every request refused, and so will `<img referrerpolicy="no-referrer">`.
+
+## Options
+
+<ParamField query="token" type="string" required>
+  Your publishable key. Also accepted as an `X-API-Key` header if you are calling from a server.
+</ParamField>
+
+<ParamField query="size" default="128" type="number">
+  Longest edge in pixels, between 16 and 512. Rounded up to the nearest stored size.
+</ParamField>
+
+<ParamField query="theme" default="light" type="string">
+  The background you are drawing on: `light`, `dark`, or `auto`. `auto` prefers a single-colour mark that works on either.
+</ParamField>
+
+<ParamField query="type" default="icon" type="string">
+  `icon` for the square mark, `wordmark` for the full logotype. Falls back to whichever the brand has when it only has one.
+</ParamField>
+
+<ParamField query="fallback" default="monogram" type="string">
+  What to serve when we have no logo for the domain: `monogram` (a lettermark in the brand's colour), `transparent` (a 1×1 transparent pixel), or `404`.
+</ParamField>
+
+## Examples
+
+```html Dark background
+<img src="https://img.hydrafetch.com/logo/figma.com?token=pk_live_x&theme=dark&size=64" alt="Figma" />
+```
+
+```html Wordmark instead of the icon
+<img src="https://img.hydrafetch.com/logo/vercel.com?token=pk_live_x&type=wordmark" alt="Vercel" />
+```
+
+```html Hide the element when we have nothing
+<img src="https://img.hydrafetch.com/logo/example.com?token=pk_live_x&fallback=404" alt="" onerror="this.remove()" />
+```
+
+## A domain we have never seen
+
+The first request for an unknown domain resolves it on the spot and waits, rather than answering with a placeholder — a monogram on the first view reads as "they do not have this brand" when we are seconds away from having it.
+
+That wait is bounded. Past the budget the resolve finishes in the background and that one request gets the fallback; the next request is served from storage. Expect a cold domain to take a few seconds and every subsequent request to be immediate.
+
+## Caching
+
+A resolved logo is served with `Cache-Control: public, max-age=86400`, so browsers and CDNs keep it for a day. Fallbacks are cached far more briefly, so a domain that resolves later starts serving its real logo without you doing anything.
+
+Because logos are cached aggressively at the edge, most of your traffic never reaches us — and anything served from cache spends no allowance.
+
+## Billing
+
+Logo serves are metered per billing cycle against your plan's logo allowance, **separately from credits**. A logo serve never spends a credit, and a credit never buys a logo serve.
+
+Going over does not break your pages immediately: for **7 days** we keep answering with monogram placeholders instead of errors, so nothing on your site turns into a broken image while you notice and upgrade. After that grace period the endpoint returns an error. See [Plans and billing](/help/billing).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Brand data" icon="palette" href="/concepts/brand">
+    The full record behind this endpoint — logos, palette, fonts, socials.
+  </Card>
+
+  <Card title="API keys" icon="key" href="/help/api-keys">
+    Creating publishable and secret keys, and what to do if one leaks.
+  </Card>
+
+  <Card title="Credits & billing" icon="coins" href="/concepts/credits">
+    Why logo serves sit outside the credit model.
+  </Card>
+
+  <Card title="Errors" icon="triangle-exclamation" href="/concepts/errors">
+    What a 401, 403 or 429 from this endpoint means.
+  </Card>
+</CardGroup>

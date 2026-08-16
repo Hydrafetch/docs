@@ -9,7 +9,7 @@ An API key authenticates every call you make. Keys belong to the **workspace**, 
 
 Create keys from the dashboard. A key looks like this:
 
-```
+```text
 hf_9Qvu23K6KuBhWx0ppLu8Tk_v5qbNr
 ```
 
@@ -66,3 +66,20 @@ res = httpx.post(
 ```
 
 For a client-side application, do not ship the key at all. Call your own backend, and let it hold the key.
+
+## Publishable keys
+
+There is one exception, and it is a separate kind of key. A **publishable key** starts with `hf_pk_` and is designed to sit in your page source, because it authenticates the [Logo endpoint](/endpoints/logo) — and an `<img>` tag cannot send a header.
+
+A publishable key serves logos and nothing else. It cannot call `/v1/web/scrape` or any other endpoint; those return `401`. That boundary is what makes it safe to publish, so treat the two kinds differently:
+
+|  | Secret key (`hf_`) | Publishable key (`hf_pk_`) |
+| --- | --- | --- |
+| Where it belongs | Server-side only | Fine in client-side HTML |
+| What it reaches | Every endpoint | The logo endpoint only |
+| Spends credits | Yes | No — logo serves have their own allowance |
+| Visible after creation | No, shown once | Yes, any time in the dashboard |
+
+You can lock a publishable key to your own domains, which refuses requests whose `Referer`/`Origin` does not match. That stops a key lifted from your HTML being casually reused elsewhere. It is not access control — `Referer` is set by the client — and it does not apply to images already sitting in the CDN cache, so treat it as friction rather than a boundary.
+
+A leaked publishable key is not the emergency a leaked secret key is: the worst case is someone else's site consuming your logo allowance. Revoke it and issue a new one; already-cached images may keep serving for up to a day.
