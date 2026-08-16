@@ -64,7 +64,8 @@
               "endpoints/crawl",
               "endpoints/batch",
               "endpoints/search",
-              "endpoints/media"
+              "endpoints/media",
+              "endpoints/logo"
             ]
           },
           {
