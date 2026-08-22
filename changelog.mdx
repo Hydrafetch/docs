@@ -4,16 +4,47 @@ description: "What's new in the Hydrafetch API."
 icon: "rocket"
 ---
 
+<Update label="August 2026" tags={["Brand"]}>
+  ## Logos you can put straight in an `<img>` tag
+
+  A company's logo as an image URL, with no request to make first and no credits spent.
+
+  ```html
+  <img src="https://img.hydrafetch.com/logo/stripe.com?token=pk_your_publishable_key" alt="Stripe" />
+  ```
+
+  - **Publishable keys** (`hf_pk_`) are safe to commit and safe to ship in client-side markup. They serve logos and nothing else, so a key lifted from your page source cannot scrape on your account
+  - **Logo serves never spend credits.** They have their own per-cycle allowance, so a page rendering forty logos costs forty serves and zero credits
+  - Lock a key to your own domains if you want, and pick the size, theme and shape per URL
+  - Served from the edge, so the second visitor gets it immediately
+
+  There are drop-in components for React and a browser client if you would rather not build the URL yourself.
+</Update>
+
 <Update label="August 2026" tags={["Web Scraping"]}>
-  ## Rendering is ours to decide
+  ## PDFs come back as Markdown
 
-  `renderJs` is gone from the API. Whether a page needs a browser is something we work out per page, and the flat one-credit price already assumes we get that right.
+  Point `scrape` at a PDF and you get Markdown, the same as any page. No separate endpoint, no extra credits, one scrape.
 
-  - Nothing to change if you never sent it: behaviour is identical
-  - If you did send `renderJs: true`, drop it. Pages that need rendering still render, automatically
-  - Pages that do not need it are no longer rendered because a caller guessed they might
+  - Headings stay headings and tables stay tables, instead of collapsing into a flat run of text in reading order
+  - Works on anything with a text layer, including exports from Word, LaTeX and design tools
+  - Previously a PDF could come back carrying page markup rather than clean Markdown. It no longer does
 
-  Deciding this per URL was never something a caller could do accurately, because whether a page needs JavaScript is a property of the site and changes without warning. Guessing high wasted time on pages that did not need it; guessing low put empty shells in your index.
+  <Warning>
+    **Scanned PDFs are not supported.** A scan is a picture of a document with no text to read, so you get empty `markdown`, `complete: false`, `confidence: 0` and a `warning` saying exactly that. Retrying will not change it.
+  </Warning>
+</Update>
+
+<Update label="August 2026" tags={["Web Extraction"]}>
+  ## A publication date only when the page has one
+
+  `metadata.publishedTime` is now read from what the page actually declares, and is `null` when it declares nothing.
+
+  - A copyright year in a footer is no longer treated as a publication date. An undated pricing page used to come back "published 1 January" of whatever year the footer mentioned
+  - The same applies to the date line at the top of the Markdown: present when the page states one, absent when it does not
+  - Pages that declare a real date are unaffected
+
+  A wrong date is worse than no date, because you cannot tell it apart from a real one, and anything sorting or filtering on recency quietly inherits the error.
 </Update>
 
 <Update label="August 2026" tags={["Search"]}>
