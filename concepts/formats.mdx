@@ -122,6 +122,24 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
   Requesting `json` without a `schema` or `prompt` in `jsonOptions` is a validation error. One of the two is required.
 </Warning>
 
+## PDFs
+
+Point `scrape` at a PDF and you get Markdown, the same as any web page. No separate endpoint and no extra credits: a PDF is one scrape.
+
+The document's structure survives. Headings come back as headings and tables come back as Markdown tables, rather than as a flat run of text in reading order.
+
+```bash
+curl -sS --max-time 120 https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://arxiv.org/pdf/2605.21097","formats":["markdown"]}' \
+| jq -r '.data.markdown'
+```
+
+<Warning>
+  **Scanned PDFs are not supported.** A scan is an image of a document with no text layer, so there is nothing to extract without OCR, which we do not run. You get an empty `markdown`, `complete: false`, `confidence: 0`, and a `warning` saying the document is a scan. Retrying will not change the answer. Text-based PDFs, including exports from Word, LaTeX and design tools, are fully supported.
+</Warning>
+
 ## Formats compose
 
 Request as many formats as you like in a single call. Each returns on its own field, and the credit cost is the base scrape plus the surcharge for any premium formats you included.
