@@ -4,6 +4,72 @@ description: "What's new in the Hydrafetch API."
 icon: "rocket"
 ---
 
+<Update label="September 2026" tags={["Web Scraping"]}>
+  ## Endpoints that only answer a POST
+
+  Some data never appears in a page. It sits behind a JSON or GraphQL endpoint that will not answer a `GET`, and until now the URL was the only thing you could describe.
+
+  - `method: "POST"` and `body` send the request the endpoint expects. The body goes verbatim, and you set your own content type through `headers`, so JSON, form-encoded and anything else are all just a body and a header
+  - `GET` stays the default. Every existing call behaves exactly as before
+  - Bodies are capped at 64KB. A request body selects what an endpoint returns; anything larger is a file upload, which is a different thing and not one we do
+  - A `POST` and a `GET` to the same URL are cached separately, and so are two `POST`s with different bodies
+
+  Two limits worth knowing. A `POST` target is fetched, never rendered, because a browser navigation is a `GET` and rendering one would quietly ask the origin a different question than you did. And `PUT`, `PATCH` and `DELETE` are deliberately not supported: `POST` is what makes unreachable data reachable, and a narrower surface is easier to reason about for a service that takes arbitrary URLs.
+</Update>
+
+<Update label="September 2026" tags={["MCP"]}>
+  ## Crawl and batch are tools now
+
+  Last time these were left off, on the grounds that they are jobs and a tool call is not. That was the wrong call for an agent that is perfectly happy to come back later.
+
+  - `crawl` and `batch` start the job and hand back an id; `crawl_status` and `batch_status` read it
+  - `logo` joins them, so an agent can fetch a company's mark without building a URL itself
+  - `screenshot` now takes the same sizing and timing options as the REST call
+  - Thirteen tools, all under the existing `web:scrape` scope, so a grant you have already approved needs no re-authorising
+
+  Costs are unchanged: a tool costs exactly what the equivalent REST call costs.
+</Update>
+
+<Update label="September 2026" tags={["Platform"]}>
+  ## Bring your team in
+
+  A workspace was effectively one person. It is now a team, with the awkward cases handled rather than left to support.
+
+  - Invite people, set their role, and remove them. A removed member's seat comes back to the plan immediately
+  - Sign up with an email at a company that already has a workspace and you are not turned away: you ask to join, and an owner approves or declines it from the team page
+  - An invitation now survives sign-in and sign-up, so following an invite link and then creating an account lands you in the right workspace instead of a new empty one
+  - One workspace per company domain, enforced everywhere a workspace can be created
+
+  We never show one member another's email address, including the owner's.
+</Update>
+
+<Update label="September 2026" tags={["Platform"]}>
+  ## Told in the product, not just by email
+
+  Things that only ever arrived in an inbox now appear in the app, as they happen.
+
+  - Credits running low, credits exhausted, a failed payment, a cancelled plan, your logo allowance, a publishable key being used off-domain, and join requests waiting on you
+  - They arrive live. No reload, no polling
+  - Email is now something you choose per category in settings, split into account alerts and product updates, so you can turn off the newsletter without also turning off "your payment failed"
+
+  Account alerts are the ones we would rather you did not miss, which is exactly why they are in the product now as well as your inbox.
+</Update>
+
+<Update label="August 2026" tags={["Brand"]}>
+  ## Colours and marks you can trust
+
+  A brand's palette is only useful if it is the brand's palette. Several cases where it was not are fixed.
+
+  - The primary colour now comes from the company's own mark rather than from whatever colour the page happened to use most, and a palette leads with that colour instead of the page background
+  - Your operating system's font is no longer reported as a company's typeface
+  - A mark that cannot say what colour it is loses to one that can, and a saturated mark is classified as mono rather than by brightness alone
+  - We never serve an SVG that renders blank, which is what happened when a mark was being coloured by a stylesheet we do not have
+  - A domain whose certificate does not cover the bare name is retried on `www` rather than failing to resolve
+  - A styleguide that cannot read one value returns the rest instead of nothing
+
+  Logos are cached for a week now rather than a day, so a page rendering the same mark repeatedly stays fast.
+</Update>
+
 <Update label="August 2026" tags={["Brand"]}>
   ## Logos you can put straight in an `<img>` tag
 
