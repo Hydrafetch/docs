@@ -3,7 +3,7 @@ title: "Search"
 description: "Search the web and get ranked results, each scraped to clean data."
 ---
 
-`POST /v1/web/search` runs a query against the web and returns ranked results. By default every result comes back with its page already fetched and cleaned, so a single call turns a question into a set of LLM-ready documents — no second round of scraping.
+`POST /v1/web/search` runs a query against the web and returns ranked results. Turn on `scrapeResults` and every result also comes back with its page already fetched and cleaned, so a single call turns a question into a set of LLM-ready documents with no second round of scraping.
 
 ## When to use it
 

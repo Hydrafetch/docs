@@ -1,0 +1,63 @@
+---
+title: "Match a customer's brand"
+description: "Read a customer's colours, fonts, and logo from their own site, so your product looks like theirs on day one."
+---
+
+White labelling usually starts with a form: upload a logo, pick a primary colour, choose a font. Most customers abandon it, and the ones who finish pick badly.
+
+Ask for their domain instead, and read the answers off their own site.
+
+## The pipeline
+
+### 1. Pull the design system
+
+```bash
+curl -X GET "https://api.hydrafetch.com/v1/web/styleguide?domain=stripe.com" \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY"
+```
+
+`styleguide` reads the styles that actually get applied, so what comes back is what a visitor sees rather than what the stylesheet declares. You get colour roles, typography with real font families and weights, radius, spacing and shadow tokens, the webfonts in use, and a contrast check.
+
+### 2. Take the logo that suits your surface
+
+Ask for the variant that matches the background you are drawing on, so a dark mark never lands on a dark header.
+
+### 3. Map their tokens onto yours
+
+Do not apply the palette wholesale. Map their primary onto your primary and keep your own spacing and radius, or the result stops looking like your product with their colours and starts looking like a broken copy of their site.
+
+### 4. Confirm the contrast before you ship it
+
+The response carries a contrast reading and whether it meets AA. Some brands are genuinely inaccessible, and inheriting that faithfully is not a feature.
+
+## What it costs
+
+A styleguide is 10 credits, the highest priced call we have. It loads the page the way a browser does and reads the styles that actually get applied, and there is no cheaper path that produces the same answer.
+
+Resolve it once per customer at onboarding and store the result. This is not a call to make on page load.
+
+## What to watch for
+
+Offer an override. Reading a brand automatically is a good default and a bad mandate, and some customers want their product looking different from their marketing site.
+
+Fall back deliberately. A site with no clear palette should land on your own defaults, not on whatever grey the parser found first.
+
+Re-read on a schedule, not on every session. Brands change once every few years.
+
+## Hand it to an agent
+
+```text
+Build customer brand theming using the Hydrafetch API.
+
+One call at onboarding: GET /v1/web/styleguide?domain={domain} returns colours by role, typography, radius, spacing, shadow tokens, webfonts, and a contrast report. GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark returns a logo for a given background.
+
+Ask me before writing code:
+- Which of our design tokens should follow the customer, and which stay ours?
+- Where is the resolved theme stored, and when is it refreshed?
+- What happens when a brand fails the AA contrast check: use it, adjust it, or fall back?
+- Can a customer override the automatic result, and where does that live in the UI?
+
+The response shape: data with colors (role and hex), typography per role, radius, spacing, shadows, webfonts, and contrast with textOnBackground and meetsAA.
+
+Notes: authenticate with the X-API-Key header. A styleguide is 10 credits because it always renders, so resolve once per customer and store it rather than calling it at request time. Map their palette onto our roles instead of replacing our design system.
+```

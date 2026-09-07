@@ -1,0 +1,66 @@
+---
+title: "Watch a site for changes"
+description: "Re-read a set of pages on a schedule and get told what changed, rather than polling by hand."
+---
+
+Pricing pages move. Competitors quietly add a feature. A supplier changes their terms. You want to know when, without a person checking every week.
+
+There is no change endpoint. There is something better: fetches that are cheap when nothing moved, so a scheduled re-read is affordable and you diff the results yourself.
+
+## The pipeline
+
+### 1. Pick the pages, once
+
+Use `map` to list the site, and keep the handful that actually matter. Watching a whole site produces noise; watching a pricing page and a features page produces signal.
+
+### 2. Re-read them on your schedule
+
+Run a `batch` over the watched URLs from your own cron, and set `maxAge` to control how stale a stored copy may be before we go back to the origin.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/batch \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"urls": ["https://example.com/pricing", "https://example.com/features"],
+       "scrapeOptions": {"formats": ["markdown"], "maxAge": 0}}'
+```
+
+Set `maxAge` to `0` when the whole point is to see the current state. Leave it high when you are rebuilding an index and a day old copy is fine.
+
+### 3. Diff the Markdown, not the HTML
+
+HTML changes constantly and means nothing: a rotated asset hash, a reordered script tag, a session id. The cleaned Markdown changes when the words change, which is the thing you actually wanted to be told about.
+
+### 4. Get told, instead of polling
+
+Attach a webhook to the batch and receive the results when they land, rather than holding a polling loop open.
+
+## What it costs
+
+1 credit per page read. Watching six pages daily is 6 credits a day.
+
+## What to watch for
+
+Normalise before you diff. A timestamp in a footer, a rotating testimonial, or a "trusted by 4,312 teams" counter will fire every single run and train you to ignore the alert.
+
+Store the previous Markdown, not a hash of it. A hash tells you something changed and nothing about what, which means every alert becomes a manual investigation.
+
+Be a considerate visitor. Daily is almost always enough. Nobody's pricing page changes hourly, and reading it hourly is how you become a problem for someone else's site.
+
+## Hand it to an agent
+
+```text
+Build a change monitor over a small set of URLs using the Hydrafetch API.
+
+Per run: POST /v1/web/batch with {urls, scrapeOptions: {formats: ["markdown"], maxAge: 0}}. It is asynchronous, returning a batchId to poll at GET /v1/web/batch/{id}, or attach a webhook and receive the result instead.
+
+Ask me before writing code:
+- Which pages, and how often should they be re-read?
+- Where does the previous version live so we can diff against it?
+- What counts as a change worth alerting on, and what is noise to normalise away first?
+- Where should the alert go: email, Slack, a webhook of our own?
+
+The response shape: data.pages[] each with url, status, and data holding markdown and metadata.
+
+Notes: authenticate with the X-API-Key header. 1 credit per page read, failures are free. Diff the cleaned markdown rather than the html, since html changes on every request for reasons that do not matter. Store the previous markdown itself so an alert can show what changed. Strip timestamps and rotating counters before comparing.
+```

@@ -1,0 +1,63 @@
+---
+title: "Show company logos in your app"
+description: "Render a mark for any domain straight from an image tag, with no fetching, storing, or resizing on your side."
+---
+
+Directories, CRMs, dashboards and vendor lists all need a logo next to a company name. The usual answer is a scraper, an S3 bucket, a resize pipeline, and a placeholder for everything that failed.
+
+There is an image endpoint that removes all four. Point an `img` tag at it.
+
+## The pipeline
+
+### 1. Render the mark directly
+
+```html
+<img src="https://img.hydrafetch.com/logo/stripe.com?token=YOUR_PUBLISHABLE_KEY&size=128"
+     alt="Stripe" />
+```
+
+The URL is public and immutable, so it can go straight into your markup, an email template, or a PDF. No signing, no proxying, no bucket.
+
+### 2. Use a publishable key in the browser
+
+Browser traffic uses a publishable key restricted to your domains, not your secret API key. It is metered on its own allowance and never spends credits, which is what makes it safe to put in client-side markup.
+
+### 3. Decide what a missing logo looks like
+
+By default a domain we hold no mark for returns a generated monogram, so the tag always renders something. Ask for a 404 instead when you would rather draw your own fallback.
+
+### 4. Fetch it server side when you need the metadata
+
+When you need the file itself, or its dimensions and dominant colour, `GET /v1/web/brand/logo` returns the asset with its details for 1 credit.
+
+## What it costs
+
+The image endpoint does not spend credits. It runs on a separate allowance tied to your publishable key, because a logo in a list view is not the same kind of request as a scrape.
+
+The server side logo call is 1 credit. A full brand record is 5, so reach for it only when you want more than the mark.
+
+## What to watch for
+
+Set `size` to what you actually render. Asking for 512 to display at 32 wastes bandwidth on every row of every page.
+
+Pick the variant for your background. A light mark on a light card is an empty box, and this is the single most common way this goes wrong.
+
+Remember the edge cache. Once a URL has been served it is cached at the edge for up to a day, so revoking a key does not immediately stop already-cached URLs from loading.
+
+## Hand it to an agent
+
+```text
+Add company logos to a directory UI using the Hydrafetch image endpoint.
+
+For browser rendering: an img tag pointed at https://img.hydrafetch.com/logo/{domain} with a publishable key as the token query parameter, plus size and an optional fallback parameter. No credits, no server round trip. For server side use where metadata is needed: GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark with the X-API-Key header, 1 credit, returning url, format, width, height and dominantColor.
+
+Ask me before writing code:
+- What pixel size is the logo rendered at, and is it on a light or dark surface?
+- Should a missing logo render a generated monogram or fall through to our own placeholder component?
+- Is this browser-side only, or does something server side need the file and its metadata?
+- Which domains are allowed to use the publishable key?
+
+The response shape for the API call: data with domain, url, kind, variant, format, width, height, dominantColor. data is null when we hold no mark.
+
+Notes: use the publishable key in markup and never the secret API key. Request the size you render at. Choose the variant that suits the background. Served image URLs are edge cached for up to a day.
+```

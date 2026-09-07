@@ -1,0 +1,79 @@
+---
+title: "Build a RAG corpus"
+description: "Turn a documentation site into clean Markdown you can chunk and embed, without writing a crawler."
+---
+
+You want every page of a site as clean Markdown, once, so you can chunk it, embed it, and answer questions over it. The work is discovery, fetching, and cleaning, and none of it is the interesting part of your product.
+
+Two calls do it. `map` lists the URLs so you can decide what is worth fetching, and `batch` fetches the ones you kept.
+
+## The pipeline
+
+### 1. List the URLs without fetching them
+
+`map` returns a site's URLs for a single credit, whatever the site's size. Nothing is fetched, so this is the cheap place to find out how big the job is before committing to it.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/map \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "search": "docs", "limit": 500}'
+```
+
+The `search` filter keeps only URLs containing a term, which is usually the difference between a corpus and a mess. A documentation site carries a blog, a changelog, and a careers page, and none of them belong in an index you will ask technical questions of.
+
+### 2. Filter the list yourself
+
+Look at the URLs before you spend anything on content. Drop the pagination, the tag pages, and the archive. This step costs nothing and removes more junk than any cleaning step downstream can.
+
+### 3. Fetch the pages you kept
+
+`batch` takes up to 25,000 URLs in one call and runs them asynchronously. You get an id back immediately.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/batch \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"urls": ["https://example.com/docs/a", "https://example.com/docs/b"],
+       "scrapeOptions": {"formats": ["markdown"], "onlyMainContent": true}}'
+```
+
+Poll `GET /v1/web/batch/{id}`, or configure a webhook and skip polling entirely. Each page comes back with its Markdown, its metadata, and a quality object saying whether the fetch was complete.
+
+### 4. Chunk what came back
+
+Split on headings rather than a fixed character count. The Markdown keeps its heading structure, so a chunk that starts at an `h2` is a chunk about one thing, which is what makes retrieval work.
+
+## What it costs
+
+`map` is 1 credit regardless of how many URLs come back. `batch` is 1 credit per page that succeeds. A 400 page corpus is 401 credits, and pages that fail cost nothing.
+
+Re-running later is cheaper than it looks. Set `maxAge` in `scrapeOptions` and a page we already hold, fetched more recently than that, is served without going back to the origin.
+
+## What to watch for
+
+Filter before you fetch, not after. Fetching 5,000 pages and discarding 4,000 costs 5,000 credits and gets you the same corpus as filtering first.
+
+Check the `quality` object rather than assuming success. A page that returned content but was flagged incomplete is worth re-fetching, and a page that came back short is usually a login wall rather than a short page.
+
+Store the raw Markdown, not just the embeddings. When you change chunking strategy or embedding model, and you will, re-embedding from stored Markdown costs nothing while re-crawling costs the whole corpus again.
+
+## Hand it to an agent
+
+Paste this into Claude Code, Cursor, or any coding agent with access to your codebase.
+
+```text
+Build a function that turns a documentation site into a chunked, embedded corpus using the Hydrafetch API.
+
+The pipeline: POST /v1/web/map to list URLs (1 credit, nothing fetched), filter that list in code, then POST /v1/web/batch with the survivors and scrapeOptions {"formats": ["markdown"], "onlyMainContent": true}. Batch is asynchronous: it returns a batchId, and you poll GET /v1/web/batch/{id} until status is completed or failed.
+
+Ask me before writing code:
+- Which site, and which URL patterns should be kept or dropped?
+- Where do the chunks go: which vector store and which embedding model?
+- Is this a one-off build or does it re-run on a schedule? If it re-runs, what maxAge is acceptable so unchanged pages are not re-fetched?
+- Do you want to poll or receive a webhook when the batch finishes?
+
+The response shape: data.pages[] each with url, status, and data holding markdown, metadata (title, wordCount, description) and quality (confidence, complete, blocked).
+
+Notes: authenticate with the X-API-Key header. Batch takes up to 25,000 URLs per call. Only pages that succeed are billed. Chunk on Markdown headings rather than a character count, and keep the raw Markdown so re-embedding does not mean re-fetching.
+```

@@ -1,0 +1,59 @@
+---
+title: "Read PDFs and documents"
+description: "Send a document URL to the same endpoint you use for web pages and get Markdown back, tables intact."
+---
+
+Research lives in PDFs. So do filings, manuals, datasheets, and half the useful pages on a government site. Most scrapers hand you an empty string for all of them.
+
+There is no separate document endpoint. Send the URL to `scrape` and it comes back as Markdown like anything else.
+
+## The pipeline
+
+### 1. Scrape the document like a page
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/report.pdf", "formats": ["markdown"]}'
+```
+
+Tables come back as Markdown tables rather than as a column of stray numbers, which is the difference between a document you can query and a wall of text.
+
+### 2. Do a set of them at once
+
+Documents are slower to read than web pages. Send a list to `batch` and collect the results when they land, instead of holding a request open per file.
+
+### 3. Type the contents when you need fields
+
+For a set of filings or datasheets where you want the same fields from each, follow with `extract` and a schema. Same pipeline as any other page.
+
+## What it costs
+
+A document is 1 credit, the same as a page. It costs the same whether the file was two pages or two hundred.
+
+## What to watch for
+
+A very large document takes real time to read. Prefer `batch` over a single call when you have more than a handful, so nothing is waiting on a synchronous response.
+
+Check the word count that comes back. A 90 page report that extracted to 200 words is a scanned image of text rather than text, and that is worth knowing before it reaches your index.
+
+Keep the source URL and the page it came from. A number pulled out of a filing is worth very little if nobody can find where it came from.
+
+## Hand it to an agent
+
+```text
+Add PDF and document reading using the Hydrafetch API.
+
+There is no separate endpoint: POST /v1/web/scrape with {url, formats: ["markdown"]} handles documents the same as web pages, and tables come back as markdown tables. For a set of files, POST /v1/web/batch with the list, which is asynchronous and polled at GET /v1/web/batch/{id}.
+
+Ask me before writing code:
+- Where does the list of document URLs come from, and roughly how many and how large?
+- Do you need the prose, typed fields, or both? Typed fields means a follow-up extract call with a schema.
+- What should happen with a scanned document that yields almost no text?
+- Where does the output land, and does it need the source URL attached?
+
+The response shape: data with markdown, metadata (title, wordCount) and quality (confidence, complete, blocked).
+
+Notes: authenticate with the X-API-Key header. A document is 1 credit regardless of length, and failures are free. Use batch rather than single calls for more than a handful, since documents take longer to read than pages. Treat a very low wordCount against a large file as a signal the document was scanned images rather than text.
+```

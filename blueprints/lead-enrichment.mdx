@@ -1,0 +1,68 @@
+---
+title: "Enrich a list of companies"
+description: "Turn a column of domains into company records with names, descriptions, logos, colours, and social links."
+---
+
+You have domains, from a signup form, a CRM export, or a conference list, and you need them to become companies: a real name, what they do, an industry code, a logo you can render, and the social accounts to follow.
+
+One call per domain does it. `brand` resolves the whole record.
+
+## The pipeline
+
+### 1. Resolve a domain into a brand record
+
+```bash
+curl -X GET "https://api.hydrafetch.com/v1/web/brand?domain=stripe.com" \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY"
+```
+
+You get back the company name, description, tagline, an industry classification, a colour palette, the fonts the site uses, social profiles, and logos already processed into several formats and background variants.
+
+### 2. Take only the logo when that is all you need
+
+If you are rendering an avatar in a list and nothing else, resolving the whole record and throwing most of it away is five times the price.
+
+```bash
+curl -X GET "https://api.hydrafetch.com/v1/web/brand/logo?domain=stripe.com&theme=light&type=icon" \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY"
+```
+
+### 3. Resolve a name you do not have a domain for
+
+`GET /v1/web/brand/search?query=stripe` finds candidate companies by name, so a messy list of company names can be turned into domains before enrichment.
+
+### 4. Store the record, not just the fields you use today
+
+The full record is one call whether you read three fields or thirty. Store it, and adding a field to your UI later becomes a database change rather than a re-enrichment of your whole list.
+
+## What it costs
+
+A full brand record is 5 credits. A single logo is 1. A brand search is 1.
+
+The price is flat whether the record was already held or resolved fresh, so a list with repeats does not cost more per unique company than a list without them.
+
+## What to watch for
+
+Normalise domains before you send them. `www.stripe.com`, `stripe.com/`, and `https://stripe.com` are one company, and sending all three spends three times.
+
+Handle the empty answer. Some domains have no resolvable brand: a parked domain, a personal site, a company that no longer exists. Decide what your UI shows for that case before you meet it in production.
+
+A logo has a variant for a reason. Ask for the one that suits the background you are drawing on, rather than picking one and hoping. A dark wordmark on a dark card is invisible.
+
+## Hand it to an agent
+
+```text
+Build a company enrichment function over a list of domains using the Hydrafetch API.
+
+Per domain: GET /v1/web/brand?domain={domain} returns the full record (name, description, tagline, industry classification, colours, fonts, socials, logos). GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark returns one asset. GET /v1/web/brand/search?query={name} finds a domain from a company name.
+
+Ask me before writing code:
+- Where does the list come from and how many domains, so we can decide on concurrency and cost up front?
+- Which fields does the product actually render today, and should we store the whole record anyway?
+- Are inputs domains or company names? Names need the brand search step first.
+- What should the UI show for a domain with no resolvable brand?
+
+The response shape: data with name, domain, description, tagline, naics, colors[], fonts, socials[], and logos with format, variant and dimensions. data is null when nothing resolves.
+
+Notes: authenticate with the X-API-Key header. A full record is 5 credits and a single logo is 1, so do not resolve a record when only a mark is needed. Normalise domains (strip scheme, www, trailing slash) and deduplicate before spending. Failed calls are free.
+```

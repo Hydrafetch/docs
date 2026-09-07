@@ -1,0 +1,56 @@
+---
+title: "Blueprints"
+description: "Complete pipelines that turn the endpoints into something useful, with the costs and the failure modes stated up front."
+---
+
+The endpoint pages tell you what each call does. These tell you what to build with them.
+
+Every blueprint is a real pipeline: the sequence of calls, working requests, what it costs in credits, and the mistakes that are easy to make and expensive to find later. Each one ends with a brief you can paste into a coding agent, so you can hand the whole thing over rather than typing it out.
+
+## Get data out of a site
+
+<CardGroup cols={2}>
+  <Card title="Build a RAG corpus" icon="layer-group" href="/blueprints/rag-corpus">
+    List a site's URLs, keep the ones worth having, and fetch them as clean Markdown ready to chunk.
+  </Card>
+  <Card title="Turn a catalogue into rows" icon="table" href="/blueprints/catalogue-to-rows">
+    Point at a set of pages, describe the fields, get typed records instead of prose.
+  </Card>
+  <Card title="Read PDFs and documents" icon="file-lines" href="/blueprints/documents-to-markdown">
+    Send a document URL to the same endpoint as a web page and get Markdown back, tables intact.
+  </Card>
+  <Card title="Watch a site for changes" icon="bell" href="/blueprints/watch-a-site">
+    Re-read the pages that matter on a schedule and diff the words rather than the markup.
+  </Card>
+</CardGroup>
+
+## Answer questions and feed agents
+
+<CardGroup cols={2}>
+  <Card title="Answer with sources" icon="magnifying-glass" href="/blueprints/answer-with-sources">
+    Search the web and get the pages back already fetched, so a model answers from text it can cite.
+  </Card>
+  <Card title="Give an agent live web access" icon="robot" href="/blueprints/agent-web-access">
+    Two tools, or one MCP connection, and your agent stops guessing from memory.
+  </Card>
+</CardGroup>
+
+## Know who you are dealing with
+
+<CardGroup cols={2}>
+  <Card title="Enrich a list of companies" icon="building" href="/blueprints/lead-enrichment">
+    Turn a column of domains into names, descriptions, industries, logos and socials.
+  </Card>
+  <Card title="Match a customer's brand" icon="palette" href="/blueprints/match-a-customer-brand">
+    Read a customer's colours, fonts and logo from their own site instead of asking them to upload one.
+  </Card>
+  <Card title="Show company logos" icon="image" href="/blueprints/directory-logos">
+    Render a mark for any domain straight from an image tag, with nothing to store or resize.
+  </Card>
+</CardGroup>
+
+## Before you start
+
+Every blueprint assumes an API key in the `X-API-Key` header and a workspace with credits. If you have neither yet, [the quickstart](/quickstart) takes about two minutes.
+
+Failed calls never cost credits, so the cheapest way to understand any of these is to run the first step and look at what comes back.

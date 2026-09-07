@@ -56,6 +56,22 @@
             ]
           },
           {
+            "group": "Blueprints",
+            "icon": "/icons/route.svg",
+            "pages": [
+              "blueprints/overview",
+              "blueprints/rag-corpus",
+              "blueprints/answer-with-sources",
+              "blueprints/agent-web-access",
+              "blueprints/catalogue-to-rows",
+              "blueprints/documents-to-markdown",
+              "blueprints/watch-a-site",
+              "blueprints/lead-enrichment",
+              "blueprints/match-a-customer-brand",
+              "blueprints/directory-logos"
+            ]
+          },
+          {
             "group": "Web Scraping",
             "icon": "/icons/markdown.svg",
             "pages": [

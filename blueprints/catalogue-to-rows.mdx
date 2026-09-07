@@ -1,0 +1,73 @@
+---
+title: "Turn a catalogue into rows"
+description: "Point at a set of pages, describe the fields you want, and get typed records back instead of prose."
+---
+
+Some sites are a database with a website in front of them: a product catalogue, a jobs board, a directory, a price list. You do not want the text of those pages, you want the rows behind them.
+
+`extract` takes URLs and a schema and returns records shaped the way you asked, merged across pages.
+
+## The pipeline
+
+### 1. Find the pages that hold the rows
+
+Use `map` with a `search` filter to pull just the listing URLs, for one credit and without fetching anything.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/map \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "search": "/products/", "limit": 500}'
+```
+
+### 2. Describe the fields, in a schema
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/extract \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"urls": ["https://example.com/products/widget"],
+       "schema": {"type": "object",
+                  "properties": {"name": {"type": "string"},
+                                 "priceUsd": {"type": "number"},
+                                 "inStock": {"type": "boolean"}},
+                  "required": ["name"]}}'
+```
+
+A schema gives typed, stable output that you can write to a table. A prompt on its own is more flexible and less predictable, which is fine while you are exploring and a problem once something depends on the shape.
+
+### 3. Let a path pattern do the fan-out
+
+A URL ending in `/*` marks a crawl scope. Every page discovered under that path is extracted and merged into one result set, so a small list can cover a large section.
+
+## What it costs
+
+Extraction is model-backed work, so it is 5 credits per URL. That is the one place where the price reflects what you asked for rather than how hard the page was to fetch.
+
+This is the expensive step in any pipeline, which is the argument for filtering first. Extract from the 200 pages that matter, not the 5,000 the site happens to have.
+
+## What to watch for
+
+Ask for fewer fields than you think you need. Every field is another thing that can come back wrong on a page that renders it differently, and a schema with three reliable fields is worth more than one with twelve unreliable ones.
+
+Decide what a missing field means before you start. A product page with no price can be a free product, an out of stock product, or a page we failed to read, and your schema should be able to tell you which.
+
+Keep the source URL with each record. When a number looks wrong, and one will, the only cheap way to check is to open the page it came from.
+
+## Hand it to an agent
+
+```text
+Build a function that turns a set of catalogue pages into typed records using the Hydrafetch API.
+
+Two steps: POST /v1/web/map with {url, search, limit} to discover the listing URLs for 1 credit without fetching, then POST /v1/web/extract with {urls, schema} where schema is JSON Schema. A URL ending in /* expands to every page discovered under that path.
+
+Ask me before writing code:
+- What fields do you need, and what type is each one?
+- What should a missing field be: null, an omitted record, or an error to review?
+- Is this one run or does it repeat? If it repeats, how are records deduplicated and updated?
+- Where do the rows land, and does that store need a fixed schema up front?
+
+The response shape: data.results[] each with url, data (the object shaped by your schema) and error, plus data.sources[].
+
+Notes: authenticate with the X-API-Key header. Extract is 5 credits per URL, so filter the URL list before extracting rather than after. Up to 10 URLs per call. Keep the source url alongside every record for provenance. Prefer a schema over a bare prompt when anything downstream depends on the shape.
+```
