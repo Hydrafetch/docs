@@ -23,10 +23,13 @@ Ask me before writing code:
 - Where does the previous version live so we can diff against it?
 - What counts as a change worth alerting on, and what is noise to normalise away first?
 - Where should the alert go: email, Slack, a webhook of our own?
+- Should a page that starts failing be reported as a change, and after how many consecutive failures?
 
-The response shape: data.pages[] each with url, status, and data holding markdown and metadata.
+The response shape: data.pages[] each with url, status, error, errorCode, and data holding markdown, finalUrl and metadata (title, wordCount).
 
-Notes: authenticate with the X-API-Key header. 1 credit per page read, failures are free. Diff the cleaned markdown rather than the html, since html changes on every request for reasons that do not matter. Store the previous markdown itself so an alert can show what changed. Strip timestamps and rotating counters before comparing. Keep the API key on the server and never ship it in client code.
+Store the previous markdown itself rather than a hash, so the alert can show a real diff instead of just saying that something moved. Normalise before comparing: strip dates, relative timestamps, rotating counters and build hashes, and collapse whitespace, or the watch fires every run and gets muted. Compare the markdown, not the html. Treat a page that fails several consecutive runs as removed, but never on a single failure. Record every run including the quiet ones, so a watch that silently broke can be told apart from a site that is stable.
+
+Notes: authenticate with the X-API-Key header. 1 credit per page read, failures are free. Set maxAge to 0 so a stored copy cannot answer a monitoring run. Daily is almost always enough, and reading a site hourly is how you become a problem for it. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -54,22 +57,57 @@ curl -X POST https://api.hydrafetch.com/v1/web/batch \
 
 Set `maxAge` to `0` when the whole point is to see the current state. Leave it high when you are rebuilding an index and a day old copy is fine.
 
-### 3. Diff the Markdown, not the HTML
+### 3. Normalise before you compare
 
-HTML changes constantly and means nothing: a rotated asset hash, a reordered script tag, a session id. The cleaned Markdown changes when the words change, which is the thing you actually wanted to be told about.
+This is the step that decides whether anyone still reads your alerts in a month.
 
-### 4. Get told, instead of polling
+A page changes on every single request for reasons that have nothing to do with the content: a rotating testimonial, a "trusted by 4,312 teams" counter, a copyright year, a build hash in a footer, a relative timestamp reading "3 hours ago". Diff the raw text and every one of those fires an alert, and a channel that cries wolf daily gets muted in a week.
 
-Attach a webhook to the batch and receive the results when they land, rather than holding a polling loop open.
+Strip them before comparing. Drop anything matching a date or time pattern, collapse runs of whitespace, and remove the lines you have already seen change without meaning anything. Keep the list of exclusions in code next to the watch, because it grows every time a new false positive appears.
+
+Compare the cleaned Markdown rather than the HTML. HTML changes constantly and means nothing: a reordered script tag, a rotated asset hash, a session id. The Markdown changes when the words change, which is the thing you actually wanted to be told about.
+
+### 4. Treat a failure as a change too
+
+A page that stops answering is news. If a URL you have watched for six months starts returning a 404, that is a product that got retired or a page that moved, and it is usually more interesting than an edited sentence.
+
+Every batch result carries a per-page `status`, and a failed page carries an `error` and an `errorCode`. Report those rather than skipping them, but do not treat one bad run as a deletion. A page has to fail two or three consecutive runs before it is gone, otherwise a momentary blip reads as a removal.
+
+### 5. Get told, instead of polling
+
+Attach a webhook to the batch and receive the results when they land, rather than holding a polling loop open. See [Jobs and webhooks](/concepts/jobs-and-webhooks) for the delivery shape and retry behaviour.
+
+## Making the alert worth reading
+
+An alert saying "example.com/pricing changed" is a task, not information. The reader still has to open two tabs and compare them by eye, and after the third such alert they stop.
+
+Store the previous Markdown itself, not a hash of it. A hash tells you something changed and nothing about what, which turns every alert into an investigation. With the previous version in hand you can show a real diff in the message.
+
+Send the diff, trimmed to the changed lines with a little surrounding context. For most watches that is three or four lines, and it is the difference between an alert someone acts on and one they archive.
+
+Say what did not change too, at least in a weekly summary. Silence is ambiguous: it reads the same whether nothing moved or the watch quietly broke three weeks ago.
+
+## Knowing the watch still works
+
+A monitor that fails silently is worse than no monitor, because you believe you are covered.
+
+Record every run, not just the ones that found something. If a watch has reported no changes for a month, check that it is still running and still fetching successfully rather than assuming the site is stable.
+
+Watch the fetch quality as well as the content. A page that starts coming back with a much lower `wordCount` than usual has probably started serving a consent wall or a login page rather than losing most of its content, and diffing that against last week produces a spectacular and completely useless alert.
+
+Re-run discovery occasionally. A `map` every month or so catches the pages that appeared since you picked your list, which is how a competitor's new pricing tier gets noticed rather than missed because it lives at a URL you never knew existed.
 
 ## What it costs
 
-1 credit per page read. Watching six pages daily is 6 credits a day.
+1 credit per page read. Watching six pages daily is 6 credits a day, or about 180 a month.
+
+Discovery is 1 credit per `map`, so a monthly re-check of the URL list is a rounding error against the watching itself.
 
 ## What to watch for
 
-Normalise before you diff. A timestamp in a footer, a rotating testimonial, or a "trusted by 4,312 teams" counter will fire every single run and train you to ignore the alert.
+Daily is almost always enough. Nobody's pricing page changes hourly, and reading it hourly is how you become a problem for someone else's site.
 
-Store the previous Markdown, not a hash of it. A hash tells you something changed and nothing about what, which means every alert becomes a manual investigation.
+Watch few pages deliberately rather than a whole site automatically. Ten pages you chose produce signal; four hundred pages you crawled produce a feed nobody reads.
 
-Be a considerate visitor. Daily is almost always enough. Nobody's pricing page changes hourly, and reading it hourly is how you become a problem for someone else's site.
+Set `maxAge` to `0` when the whole point is to see the current state. Leaving the default means a stored copy can answer, which is right for indexing and wrong for monitoring.
+

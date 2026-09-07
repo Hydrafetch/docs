@@ -21,12 +21,15 @@ Two steps: POST /v1/web/map with {url, search, limit} to discover the listing UR
 Ask me before writing code:
 - What fields do you need, and what type is each one?
 - What should a missing field be: null, an omitted record, or an error to review?
-- Is this one run or does it repeat? If it repeats, how are records deduplicated and updated?
+- Is this one run or does it repeat? If it repeats, what is the stable id for a row?
 - Where do the rows land, and does that store need a fixed schema up front?
+- Should we keep history when a value changes, or only the current snapshot?
 
 The response shape: data.results[] each with url, data (the object shaped by your schema) and error, plus data.sources[].
 
-Notes: authenticate with the X-API-Key header. Extract is 5 credits per URL, so filter the URL list before extracting rather than after. Up to 10 URLs per call. Keep the source url alongside every record for provenance. Prefer a schema over a bare prompt when anything downstream depends on the shape. Keep the API key on the server and never ship it in client code.
+Derive each row's id from the normalised page URL rather than from its content, so a repeat run upserts instead of duplicating. Record the fill rate per field on every run, meaning the share of records where the field came back non-null, and alert when a field that was consistently full drops sharply: that is a site redesign, not a data change, and extraction will keep returning valid JSON full of nulls without erroring. Refuse to write a run where a required field is missing from most records.
+
+Notes: authenticate with the X-API-Key header. Extract is 5 credits per URL, so filter the URL list before extracting rather than after, and re-run map (1 credit) far more often than you re-extract. Up to 10 URLs per call. Keep the source url alongside every record for provenance. Prefer a schema over a bare prompt when anything downstream depends on the shape. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -67,7 +70,38 @@ A schema gives typed, stable output that you can write to a table. A prompt on i
 
 A URL ending in `/*` marks a crawl scope. Every page discovered under that path is extracted and merged into one result set, so a small list can cover a large section.
 
+## Give every row a stable identity
+
+A one-off extraction produces a list. A pipeline that runs again produces the same list with small differences, and without an identity you cannot tell an updated row from a new one.
+
+Derive the id from the page, not from the content. The URL is stable while a product name, a price, and a description all change. Normalise it first (drop tracking parameters, settle on one trailing slash convention) and hash it, or store the URL itself as the key.
+
+Then an update is an upsert rather than a duplicate, and you can keep a history: same id, new price, new timestamp. That history is usually worth more than the current snapshot, because it is the only way to answer when something changed.
+
+## When the shape silently breaks
+
+This is the failure mode that costs people weeks, because nothing errors.
+
+A site redesigns. The price now lives in a different element. Extraction still succeeds, still returns valid JSON, and `priceUsd` is now `null` on every page. The pipeline is green, the rows are wrong, and nobody notices until someone asks why the report looks odd.
+
+Track the fill rate per field on every run, meaning the share of records where the field came back non-null. Store it. When a field that was 97% full for three months drops to 4% overnight, that is a site change, not a data change, and it should page someone.
+
+Set a floor and fail loudly under it. A run where a required field is missing from most records should stop rather than write, because a partial overwrite of good data is much harder to undo than a run that refused to start.
+
+Spot-check a handful of records against the live page after any run that looks unusual. Keeping the source URL on every record is what makes that a thirty second check instead of an investigation.
+
+## Keeping it current
+
+Re-discovery and re-extraction are separate decisions, and they have very different prices.
+
+Re-run `map` often, since it is 1 credit and tells you which URLs are new, which disappeared, and therefore which products were added or retired. Most of the value of a repeat run is in that diff alone.
+
+Re-extract selectively. Extraction is the expensive step, so do not re-run it across the whole catalogue on a schedule. Extract new URLs always, and re-extract existing ones on a slower cycle or when a cheap signal suggests the page moved, such as a `scrape` of the page returning different Markdown from last time.
+
+Delete what left. A product removed from the site should be marked gone rather than silently retained, or your dataset slowly fills with items nobody can buy.
+
 ## What it costs
+
 
 Extraction is model-backed work, so it is 5 credits per URL. That is the one place where the price reflects what you asked for rather than how hard the page was to fetch.
 

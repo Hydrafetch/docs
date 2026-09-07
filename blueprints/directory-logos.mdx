@@ -19,14 +19,17 @@ Add company logos to a directory UI using the Hydrafetch image endpoint.
 For browser rendering: an img tag pointed at https://img.hydrafetch.com/logo/{domain} with a publishable key as the token query parameter, plus size and an optional fallback parameter. No credits, no server round trip. For server side use where metadata is needed: GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark with the X-API-Key header, 1 credit, returning url, format, width, height and dominantColor.
 
 Ask me before writing code:
-- What pixel size is the logo rendered at, and is it on a light or dark surface?
+- What pixel size is the logo rendered at, and is it on a light or dark surface? Does the interface have both themes?
 - Should a missing logo render a generated monogram or fall through to our own placeholder component?
 - Is this browser-side only, or does something server side need the file and its metadata?
 - Which domains are allowed to use the publishable key?
+- Do we know the domains ahead of time, so they can be warmed in the background after an import?
 
 The response shape for the API call: data with domain, url, kind, variant, format, width, height, dominantColor. data is null when we hold no mark.
 
-Notes: use the publishable key in markup and never the secret API key. Request the size you render at. Choose the variant that suits the background. Served image URLs are edge cached for up to a day. Keep the API key on the server and never ship it in client code.
+Size the request from the device pixel ratio, so a 32 pixel avatar on a 2x display requests 64. Reserve a fixed box with an aspect ratio so rows do not reflow as logos arrive. The first request for an unseen domain resolves on the spot and takes a few seconds, and every request after it is immediate, so render a placeholder background and let the image swap in rather than blocking the layout. Restrict the publishable key to our domains, since it is readable in client markup.
+
+Notes: use the publishable key in markup and never the secret API key. Choose the variant that suits the background, and switch it with the theme. Served image URLs are edge cached for up to a day, so revoking a key does not immediately stop cached URLs. Keep the secret API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -57,7 +60,44 @@ By default a domain we hold no mark for returns a generated monogram, so the tag
 
 When you need the file itself, or its dimensions and dominant colour, `GET /v1/web/brand/logo` returns the asset with its details for 1 credit.
 
+## The first request for a new domain
+
+A domain nobody has asked for before is resolved on the spot, and that first request waits rather than answering with a placeholder.
+
+The wait is bounded. Past the budget the resolve finishes in the background, that one request gets the fallback, and the next request is served from storage. So a cold domain takes a few seconds once and every request after it is immediate.
+
+This shapes where you put the call. In a list view rendering fifty companies, most will be warm and a few may not be, so give the image a placeholder background and let it swap in rather than blocking a layout on it. If you know the domains ahead of time, such as after an import, request them once in the background and the customer never meets a cold one.
+
+## Getting the rendering right
+
+Ask for the `size` you actually draw at. Requesting 512 to display at 32 wastes bandwidth on every row of every page, and on a directory that is most of the page weight.
+
+Account for retina. A 32 pixel avatar on a 2x display wants a 64 pixel image, so size from the device pixel ratio rather than the CSS pixel.
+
+Pick the variant for the background you are drawing on. A light mark on a light card is an empty box, and this is the single most common way this goes wrong. If your interface has both themes, the logo has to switch with them.
+
+Reserve the space. Give the image a fixed box with an aspect ratio so the row does not jump when it loads, since a directory that reflows as logos arrive feels broken even when everything worked.
+
+## Choosing the fallback deliberately
+
+By default a domain with no mark returns a generated monogram, so the tag always renders something.
+
+That is right for most directories, since a consistent shape in every row looks intentional. Set `fallback=404` instead when you want to draw your own placeholder, and handle the error on the image element.
+
+Do not let a missing logo look like a broken page. Whichever route you pick, the empty state should be a designed state.
+
+## Operating it
+
+The image URL is public and immutable, so it can go anywhere: your markup, an email template, a PDF export. Nothing to sign, nothing to proxy, no bucket to keep.
+
+Restrict the publishable key to your domains. It is going into client-side markup where anyone can read it, and the domain restriction is what stops it being used elsewhere.
+
+Remember the edge cache when you rotate a key. Once a URL has been served it is cached at the edge for up to a day, so revoking a key does not immediately stop already-cached URLs from loading.
+
+Reach for the API call only when you need more than pixels. `GET /v1/web/brand/logo` returns the file with its dimensions and dominant colour for 1 credit, which is what you want when generating an email template or picking a background to sit the mark on.
+
 ## What it costs
+
 
 The image endpoint does not spend credits. It runs on a separate allowance tied to your publishable key, because a logo in a list view is not the same kind of request as a scrape.
 

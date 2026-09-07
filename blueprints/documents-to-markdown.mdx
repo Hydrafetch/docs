@@ -19,14 +19,16 @@ Add PDF and document reading using the Hydrafetch API.
 There is no separate endpoint: POST /v1/web/scrape with {url, formats: ["markdown"]} handles documents the same as web pages, and tables come back as markdown tables. For a set of files, POST /v1/web/batch with the list, which is asynchronous and polled at GET /v1/web/batch/{id}.
 
 Ask me before writing code:
-- Where does the list of document URLs come from, and roughly how many and how large?
+- Where does the list of document URLs come from, and roughly how many and how large? If they are linked from a site, map plus a .pdf filter finds them for 1 credit.
 - Do you need the prose, typed fields, or both? Typed fields means a follow-up extract call with a schema.
-- What should happen with a scanned document that yields almost no text?
-- Where does the output land, and does it need the source URL attached?
+- What should happen with a scanned document that yields almost no text: OCR it, flag it, or exclude it?
+- Where does the output land, and does it need the source URL and heading attached?
 
 The response shape: data with markdown, metadata (title, wordCount) and quality (confidence, complete, blocked).
 
-Notes: authenticate with the X-API-Key header. A document is 1 credit regardless of length, and failures are free. Use batch rather than single calls for more than a handful, since documents take longer to read than pages. Treat a very low wordCount against a large file as a signal the document was scanned images rather than text. Keep the API key on the server and never ship it in client code.
+Compare metadata.wordCount against the document's plausible length and route anything far below it for review, since a scanned PDF returns almost no text without failing. Keep the source url and the heading a passage sat under on every record, because a reader checking a number needs to find it. Store the extracted markdown so nothing has to be re-fetched to re-derive from it. Prefer a webhook over a short polling timeout, since a batch of documents has a long tail.
+
+Notes: authenticate with the X-API-Key header. A document is 1 credit regardless of length, and failures are free. Use batch rather than single calls for more than a handful, since documents take longer to read than pages. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -55,7 +57,44 @@ Documents are slower to read than web pages. Send a list to `batch` and collect 
 
 For a set of filings or datasheets where you want the same fields from each, follow with `extract` and a schema. Same pipeline as any other page.
 
+## Finding the documents in the first place
+
+Usually the PDFs are not the input, they are linked from somewhere.
+
+`map` lists a site's URLs including the documents, so a filter for `.pdf` turns a site into a document list for 1 credit. On sites that link documents from pages rather than listing them, scrape the index page with the `links` format and filter that.
+
+`search` works too when the documents are spread across the web rather than one site, and a domain filter narrows it to the source you trust.
+
+## Telling a scan from a document
+
+A PDF that is really a photograph of a page will come back with almost no text, and it will do so without failing.
+
+Compare `metadata.wordCount` against what the document should plausibly hold. A ninety page report that extracted to 200 words is a scanned image, not a short report, and it will sit in your index contributing nothing while looking like a success.
+
+Set a floor and route anything under it somewhere a human can see. Whether that means running it through OCR yourself, flagging it, or excluding it is a product decision, but it should be a decision rather than a silent pass.
+
+Check the `quality` object as well. A document reported as incomplete is worth another attempt before you conclude it has nothing in it.
+
+## Keeping the provenance
+
+A number pulled out of a filing is worth very little if nobody can find where it came from, and documents are exactly where people want to check.
+
+Keep the source URL on every record and every chunk. For a long document, keep the heading the passage sat under too, since "page 40" is not something a reader can search for but a heading is.
+
+Store the extracted Markdown, not only what you derived from it. Documents are slower and heavier to fetch than pages, so re-deriving from stored text is meaningfully cheaper than re-fetching a set of large files.
+
+## Scale and patience
+
+Documents take longer to read than web pages, and a large one takes noticeably longer.
+
+Use `batch` past a handful of files rather than a loop of single calls, so nothing is waiting on a synchronous response and the work runs in parallel on our side.
+
+Expect a wider spread of times than you would with pages. A batch of a hundred documents will have a tail of large ones finishing well after the rest, which is an argument for a webhook over a polling loop with a short timeout.
+
+Fetch once and reuse. Where the same document is referenced by several of your records, fetch it once and point them all at the stored text.
+
 ## What it costs
+
 
 A document is 1 credit, the same as a page. It costs the same whether the file was two pages or two hundred.
 

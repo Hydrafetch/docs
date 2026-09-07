@@ -21,12 +21,15 @@ Per domain: GET /v1/web/brand?domain={domain} returns the full record (name, des
 Ask me before writing code:
 - Where does the list come from and how many domains, so we can decide on concurrency and cost up front?
 - Which fields does the product actually render today, and should we store the whole record anyway?
-- Are inputs domains or company names? Names need the brand search step first.
+- Are inputs domains or company names? Names need the brand search step first, and names are ambiguous in a way domains are not.
 - What should the UI show for a domain with no resolvable brand?
+- How often should records refresh, and should a failed refresh keep the previous record?
 
 The response shape: data with name, domain, description, tagline, naics, colors[], fonts, socials[], and logos with format, variant and dimensions. data is null when nothing resolves.
 
-Notes: authenticate with the X-API-Key header. A full record is 5 credits and a single logo is 1, so do not resolve a record when only a mark is needed. Normalise domains (strip scheme, www, trailing slash) and deduplicate before spending. Failed calls are free. Keep the API key on the server and never ship it in client code.
+Clean the input before spending: normalise each domain (lowercase, strip scheme, www, path and trailing slash), deduplicate after normalising, and drop free email provider domains, since enriching gmail.com returns the email provider rather than a company. Refresh on a long cycle of six to twelve months rather than nightly, because brands change slowly, and keep the existing record when a refresh fails rather than overwriting it with an empty one. Track the share of the list that resolved, and sample successes as well as failures, since a confidently wrong company is worse than a blank.
+
+Notes: authenticate with the X-API-Key header. A full record is 5 credits, a single logo is 1 and a brand search is 1, so do not resolve a record when only a mark is needed. Failed calls are free. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -62,7 +65,46 @@ curl -X GET "https://api.hydrafetch.com/v1/web/brand/logo?domain=stripe.com&them
 
 The full record is one call whether you read three fields or thirty. Store it, and adding a field to your UI later becomes a database change rather than a re-enrichment of your whole list.
 
+## Clean the input first
+
+Most of the money wasted on enrichment is spent before any call is made, on inputs that were never going to resolve.
+
+Normalise every domain to one form: strip the scheme, strip `www`, drop the path and any trailing slash, lowercase it. `www.stripe.com`, `stripe.com/pricing` and `https://Stripe.com` are one company, and sending all three spends three times for one answer.
+
+Deduplicate after normalising, not before. A list of 5,000 rows from a CRM is routinely 3,000 companies.
+
+Drop the addresses that are not companies. A list built from signup emails is full of `gmail.com`, `outlook.com` and the rest, and enriching a free email provider returns the email provider. Filter those out before spending, and treat the row as a person without a company rather than a company.
+
+Watch for the subsidiary problem. Enriching `youtube.com` gives you YouTube, which is correct and may not be what a sales team means when the parent is the account. Decide which you want before the data lands somewhere it will be trusted.
+
+## Resolving a name instead of a domain
+
+When the list is company names, add a step. `GET /v1/web/brand/search?query=...` returns candidates, and 1 credit per lookup makes it cheap to run across the whole list.
+
+Names are ambiguous in a way domains are not. Several real companies share a name across countries and industries, so keep the match confidence and any other signal you have, like a country or an industry, and hold anything ambiguous for review rather than guessing.
+
+Store the resolved domain back onto your record. That turns a fuzzy name match into a stable key you never have to resolve again.
+
+## Refreshing without re-spending
+
+Brands move slowly. A company changes its logo or its palette every few years, not every quarter, so a nightly refresh spends real money to discover that nothing happened.
+
+Refresh on a long cycle, six or twelve months, and stagger it so the whole list does not re-resolve on one day.
+
+Refresh on a signal instead when you have one. A domain that starts returning something different, a customer who mentions a rebrand, a record that fails to render in your UI: those are worth a targeted refresh in a way that a calendar is not.
+
+Keep what you had until the new answer arrives. Replacing a good record with an empty one because a refresh failed is worse than serving a slightly old logo.
+
+## Measuring the match rate
+
+Track the share of your list that resolved to a real record, and look at the failures rather than only the total.
+
+A low rate on a list of large companies means something is wrong with the input, usually formatting. A low rate on a list of small local businesses is simply the shape of the world, since plenty of them have no real web presence to read.
+
+Sample the successes too. A record that resolved to the wrong company is more damaging than one that did not resolve at all, because it is confidently wrong on a sales call.
+
 ## What it costs
+
 
 A full brand record is 5 credits. A single logo is 1. A brand search is 1.
 

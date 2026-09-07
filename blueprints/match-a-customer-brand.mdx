@@ -19,14 +19,17 @@ Build customer brand theming using the Hydrafetch API.
 One call at onboarding: GET /v1/web/styleguide?domain={domain} returns colours by role, typography, radius, spacing, shadow tokens, webfonts, and a contrast report. GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark returns a logo for a given background.
 
 Ask me before writing code:
-- Which of our design tokens should follow the customer, and which stay ours?
+- Which of our design tokens should follow the customer, and which stay ours? Colour and logo usually should; spacing, radius and type scale usually should not.
 - Where is the resolved theme stored, and when is it refreshed?
 - What happens when a brand fails the AA contrast check: use it, adjust it, or fall back?
 - Can a customer override the automatic result, and where does that live in the UI?
+- Does the product have a dark theme that also needs to work with their palette?
 
 The response shape: data with colors (role and hex), typography per role, radius, spacing, shadows, webfonts, and contrast with textOnBackground and meetsAA.
 
-Notes: authenticate with the X-API-Key header. A styleguide is 10 credits because it always renders, so resolve once per customer and store it rather than calling it at request time. Map their palette onto our roles instead of replacing our design system. Keep the API key on the server and never ship it in client code.
+Resolve at onboarding and store the theme on the account, never at request time. Take the primary, the accent and the logo, and derive hover, active, disabled and muted shades with our own ramp rather than adopting every value. Check the contrast report before applying and adjust the colour until it passes rather than shipping unreadable text or discarding the brand. Test the result against both light and dark themes. Keep the stored theme when a refresh fails instead of blanking the account, and record whether a value was resolved, contrast-adjusted or customer-overridden.
+
+Notes: authenticate with the X-API-Key header. A styleguide is 10 credits, so it is an onboarding call rather than a page load one. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -57,7 +60,46 @@ Do not apply the palette wholesale. Map their primary onto your primary and keep
 
 The response carries a contrast reading and whether it meets AA. Some brands are genuinely inaccessible, and inheriting that faithfully is not a feature.
 
+## Where in the flow it belongs
+
+This is an onboarding call, not a request-time one.
+
+Resolve it once, when a customer first gives you their domain, and store the result on the account. Ten credits at signup is nothing; ten credits per page view is a bill.
+
+Show them the result and let them adjust it. A theme applied silently is a surprise, and the first time a customer sees your product in their colours is a moment worth putting in front of them rather than hiding. A preview with an "use this" and an "I'll pick my own" is a better onboarding step than a colour picker on an empty form.
+
+Have a default that looks finished. Some domains resolve to almost nothing, and the fallback needs to be your own design system rather than whatever grey came back first.
+
+## Map their brand onto your design system
+
+Do not apply the palette wholesale. A product that adopts every value from a marketing site stops looking like your product with their colours and starts looking like a broken copy of their site.
+
+Take the small number of things that carry identity: a primary colour, an accent, and the logo. Keep your own spacing, radius, and type scale, because those are what make your interface feel like itself and they were tuned for your layouts rather than a landing page.
+
+Be careful with fonts. A brand's display face is often licensed for their site and expensive at body sizes, and a heading font used for table rows is unreadable. Take the family for headings if you take it at all.
+
+Derive the shades yourself. You need hover, active, disabled and muted variants of their primary, and generating those from one colour with your own ramp keeps them consistent with the rest of your interface.
+
+## Contrast is not optional
+
+Some brands are genuinely inaccessible, and inheriting that faithfully is not a feature.
+
+The response carries a contrast reading and whether it meets AA. Check it before applying, not after a customer complains.
+
+Adjust rather than refuse when it fails. Darkening or lightening their primary until it passes against your background keeps the brand recognisable and the text readable, and it is a much better outcome than either shipping unreadable buttons or ignoring their brand entirely.
+
+Test both themes. A palette that works on your light surface can vanish on your dark one, and a customer who uses dark mode will see a different product from the one you checked.
+
+## Keeping it current, quietly
+
+Brands change every few years, so a refresh belongs on a slow cycle: annually, or when a customer asks.
+
+Never let a failed refresh blank an account. Keep the stored theme until a new one resolves successfully, or a transient failure turns a themed product into a grey one for everybody on that account.
+
+Record what you applied, not just what came back. When a customer says the colour looks wrong, you need to know whether it was resolved that way, adjusted for contrast, or overridden by them.
+
 ## What it costs
+
 
 A styleguide is 10 credits, the highest priced call we have. It loads the page the way a browser does and reads the styles that actually get applied, and there is no cheaper path that produces the same answer.
 
