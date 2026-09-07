@@ -3,7 +3,7 @@ title: "Media"
 description: "Harvest a page's images or capture a full-page screenshot."
 ---
 
-Two endpoints turn a page into media instead of text: **Images** lists every image on a page with its metadata, and **Screenshot** captures the rendered page as a PNG. Both are synchronous and cost one credit.
+Two endpoints turn a page into media instead of text: **Images** lists every image on a page with its metadata, and **Screenshot** captures the rendered page as a PNG. Both are synchronous. Images costs 1 credit; a screenshot costs 5, because it always renders the page in full rather than reading it.
 
 ## Images
 
@@ -94,6 +94,8 @@ print(res.json()["data"]["images"])
 ## Screenshot
 
 `POST /v1/web/screenshot` renders a page and captures it as a PNG, returned base64-encoded in the response. Use it for visual snapshots, archiving, or feeding a page's appearance to a vision model.
+
+The capture is of the page a reader would see, not of everything the page puts on screen. Cookie banners are accepted, newsletter and anti-adblock interstitials are closed, ad and tracker requests never load, and bot-check widgets are removed so a shareable screenshot is not dominated by a checkbox asking whether you are human. A page that is nothing but a challenge is left alone, because a blank capture would read as success.
 
 ### Example request
 
@@ -192,7 +194,7 @@ with open("page.png", "wb") as f:
 
 ## Billing
 
-Images and Screenshot each cost **1 credit**, charged only on success. Each response reports what it consumed. See [Credits](/concepts/credits).
+Images costs **1 credit** and Screenshot costs **5**, charged only on success. Each response reports what it consumed. See [Credits](/concepts/credits).
 
 ## Related
 
