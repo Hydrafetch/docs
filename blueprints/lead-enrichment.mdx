@@ -3,6 +3,33 @@ title: "Enrich a list of companies"
 description: "Turn a column of domains into company records with names, descriptions, logos, colours, and social links."
 ---
 
+<Note>
+  **Have an agent build it.** Copy the brief below into Claude Code, Cursor, or any coding agent with access to your project. It states the calls, the questions worth asking you first, and the mistakes to avoid.
+</Note>
+
+<Accordion title="Agent brief">
+```text
+Implement this blueprint in my project:
+https://docs.hydrafetch.com/blueprints/lead-enrichment
+
+Read that page, inspect this project's stack, then build the flow end to end.
+
+Build a company enrichment function over a list of domains using the Hydrafetch API.
+
+Per domain: GET /v1/web/brand?domain={domain} returns the full record (name, description, tagline, industry classification, colours, fonts, socials, logos). GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark returns one asset. GET /v1/web/brand/search?query={name} finds a domain from a company name.
+
+Ask me before writing code:
+- Where does the list come from and how many domains, so we can decide on concurrency and cost up front?
+- Which fields does the product actually render today, and should we store the whole record anyway?
+- Are inputs domains or company names? Names need the brand search step first.
+- What should the UI show for a domain with no resolvable brand?
+
+The response shape: data with name, domain, description, tagline, naics, colors[], fonts, socials[], and logos with format, variant and dimensions. data is null when nothing resolves.
+
+Notes: authenticate with the X-API-Key header. A full record is 5 credits and a single logo is 1, so do not resolve a record when only a mark is needed. Normalise domains (strip scheme, www, trailing slash) and deduplicate before spending. Failed calls are free. Keep the API key on the server and never ship it in client code.
+```
+</Accordion>
+
 You have domains, from a signup form, a CRM export, or a conference list, and you need them to become companies: a real name, what they do, an industry code, a logo you can render, and the social accounts to follow.
 
 One call per domain does it. `brand` resolves the whole record.
@@ -48,21 +75,3 @@ Normalise domains before you send them. `www.stripe.com`, `stripe.com/`, and `ht
 Handle the empty answer. Some domains have no resolvable brand: a parked domain, a personal site, a company that no longer exists. Decide what your UI shows for that case before you meet it in production.
 
 A logo has a variant for a reason. Ask for the one that suits the background you are drawing on, rather than picking one and hoping. A dark wordmark on a dark card is invisible.
-
-## Hand it to an agent
-
-```text
-Build a company enrichment function over a list of domains using the Hydrafetch API.
-
-Per domain: GET /v1/web/brand?domain={domain} returns the full record (name, description, tagline, industry classification, colours, fonts, socials, logos). GET /v1/web/brand/logo?domain={domain}&theme=light|dark&type=icon|wordmark returns one asset. GET /v1/web/brand/search?query={name} finds a domain from a company name.
-
-Ask me before writing code:
-- Where does the list come from and how many domains, so we can decide on concurrency and cost up front?
-- Which fields does the product actually render today, and should we store the whole record anyway?
-- Are inputs domains or company names? Names need the brand search step first.
-- What should the UI show for a domain with no resolvable brand?
-
-The response shape: data with name, domain, description, tagline, naics, colors[], fonts, socials[], and logos with format, variant and dimensions. data is null when nothing resolves.
-
-Notes: authenticate with the X-API-Key header. A full record is 5 credits and a single logo is 1, so do not resolve a record when only a mark is needed. Normalise domains (strip scheme, www, trailing slash) and deduplicate before spending. Failed calls are free.
-```

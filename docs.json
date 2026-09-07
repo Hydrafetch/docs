@@ -56,22 +56,6 @@
             ]
           },
           {
-            "group": "Blueprints",
-            "icon": "/icons/route.svg",
-            "pages": [
-              "blueprints/overview",
-              "blueprints/rag-corpus",
-              "blueprints/answer-with-sources",
-              "blueprints/agent-web-access",
-              "blueprints/catalogue-to-rows",
-              "blueprints/documents-to-markdown",
-              "blueprints/watch-a-site",
-              "blueprints/lead-enrichment",
-              "blueprints/match-a-customer-brand",
-              "blueprints/directory-logos"
-            ]
-          },
-          {
             "group": "Web Scraping",
             "icon": "/icons/markdown.svg",
             "pages": [
@@ -89,6 +73,45 @@
             "icon": "/icons/brackets-sparkle.svg",
             "pages": [
               "endpoints/extract"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Blueprints",
+        "groups": [
+          {
+            "group": "Start here",
+            "icon": "/icons/route.svg",
+            "pages": [
+              "blueprints/overview"
+            ]
+          },
+          {
+            "group": "Get data out of a site",
+            "icon": "/icons/spider-web.svg",
+            "pages": [
+              "blueprints/rag-corpus",
+              "blueprints/catalogue-to-rows",
+              "blueprints/documents-to-markdown",
+              "blueprints/watch-a-site"
+            ]
+          },
+          {
+            "group": "Answer questions and feed agents",
+            "icon": "/icons/sparkle.svg",
+            "pages": [
+              "blueprints/answer-with-sources",
+              "blueprints/agent-web-access"
+            ]
+          },
+          {
+            "group": "Know who you are dealing with",
+            "icon": "/icons/target.svg",
+            "pages": [
+              "blueprints/lead-enrichment",
+              "blueprints/match-a-customer-brand",
+              "blueprints/directory-logos"
             ]
           }
         ]

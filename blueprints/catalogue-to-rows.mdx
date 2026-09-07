@@ -3,6 +3,33 @@ title: "Turn a catalogue into rows"
 description: "Point at a set of pages, describe the fields you want, and get typed records back instead of prose."
 ---
 
+<Note>
+  **Have an agent build it.** Copy the brief below into Claude Code, Cursor, or any coding agent with access to your project. It states the calls, the questions worth asking you first, and the mistakes to avoid.
+</Note>
+
+<Accordion title="Agent brief">
+```text
+Implement this blueprint in my project:
+https://docs.hydrafetch.com/blueprints/catalogue-to-rows
+
+Read that page, inspect this project's stack, then build the flow end to end.
+
+Build a function that turns a set of catalogue pages into typed records using the Hydrafetch API.
+
+Two steps: POST /v1/web/map with {url, search, limit} to discover the listing URLs for 1 credit without fetching, then POST /v1/web/extract with {urls, schema} where schema is JSON Schema. A URL ending in /* expands to every page discovered under that path.
+
+Ask me before writing code:
+- What fields do you need, and what type is each one?
+- What should a missing field be: null, an omitted record, or an error to review?
+- Is this one run or does it repeat? If it repeats, how are records deduplicated and updated?
+- Where do the rows land, and does that store need a fixed schema up front?
+
+The response shape: data.results[] each with url, data (the object shaped by your schema) and error, plus data.sources[].
+
+Notes: authenticate with the X-API-Key header. Extract is 5 credits per URL, so filter the URL list before extracting rather than after. Up to 10 URLs per call. Keep the source url alongside every record for provenance. Prefer a schema over a bare prompt when anything downstream depends on the shape. Keep the API key on the server and never ship it in client code.
+```
+</Accordion>
+
 Some sites are a database with a website in front of them: a product catalogue, a jobs board, a directory, a price list. You do not want the text of those pages, you want the rows behind them.
 
 `extract` takes URLs and a schema and returns records shaped the way you asked, merged across pages.
@@ -53,21 +80,3 @@ Ask for fewer fields than you think you need. Every field is another thing that 
 Decide what a missing field means before you start. A product page with no price can be a free product, an out of stock product, or a page we failed to read, and your schema should be able to tell you which.
 
 Keep the source URL with each record. When a number looks wrong, and one will, the only cheap way to check is to open the page it came from.
-
-## Hand it to an agent
-
-```text
-Build a function that turns a set of catalogue pages into typed records using the Hydrafetch API.
-
-Two steps: POST /v1/web/map with {url, search, limit} to discover the listing URLs for 1 credit without fetching, then POST /v1/web/extract with {urls, schema} where schema is JSON Schema. A URL ending in /* expands to every page discovered under that path.
-
-Ask me before writing code:
-- What fields do you need, and what type is each one?
-- What should a missing field be: null, an omitted record, or an error to review?
-- Is this one run or does it repeat? If it repeats, how are records deduplicated and updated?
-- Where do the rows land, and does that store need a fixed schema up front?
-
-The response shape: data.results[] each with url, data (the object shaped by your schema) and error, plus data.sources[].
-
-Notes: authenticate with the X-API-Key header. Extract is 5 credits per URL, so filter the URL list before extracting rather than after. Up to 10 URLs per call. Keep the source url alongside every record for provenance. Prefer a schema over a bare prompt when anything downstream depends on the shape.
-```

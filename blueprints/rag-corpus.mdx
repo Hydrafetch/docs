@@ -3,6 +3,33 @@ title: "Build a RAG corpus"
 description: "Turn a documentation site into clean Markdown you can chunk and embed, without writing a crawler."
 ---
 
+<Note>
+  **Have an agent build it.** Copy the brief below into Claude Code, Cursor, or any coding agent with access to your project. It states the calls, the questions worth asking you first, and the mistakes to avoid.
+</Note>
+
+<Accordion title="Agent brief">
+```text
+Implement this blueprint in my project:
+https://docs.hydrafetch.com/blueprints/rag-corpus
+
+Read that page, inspect this project's stack, then build the flow end to end.
+
+Build a function that turns a documentation site into a chunked, embedded corpus using the Hydrafetch API.
+
+The pipeline: POST /v1/web/map to list URLs (1 credit, nothing fetched), filter that list in code, then POST /v1/web/batch with the survivors and scrapeOptions {"formats": ["markdown"], "onlyMainContent": true}. Batch is asynchronous: it returns a batchId, and you poll GET /v1/web/batch/{id} until status is completed or failed.
+
+Ask me before writing code:
+- Which site, and which URL patterns should be kept or dropped?
+- Where do the chunks go: which vector store and which embedding model?
+- Is this a one-off build or does it re-run on a schedule? If it re-runs, what maxAge is acceptable so unchanged pages are not re-fetched?
+- Do you want to poll or receive a webhook when the batch finishes?
+
+The response shape: data.pages[] each with url, status, and data holding markdown, metadata (title, wordCount, description) and quality (confidence, complete, blocked).
+
+Notes: authenticate with the X-API-Key header. Batch takes up to 25,000 URLs per call. Only pages that succeed are billed. Chunk on Markdown headings rather than a character count, and keep the raw Markdown so re-embedding does not mean re-fetching. Keep the API key on the server and never ship it in client code.
+```
+</Accordion>
+
 You want every page of a site as clean Markdown, once, so you can chunk it, embed it, and answer questions over it. The work is discovery, fetching, and cleaning, and none of it is the interesting part of your product.
 
 Two calls do it. `map` lists the URLs so you can decide what is worth fetching, and `batch` fetches the ones you kept.
@@ -57,23 +84,3 @@ Filter before you fetch, not after. Fetching 5,000 pages and discarding 4,000 co
 Check the `quality` object rather than assuming success. A page that returned content but was flagged incomplete is worth re-fetching, and a page that came back short is usually a login wall rather than a short page.
 
 Store the raw Markdown, not just the embeddings. When you change chunking strategy or embedding model, and you will, re-embedding from stored Markdown costs nothing while re-crawling costs the whole corpus again.
-
-## Hand it to an agent
-
-Paste this into Claude Code, Cursor, or any coding agent with access to your codebase.
-
-```text
-Build a function that turns a documentation site into a chunked, embedded corpus using the Hydrafetch API.
-
-The pipeline: POST /v1/web/map to list URLs (1 credit, nothing fetched), filter that list in code, then POST /v1/web/batch with the survivors and scrapeOptions {"formats": ["markdown"], "onlyMainContent": true}. Batch is asynchronous: it returns a batchId, and you poll GET /v1/web/batch/{id} until status is completed or failed.
-
-Ask me before writing code:
-- Which site, and which URL patterns should be kept or dropped?
-- Where do the chunks go: which vector store and which embedding model?
-- Is this a one-off build or does it re-run on a schedule? If it re-runs, what maxAge is acceptable so unchanged pages are not re-fetched?
-- Do you want to poll or receive a webhook when the batch finishes?
-
-The response shape: data.pages[] each with url, status, and data holding markdown, metadata (title, wordCount, description) and quality (confidence, complete, blocked).
-
-Notes: authenticate with the X-API-Key header. Batch takes up to 25,000 URLs per call. Only pages that succeed are billed. Chunk on Markdown headings rather than a character count, and keep the raw Markdown so re-embedding does not mean re-fetching.
-```
