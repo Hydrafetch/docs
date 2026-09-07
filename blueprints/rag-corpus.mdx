@@ -1,6 +1,6 @@
 ---
 title: "Build a RAG corpus"
-description: "Turn a documentation site into clean Markdown you can chunk and embed, without writing a crawler."
+description: "Turn a site into clean Markdown you can chunk, embed, cite, and keep current, without writing a crawler."
 ---
 
 <Note>
@@ -14,25 +14,28 @@ https://docs.hydrafetch.com/blueprints/rag-corpus
 
 Read that page, inspect this project's stack, then build the flow end to end.
 
-Build a function that turns a documentation site into a chunked, embedded corpus using the Hydrafetch API.
+Build a website ingestion pipeline that produces a chunked, embedded, citable corpus and can be re-run to keep it current.
 
 The pipeline: POST /v1/web/map to list URLs (1 credit, nothing fetched), filter that list in code, then POST /v1/web/batch with the survivors and scrapeOptions {"formats": ["markdown"], "onlyMainContent": true}. Batch is asynchronous: it returns a batchId, and you poll GET /v1/web/batch/{id} until status is completed or failed.
 
 Ask me before writing code:
 - Which site, and which URL patterns should be kept or dropped?
 - Where do the chunks go: which vector store and which embedding model?
-- Is this a one-off build or does it re-run on a schedule? If it re-runs, what maxAge is acceptable so unchanged pages are not re-fetched?
+- How often does this re-run, and is deleting removed pages in scope or is the index append-only?
 - Do you want to poll or receive a webhook when the batch finishes?
+- Is there a set of real questions we can evaluate retrieval against, or should we write one?
 
-The response shape: data.pages[] each with url, status, and data holding markdown, metadata (title, wordCount, description) and quality (confidence, complete, blocked).
+The response shape: data.pages[] each with url, requestedUrl (present only when it differed from url after normalisation), status, and data holding markdown, finalUrl, redirected, cached, metadata (title, wordCount, description) and quality (confidence, complete, blocked).
 
-Notes: authenticate with the X-API-Key header. Batch takes up to 25,000 URLs per call. Only pages that succeed are billed. Chunk on Markdown headings rather than a character count, and keep the raw Markdown so re-embedding does not mean re-fetching. Keep the API key on the server and never ship it in client code.
+Deduplicate on finalUrl rather than the URL you submitted, since redirects collapse several requested URLs onto one page. Store a content hash per page so a re-run only re-embeds what changed, and delete chunks whose page has disappeared from the site. Carry url and title on every chunk so answers can cite them. Chunk on Markdown headings rather than a character count, and keep the raw Markdown so re-embedding does not mean re-fetching.
+
+Notes: authenticate with the X-API-Key header. Batch takes up to 25,000 URLs per call. Only pages that succeed are billed. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
-You want every page of a site as clean Markdown, once, so you can chunk it, embed it, and answer questions over it. The work is discovery, fetching, and cleaning, and none of it is the interesting part of your product.
+You want every page of a site as clean Markdown, once, so you can chunk it, embed it, and answer questions over it with sources. The work is discovery, fetching, cleaning, deduplication, and keeping the whole thing current, and none of it is the interesting part of your product.
 
-Two calls do it. `map` lists the URLs so you can decide what is worth fetching, and `batch` fetches the ones you kept.
+Two calls cover the fetching. The rest of this page is the part that decides whether the corpus is any good six months later.
 
 ## The pipeline
 
@@ -53,6 +56,8 @@ The `search` filter keeps only URLs containing a term, which is usually the diff
 
 Look at the URLs before you spend anything on content. Drop the pagination, the tag pages, and the archive. This step costs nothing and removes more junk than any cleaning step downstream can.
 
+Save the filtered list. It is the input to every future re-run, and it is what you will diff against to notice pages appearing and disappearing.
+
 ### 3. Fetch the pages you kept
 
 `batch` takes up to 25,000 URLs in one call and runs them asynchronously. You get an id back immediately.
@@ -65,22 +70,60 @@ curl -X POST https://api.hydrafetch.com/v1/web/batch \
        "scrapeOptions": {"formats": ["markdown"], "onlyMainContent": true}}'
 ```
 
-Poll `GET /v1/web/batch/{id}`, or configure a webhook and skip polling entirely. Each page comes back with its Markdown, its metadata, and a quality object saying whether the fetch was complete.
+Poll `GET /v1/web/batch/{id}`, or configure a webhook and skip polling entirely.
 
-### 4. Chunk what came back
+### 4. Collapse duplicates before you chunk
+
+The same page is often reachable at several URLs: with and without a trailing slash, with tracking parameters, at `http` and `https`, at `/docs/intro` and `/docs/intro/index.html`. Embed all of them and your retriever will happily return the same passage three times and crowd out the answer.
+
+The response gives you what you need to collapse them. Each page carries `finalUrl`, the URL after any redirects, and `redirected` telling you whether it moved. Two requested URLs that redirect to one `finalUrl` are one document.
+
+Deduplicate on `finalUrl`, not on the URL you submitted. A batch also returns `requestedUrl` when the URL you sent differed from the normalised one, so you can still map a result back to your input list.
+
+Where two genuinely different URLs return the same content and neither redirects, fall back to a hash of the Markdown. Keep whichever URL is shorter or lives higher in the path, since that is almost always the canonical one a reader would be shown.
+
+### 5. Chunk with the source attached
 
 Split on headings rather than a fixed character count. The Markdown keeps its heading structure, so a chunk that starts at an `h2` is a chunk about one thing, which is what makes retrieval work.
+
+Carry metadata onto every chunk, not just the text: the `finalUrl`, the page `title`, the heading path the chunk sits under, and the time you fetched it. A chunk without its source is a passage you cannot cite and cannot invalidate.
+
+Store the raw Markdown alongside the chunks. When you change chunking strategy or embedding model, and you will, re-embedding from stored Markdown costs nothing while re-crawling costs the whole corpus again.
+
+### 6. Retrieve with citations
+
+Return the `url` and `title` with every retrieved chunk and pass both into the prompt, then tell the model to name which source supports each claim. This is the whole difference between a summary and an answer someone can check.
+
+Show the link in your UI too. A reader who can click through to the page is a reader who can catch the one answer in fifty that is wrong.
+
+## Keeping it current
+
+A corpus is only correct on the day you built it. The re-run is the part most pipelines never get around to, and it is three cheap operations.
+
+**Notice what changed.** Re-run `map` and diff the URL list against your stored one. New URLs are pages to add. Missing URLs are pages to delete.
+
+**Re-fetch without paying for what did not move.** Set `maxAge` in `scrapeOptions` and a page we already hold, fetched more recently than that, is served without going back to the origin. Store a hash of each page's Markdown and only re-embed the ones whose hash changed.
+
+**Actually delete.** This is the step everyone skips. A page removed from the site stays in your index forever unless something removes it, and a retired pricing page or a deprecated API method will keep surfacing in answers long after it stopped being true. Deleting stale chunks matters more than adding new ones, because a missing answer looks like a gap and a wrong answer looks like an answer.
+
+## Knowing whether it works
+
+Write down twenty questions your users actually ask, with the page that should answer each one. Run them through retrieval and count how often the right page comes back in the top few results. That number is the only honest measure of whether the corpus is working, and it takes an afternoon to build.
+
+Two failure signals are visible in the response itself. A page whose `quality` reports `complete: false` came back partial and is worth re-fetching. A page with a `wordCount` far below its neighbours is usually a login wall, a redirect to a hub page, or a mostly empty template, and it will sit in your index contributing nothing.
+
+Check coverage as well as accuracy. If a whole section of the site never appears in any retrieval result, either nobody asks about it or your filter in step 2 was too aggressive.
 
 ## What it costs
 
 `map` is 1 credit regardless of how many URLs come back. `batch` is 1 credit per page that succeeds. A 400 page corpus is 401 credits, and pages that fail cost nothing.
 
-Re-running later is cheaper than it looks. Set `maxAge` in `scrapeOptions` and a page we already hold, fetched more recently than that, is served without going back to the origin.
+A weekly refresh over the same 400 pages costs at most another 401, and considerably less when `maxAge` lets unchanged pages be served without a fresh fetch.
 
 ## What to watch for
 
 Filter before you fetch, not after. Fetching 5,000 pages and discarding 4,000 costs 5,000 credits and gets you the same corpus as filtering first.
 
-Check the `quality` object rather than assuming success. A page that returned content but was flagged incomplete is worth re-fetching, and a page that came back short is usually a login wall rather than a short page.
+Deduplicate before you embed, not after. Removing duplicate chunks from a vector store is harder than never adding them, and you pay to embed each one either way.
 
-Store the raw Markdown, not just the embeddings. When you change chunking strategy or embedding model, and you will, re-embedding from stored Markdown costs nothing while re-crawling costs the whole corpus again.
+Do not treat the first build as the finished product. The pipeline that runs once is a demo, and the difference between a demo and a feature is entirely in the refresh and delete path.
