@@ -10,13 +10,58 @@
  * Rule going forward: if Mintlify has a component or a setting for it, use
  * that. Only add CSS here for something the platform genuinely gets wrong.
  *
- * Brand: cyan #0891B2, ink #0B1B26 (apps/admin/public/brand/README.md). The
- * theme's own colours stay monochrome; cyan is a CTA colour, not a text colour.
+ * The values below come from design-system/HANDOFF.md, which the app and the
+ * marketing site read from the same token block. Docs cannot import that file,
+ * so the handful of roles the theme actually exposes are mirrored here.
  */
 
 :root {
-  --hf-accent: #0891b2;
-  --hf-accent-hover: #0e7490;
+  --hf-ink: #0b1b26;
+  --hf-text-2: #47606c;
+  --hf-text-3: #74909c;
+  --hf-line: #d3e0e6;
+  --hf-well: #edf4f7;
+  --hf-accent: #0e7490;
+  --hf-accent-hover: #107ea0;
+  --hf-ok-soft: #e6f4ea;
+  --hf-ok-line: #cfe8d6;
+  --hf-warn-soft: #fbf1e1;
+  --hf-warn-line: #f1dfbf;
+  --hf-danger-soft: #fbe7e7;
+  --hf-danger-line: #f2c9c9;
+  --hf-brand-soft: #e0f4f9;
+  --hf-info-line: #bfe6f0;
+
+  --hf-r-control: 2px;
+  --hf-r-intent: 4px;
+  --hf-r-panel: 8px;
+}
+
+.dark {
+  --hf-ink: #e6eef2;
+  --hf-text-2: #a7b9c3;
+  --hf-text-3: #748a97;
+  --hf-line: #1f2c36;
+  --hf-well: #151e26;
+  --hf-accent: #22d3ee;
+  --hf-accent-hover: #3ddcf3;
+}
+
+/* docs.json's `fonts` has slots for heading and body only, so the mono face has
+   to be declared here. Every number, key and endpoint on the site is set in it. */
+@font-face {
+  font-family: 'Chivo Mono';
+  src: url('/fonts/ChivoMono[wght].woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: 'Chivo Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 html {
@@ -29,8 +74,75 @@ html {
    middle of a cyan site. */
 .tryit-button {
   background: var(--hf-accent) !important;
+  border-radius: var(--hf-r-control) !important;
 }
 
 .tryit-button:hover {
   background: var(--hf-accent-hover) !important;
+}
+
+/* Controls are radius 2 and panels are radius 8. The theme ships everything at
+   14, which reads soft next to the app. */
+button,
+input,
+select,
+textarea,
+.tryit-button,
+[role='button'] {
+  border-radius: var(--hf-r-control);
+}
+
+/* Cards: one hairline, no shadow, no lift. Depth is a hairline that darkens. */
+#content-area a[href] > div,
+#content-area .card,
+.card {
+  border-radius: var(--hf-r-panel);
+  border: 1px solid var(--hf-line);
+  box-shadow: none;
+  transition: border-color 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+#content-area a[href]:hover > div,
+#content-area .card:hover,
+.card:hover {
+  border-color: var(--hf-accent);
+  box-shadow: none;
+}
+
+/* Callouts become intent panels: soft ground, hairline in the intent colour,
+   radius 4. The theme's own left-rail bar is the thing being replaced. */
+.callout,
+[class*='callout'] {
+  border-radius: var(--hf-r-intent);
+  border: 1px solid var(--hf-line);
+  box-shadow: none;
+}
+
+/* Code surfaces sit on the well with a hairline, matching the app's one code
+   block. */
+pre,
+.code-block {
+  border-radius: var(--hf-r-panel);
+  border: 1px solid var(--hf-line);
+}
+
+/* Section breaks are the Seam: a sparse dither band between hairlines, the
+   same rule the site uses instead of a plain <hr>. */
+#content-area hr {
+  height: 48px;
+  border: 0;
+  border-top: 1px solid var(--hf-line);
+  border-bottom: 1px solid var(--hf-line);
+  background:
+    repeating-conic-gradient(var(--hf-line) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+  mask-image: linear-gradient(to bottom, transparent, #000 50%, transparent);
+}
+
+/* Every number, key, endpoint and timestamp is tabular. */
+code,
+pre,
+kbd {
+  font-feature-settings:
+    'tnum' 1,
+    'zero' 1;
 }
