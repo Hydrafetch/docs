@@ -93,8 +93,6 @@ textarea,
 }
 
 /* Cards: one hairline, no shadow, no lift. Depth is a hairline that darkens. */
-#content-area a[href] > div,
-#content-area .card,
 .card {
   border-radius: var(--hf-r-panel);
   border: 1px solid var(--hf-line);
@@ -102,8 +100,6 @@ textarea,
   transition: border-color 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-#content-area a[href]:hover > div,
-#content-area .card:hover,
 .card:hover {
   border-color: var(--hf-accent);
   box-shadow: none;
@@ -119,8 +115,8 @@ textarea,
 }
 
 /* Code surfaces sit on the well with a hairline, matching the app's one code
-   block. */
-pre,
+   block. The border belongs to the block, not to the `pre` inside it: the theme
+   nests several wrappers between the two, so styling both drew a box in a box. */
 .code-block {
   border-radius: var(--hf-r-panel);
   border: 1px solid var(--hf-line);
