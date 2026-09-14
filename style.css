@@ -106,11 +106,11 @@ textarea,
 }
 
 /* Callouts become intent panels: soft ground, hairline in the intent colour,
-   radius 4. The theme's own left-rail bar is the thing being replaced. */
+   radius 4. The border is left to the theme, which already tints it per intent;
+   forcing the neutral line here made a warning and a note read the same. */
 .callout,
 [class*='callout'] {
   border-radius: var(--hf-r-intent);
-  border: 1px solid var(--hf-line);
   box-shadow: none;
 }
 
