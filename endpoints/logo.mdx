@@ -11,11 +11,11 @@ description: "A company's logo as an image URL you can drop straight into an img
 
 Two things about this endpoint are different from every other one, and both are deliberate.
 
-<Card title="Logo serves never spend credits" icon="coins">
+<Card title="Logo serves never spend credits" icon="/icons/coins.svg">
   They are metered on their own per-cycle allowance. A page rendering forty logos costs you forty logo serves and zero credits.
 </Card>
 
-<Card title="The key goes in your markup" icon="key">
+<Card title="The key goes in your markup" icon="/icons/key.svg">
   An `<img>` tag cannot send a header, so this endpoint takes a **publishable key** in the query string. It is designed to be public and reaches this endpoint and nothing else.
 </Card>
 
@@ -94,19 +94,19 @@ Going over does not break your pages immediately: for **7 days** we keep answeri
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Brand data" icon="palette" href="/concepts/brand">
+  <Card title="Brand data" icon="/icons/palette.svg" href="/concepts/brand">
     The full record behind this endpoint — logos, palette, fonts, socials.
   </Card>
 
-  <Card title="API keys" icon="key" href="/help/api-keys">
+  <Card title="API keys" icon="/icons/key.svg" href="/help/api-keys">
     Creating publishable and secret keys, and what to do if one leaks.
   </Card>
 
-  <Card title="Credits & billing" icon="coins" href="/concepts/credits">
+  <Card title="Credits & billing" icon="/icons/coins.svg" href="/concepts/credits">
     Why logo serves sit outside the credit model.
   </Card>
 
-  <Card title="Errors" icon="triangle-exclamation" href="/concepts/errors">
+  <Card title="Errors" icon="/icons/warning.svg" href="/concepts/errors">
     What a 401, 403 or 429 from this endpoint means.
   </Card>
 </CardGroup>

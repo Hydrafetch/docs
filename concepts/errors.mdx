@@ -30,7 +30,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
 ## Statuses
 
 <AccordionGroup>
-  <Accordion title="400 — Validation error" icon="circle-exclamation">
+  <Accordion title="400 — Validation error" icon="/icons/circle-warning.svg">
     The request body didn't pass validation — a missing `url`, a non-http scheme, an out-of-range `maxAge`, or requesting the `json` format without `jsonOptions`. Fix the request and retry.
 
     ```json
@@ -41,7 +41,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="401 — Unauthorized" icon="key">
+  <Accordion title="401 — Unauthorized" icon="/icons/key.svg">
     The `X-API-Key` header is missing, malformed, or revoked. The check runs before any work, so a rejected request never costs credits. See [Authentication](/authentication).
 
     ```json
@@ -52,7 +52,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="402 — Insufficient credits" icon="coins">
+  <Accordion title="402 — Insufficient credits" icon="/icons/coins.svg">
     Your workspace doesn't have enough credits to cover the call. It's rejected up front, before any work runs, so nothing is charged. Top up and retry.
 
     ```json
@@ -63,7 +63,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="404 — Not found" icon="magnifying-glass">
+  <Accordion title="404 — Not found" icon="/icons/magnifier.svg">
     The resource doesn't exist — an unknown job, crawl, or batch id — or a `cacheOnly` scrape found no fresh capture to serve. A `cacheOnly` miss is expected and never triggers a live fetch; see [Caching](/concepts/caching).
 
     ```json
@@ -74,7 +74,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="422 — Origin unreachable" icon="link-slash">
+  <Accordion title="422 — Origin unreachable" icon="/icons/link-broken.svg">
     The target site did not respond, so there was nothing to return. This says something about that URL rather than about our service, and retrying it will not change the answer: treat it as a dead address and move on. Nothing was charged.
 
     ```json
@@ -85,7 +85,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="429 — Rate limited" icon="gauge-high">
+  <Accordion title="429 — Rate limited" icon="/icons/gauge.svg">
     You've sent requests faster than your allowance. Back off and retry after a short delay, ideally with exponential backoff.
 
     ```json
@@ -96,7 +96,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     }
     ```
   </Accordion>
-  <Accordion title="504 — Timed out" icon="clock">
+  <Accordion title="504 — Timed out" icon="/icons/clock.svg">
     The page ran past the 90-second synchronous budget. The fetch keeps going in the background, so
     the capture usually lands in the cache and an immediate retry returns it quickly. Pages that hit
     this are almost always behind heavy bot protection. If you would rather not wait at all, send
@@ -112,7 +112,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     ```
   </Accordion>
 
-  <Accordion title="5xx — Server error" icon="server">
+  <Accordion title="5xx — Server error" icon="/icons/server.svg">
     Something went wrong on our side, or the target page couldn't be delivered within the time budget. These are safe to retry — the failed call wasn't charged.
 
     ```json
