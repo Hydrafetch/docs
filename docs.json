@@ -115,6 +115,7 @@
             "group": "Know who you are dealing with",
             "icon": "/icons/target.svg",
             "pages": [
+              "blueprints/local-business-directory",
               "blueprints/lead-enrichment",
               "blueprints/match-a-customer-brand",
               "blueprints/directory-logos"

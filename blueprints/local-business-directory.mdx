@@ -1,0 +1,158 @@
+---
+title: "Build a local business directory"
+description: "Start from a category and a city, find each business's own site, and turn it into a row with the fields a directory listing never carries."
+---
+
+<Note>
+  **Have an agent build it.** Copy the brief below into Claude Code, Cursor, or any coding agent with access to your project. It states the calls, the questions worth asking you first, and the mistakes to avoid.
+</Note>
+
+<Accordion title="Agent brief">
+```text
+Implement this blueprint in my project:
+https://docs.hydrafetch.com/blueprints/local-business-directory
+
+Read that page, inspect this project's stack, then build the flow end to end.
+
+Build a pipeline that turns a category plus a city into structured records for every business of that kind, using the Hydrafetch API.
+
+Three steps. POST /v1/web/search with {query, limit, country} to find the businesses' own sites rather than aggregator listings. POST /v1/web/map with {url, search, limit} against any multi-location operator to enumerate every branch page for 1 credit. POST /v1/web/extract with {urls, schema} where schema is JSON Schema, to turn each page into a record.
+
+Ask me before writing code:
+- What fields make a record useful to you, and which ones are required?
+- Is the base list coming from a licensed places dataset, or are we discovering it by search?
+- One run, or does it repeat? If it repeats, how do you want closures handled?
+- Where do the rows land, and does that store need a fixed schema up front?
+- How do you want to handle a business with no website at all?
+
+The response shape for extract: data.results[] each with url, data (the object shaped by your schema) and error, plus data.sources[].
+
+Key the rows on the normalised page URL, not on the business name, so a repeat run upserts instead of duplicating. Record the fill rate per field on every run and alert when a field that was consistently full drops sharply. Deduplicate across chains and independents before extracting, because the same branch is often reachable from more than one URL.
+
+Notes: authenticate with the X-API-Key header. Search and map are 1 credit each, extract is 5 credits per URL, so filter the URL list before extracting rather than after. Up to 10 URLs per extract call; for thousands of pages use POST /v1/web/batch with a webhook. Keep the source url alongside every record. Keep the API key on the server and never ship it in client code.
+```
+</Accordion>
+
+"Every hospital in the city." "Every dealership in the state." "Every gym within the metro." It is a common ask and the usual answer is disappointing, because the aggregator directories that look like they have the list are stale, partial, and thin on the fields that matter.
+
+This blueprint builds the list from the businesses' own sites instead. Their pages are where the current address, the real opening hours and the actual service list live, because the business updates them and nobody else does.
+
+## Start with an honest base list
+
+Before the pipeline, decide where the universe of businesses comes from.
+
+Map products are not scrapeable. Their terms forbid it and the results live inside an interactive pane rather than on a page, so anyone offering you a map scrape is selling you a liability rather than a dataset. Use the licensed route: a places API with a category and a radius, or OpenStreetMap through Overpass for an open licensed alternative. Both give you names and approximate locations, and both stop well short of a usable record.
+
+That is the split worth understanding. A licensed places source gives you the spine. This pipeline gives you the record.
+
+## The pipeline
+
+### 1. Find each business's own site
+
+`search` reaches past the aggregators to the pages the businesses publish themselves.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/search \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "diagnostic centre path lab Koregaon Park Pune", "limit": 8, "country": "IN"}'
+```
+
+Search a neighbourhood at a time rather than a whole city. The results are ranked, so a broad query returns the same handful of national aggregators everywhere, while a narrow one surfaces the local operators you actually wanted.
+
+Add `"scrapeResults": true` when you want each result's content in the same call. That bills 1 credit per result on top of the search, so leave it off while you are still deciding which results are worth keeping.
+
+### 2. Enumerate every branch of a multi-location business
+
+Most categories are dominated by a handful of chains with dozens or hundreds of locations each. Search will show you one branch. `map` gives you all of them.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/map \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example-chain.com", "search": "pune", "limit": 200}'
+```
+
+The `search` filter is a substring match against the URLs, so a city name or a path segment narrows a national site down to one region without fetching anything. This is the step where coverage actually gets built: one call, one credit, and the long tail of branches no directory bothered to list.
+
+Raise `limit` when the result comes back exactly at the number you asked for, because that means you hit your ceiling rather than the end of the list.
+
+### 3. Turn each page into a record
+
+One schema, written once, applied across operators whose sites have nothing structurally in common.
+
+```bash
+curl -X POST https://api.hydrafetch.com/v1/web/extract \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"urls": ["https://example-chain.com/locations/koregaon-park"],
+       "schema": {"type": "object",
+                  "properties": {"name": {"type": "string"},
+                                 "addressLine": {"type": "string"},
+                                 "city": {"type": "string"},
+                                 "postalCode": {"type": "string"},
+                                 "phone": {"type": "string"},
+                                 "openingHours": {"type": "string"},
+                                 "servicesOffered": {"type": "array", "items": {"type": "string"}},
+                                 "homeCollection": {"type": "boolean"}},
+                  "required": ["name"]}}'
+```
+
+The records come back shaped the way you asked:
+
+```json
+{
+  "name": "Example Diagnostics - Koregaon Park",
+  "addressLine": "2nd Floor, Liberty Complex, North Main Road, Koregaon Park",
+  "city": "Pune",
+  "postalCode": "411001",
+  "phone": "+91 20 4000 0000",
+  "openingHours": "Mon-Sat: 07:30 AM - 02:00 PM, Sun: Closed",
+  "servicesOffered": ["Full body checkup", "Blood tests", "Thyroid profile"],
+  "homeCollection": true
+}
+```
+
+`homeCollection` is the field to pay attention to. It is meaningless outside diagnostics, and that is the point: the last field in the schema is usually the one specific to your category, and it is the reason to write a schema rather than buy a list. A dealership directory wants `brandsSold`, a gym wants `openTwentyFourHours`, a clinic wants the specialisms. No aggregator carries any of them, because no aggregator knows which vertical you are in.
+
+`urls` takes a list, so a batch of branches is one call rather than one call per branch.
+
+## Deduplicate before you extract, not after
+
+Extraction is the priced step, so paying for it twice on the same location is the easiest money to waste here.
+
+The same branch is routinely reachable from several URLs: a city landing page, a locality page, a legacy path kept alive for search. Normalise the list first, meaning drop tracking parameters, settle on one trailing slash convention, and collapse obvious aliases. Then, after extraction, deduplicate again on the record itself, because two genuinely different URLs can describe one physical location.
+
+A phone number plus a postal code is a stronger key than a name. Names carry franchise suffixes, punctuation and spelling drift that no normalisation fully fixes.
+
+## Keeping it current
+
+Local business data goes stale faster than almost anything else. Branches open, move, change hours and quietly close.
+
+Re-run `map` on a schedule, since it is 1 credit and the diff is most of the value. A URL that appeared is a new branch. A URL that disappeared is a closure or a redesign, and either way it is the signal you wanted.
+
+Re-extract selectively. Hours and services change; addresses rarely do. Extract new URLs always and cycle through existing ones slowly, rather than re-running the whole city every week.
+
+Mark what left rather than deleting it. A directory that silently drops a closed location cannot tell you it closed, and that is often the question being asked.
+
+## What it costs
+
+Search and map are 1 credit each. Extract is 5 credits per URL, because it is model-backed work rather than a fetch.
+
+A worked example: one operator, 200 branches in a city, full records. That is 1 credit to map and 1,000 to extract. Repeat it for the three or four operators that cover most of a category and you have the city, with fields no directory sells.
+
+For thousands of pages, use [`batch`](/endpoints/batch) rather than looping extract calls. It takes the same options, returns a job id, and calls a webhook when it finishes, so nothing sits waiting on a response.
+
+Failed calls never cost credits, so the cheapest way to size any of this is to run step one and look at what comes back.
+
+## What to watch for
+
+Validate URLs before you spend on them. A URL that does not resolve returns a record of nulls rather than an error, which reads like a failed extraction when it is really a bad input. Confirm the page exists before extracting it.
+
+Not every business has a website, and in some categories that is most of them. Those businesses need a different route entirely, usually a phone call or a licensed dataset, and the pipeline should record them as "no source" rather than as failures.
+
+Watch the fill rate per field. Extraction keeps returning valid JSON after a site redesign, with the field you cared about silently null on every page. Track the share of records where each field came back non-null, and alert when a field that was consistently full drops sharply.
+
+Ask for fewer fields than you think you need. Three fields that are right on every page beat twelve that are right on half.
+
+Public pages only. Anything behind a login or a booking flow is out of scope, and a record built from what a business chose to publish is the one you can stand behind.
