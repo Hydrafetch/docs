@@ -23,11 +23,11 @@ curl -X POST https://api.hydrafetch.com/v1/web/crawl \
   -H "X-API-Key: hf_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://example.com",
+    "url": "https://example.com/blog",
     "limit": 100,
     "maxDepth": 2,
-    "includePaths": ["^/blog/.*"],
-    "excludePaths": ["^/tag/.*"],
+    "includePaths": ["^/blog"],
+    "excludePaths": ["^/tag"],
     "scrapeOptions": { "formats": ["markdown", "links"] }
   }'
 ```
@@ -40,11 +40,11 @@ const res = await fetch("https://api.hydrafetch.com/v1/web/crawl", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    url: "https://example.com",
+    url: "https://example.com/blog",
     limit: 100,
     maxDepth: 2,
-    includePaths: ["^/blog/.*"],
-    excludePaths: ["^/tag/.*"],
+    includePaths: ["^/blog"],
+    excludePaths: ["^/tag"],
     scrapeOptions: { formats: ["markdown", "links"] },
   }),
 });
@@ -58,11 +58,11 @@ res = requests.post(
     "https://api.hydrafetch.com/v1/web/crawl",
     headers={"X-API-Key": "hf_your_key_here"},
     json={
-        "url": "https://example.com",
+        "url": "https://example.com/blog",
         "limit": 100,
         "maxDepth": 2,
-        "includePaths": ["^/blog/.*"],
-        "excludePaths": ["^/tag/.*"],
+        "includePaths": ["^/blog"],
+        "excludePaths": ["^/tag"],
         "scrapeOptions": {"formats": ["markdown", "links"]},
     },
 )
@@ -79,6 +79,18 @@ The crawl is accepted right away:
 { "crawlId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
 ```
 
+## Keeping a crawl inside one section
+
+A starting URL says where to begin, not where to stay. Discovery also uses the site's own published page list, which covers everything, so pointing a crawl at `https://example.com/blog` and setting nothing else will happily return pages from the rest of the site.
+
+Add `includePaths` to hold it inside the section, and write the pattern so that the starting page matches it too:
+
+```json
+{ "url": "https://example.com/blog", "includePaths": ["^/blog"] }
+```
+
+`["^/blog/.*"]` looks equivalent and is not. A starting URL loses its trailing slash, so `https://example.com/blog/` starts at the path `/blog`, which that pattern does not match. The crawl would then have no page to begin from, so we refuse the request instead of handing back a job that finishes with nothing in it.
+
 ## Request options
 
 <ParamField body="url" type="string" required>
@@ -94,11 +106,11 @@ The crawl is accepted right away:
 </ParamField>
 
 <ParamField body="includePaths" type="string[]">
-  Only follow URLs whose path matches every one of these patterns (e.g. `["^/blog/.*"]`). Up to 50.
+  Only follow URLs whose path matches every one of these patterns (e.g. `["^/blog"]`). Up to 50. **The patterns apply to the starting URL as well.** If they exclude it, the crawl has nowhere to begin, so the request is refused rather than returning an empty job.
 </ParamField>
 
 <ParamField body="excludePaths" type="string[]">
-  Skip URLs whose path matches any of these patterns (e.g. `["^/tag/.*"]`). Up to 50.
+  Skip URLs whose path matches any of these patterns (e.g. `["^/tag"]`). Up to 50. As with `includePaths`, these apply to the starting URL too.
 </ParamField>
 
 <ParamField body="allowSubdomains" type="boolean" default="false">
@@ -114,7 +126,7 @@ The crawl is accepted right away:
 </ParamField>
 
 <ParamField body="sitemap" type="string" default="include">
-  Whether to seed discovery from the site's published page list: `skip` or `include`.
+  Whether to seed discovery from the site's published page list: `skip` or `include`. Because that list covers the whole site, **starting from a section does not by itself limit the crawl to that section.** Use `includePaths` to do that.
 </ParamField>
 
 <ParamField body="scrapeOptions" type="object">

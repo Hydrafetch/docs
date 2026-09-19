@@ -86,7 +86,7 @@ print(res.json()["data"]["links"])
 </ParamField>
 
 <ParamField body="limit" type="number">
-  Maximum number of URLs to return. 1–5000.
+  Maximum number of URLs to return. 1–5000. Results are ordered by how recently each page changed, so a limit gives you the **most recently updated** URLs rather than an even sample of the site. On a site where one kind of page changes constantly, such as a shop's product pages, a small limit can return that kind and nothing else. `sitemapInclude` is how you ask for the rest.
 </ParamField>
 
 <ParamField body="search" type="string">
@@ -95,6 +95,18 @@ print(res.json()["data"]["links"])
 
 <ParamField body="sitemap" type="string">
   Whether to use the site's published page list: `skip` it, `include` it alongside discovered links, or use it `only`.
+</ParamField>
+
+<ParamField body="sitemapInclude" type="string">
+  On sites that publish several page lists, only read the ones whose address contains one of these comma-separated terms. For example `"pages"` on a shop to reach its policy and information pages instead of its products.
+</ParamField>
+
+<ParamField body="sitemapExclude" type="string">
+  Skip page lists whose address contains any of these comma-separated terms. Compose it with `sitemapInclude`, for example include `"post"` and exclude `"tag,category,author"` to avoid tag and category archives.
+</ParamField>
+
+<ParamField body="order" type="string" default="newest">
+  Sort by how recently each page changed: `newest` first, or `oldest`. URLs with no recorded date sort last either way.
 </ParamField>
 
 <ParamField body="includeSubdomains" type="boolean" default="false">
