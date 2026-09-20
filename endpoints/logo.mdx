@@ -89,6 +89,8 @@ Because logos are cached aggressively at the edge, most of your traffic never re
 
 Logo serves are metered per billing cycle against your plan's logo allowance, **separately from credits**. A logo serve never spends a credit, and a credit never buys a logo serve.
 
+Only a delivered logo counts. If we have no logo for the domain, or we are still resolving it, you get a placeholder and your allowance is untouched. So is anything served from the edge cache. You are charged for the image you actually rendered, nothing else.
+
 Going over does not break your pages immediately: for **7 days** we keep answering with monogram placeholders instead of errors, so nothing on your site turns into a broken image while you notice and upgrade. After that grace period the endpoint returns an error. See [Plans and billing](/help/billing).
 
 ## Related
