@@ -48,7 +48,7 @@ If you lock a key, make sure your pages actually send a referrer. A `Referrer-Po
 </ParamField>
 
 <ParamField query="theme" default="light" type="string">
-  The background you are drawing on: `light`, `dark`, or `auto`. `auto` prefers a single-colour mark that works on either.
+  The background you are drawing on: `light`, `dark`, or `auto`. `light` and `dark` pin the mark to one colour. `auto` leaves it adaptive, so it follows the viewer's operating system setting. See [Getting the theme right](#getting-the-theme-right) before reaching for `auto`.
 </ParamField>
 
 <ParamField query="type" default="icon" type="string">
@@ -72,6 +72,28 @@ If you lock a key, make sure your pages actually send a referrer. A `Referrer-Po
 ```html Hide the element when we have nothing
 <img src="https://img.hydrafetch.com/logo/example.com?token=pk_live_x&fallback=404" alt="" onerror="this.remove()" />
 ```
+
+## Getting the theme right
+
+A logo is usually one colour, and the wrong one is invisible rather than merely wrong. A white mark on a white card looks to your users like we have no logo for that company.
+
+**Pass the theme your page has actually resolved.** Not the operating system's, yours:
+
+```html
+<img src="https://img.hydrafetch.com/logo/github.com?token=pk_live_x&theme=light" alt="GitHub" />
+```
+
+`theme=auto` is the exception, not the default, and it is worth understanding why. An adaptive logo carries a `prefers-color-scheme` rule inside the image, and an image loaded through an `<img>` tag cannot see your page. It only sees the viewer's operating system setting. If your site follows the OS exactly, `auto` is correct and saves you the work. **If your site has its own light and dark toggle, `auto` will be wrong every time a visitor sets your toggle against their OS**, which is exactly when a broken logo is most visible.
+
+So: a theme toggle means you pass `light` or `dark` yourself. In React, the [React SDK](/sdks/react) takes the theme once on the provider and every `<Logo>` beneath it follows:
+
+```tsx
+<HydrafetchProvider publishableKey="pk_live_x" theme={resolvedTheme}>
+  <Logo domain="github.com" />
+</HydrafetchProvider>
+```
+
+Serving a CSS background instead of an `<img>` does not change this. The rule is the same: name the background you are drawing on.
 
 ## A domain we have never seen
 

@@ -183,6 +183,7 @@ status = res.json()
       "url": "https://example.com/blog/post",
       "status": "completed",
       "depth": 1,
+      "discoveredVia": "sitemap",
       "error": null,
       "data": {
         "url": "https://example.com/blog/post",
@@ -209,7 +210,9 @@ status = res.json()
 <ResponseField name="failed" type="number">Pages that failed.</ResponseField>
 <ResponseField name="creditsUsed" type="number">Credits consumed so far. One per scraped page.</ResponseField>
 <ResponseField name="pages" type="object[]">
-  Per-page results, each with `url`, `status` (`queued`, `running`, `completed`, `failed`), `depth`, `error`, and `data` (the scraped page, once completed).
+  Per-page results, each with `url`, `status` (`queued`, `running`, `completed`, `failed`), `depth`, `discoveredVia`, `error`, and `data` (the scraped page, once completed).
+
+  `discoveredVia` tells you how a URL entered the job: `requested` for one you gave us (the crawl seed, or any batch entry), `sitemap` for one read from the site's sitemap, `link` for one followed from a page we had already fetched. It is the quickest way to see why a crawl returned the set it did, and whether raising the limit or the depth would find more.
 </ResponseField>
 
 <Note>
