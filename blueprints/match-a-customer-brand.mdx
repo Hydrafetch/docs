@@ -25,7 +25,7 @@ Ask me before writing code:
 - Can a customer override the automatic result, and where does that live in the UI?
 - Does the product have a dark theme that also needs to work with their palette?
 
-The response shape: data with colors (role and hex), typography per role, radius, spacing, shadows, webfonts, and contrast with textOnBackground and meetsAA.
+The response shape: data with colors (role and hex), typography per role, radius, spacing, shadows, webfonts, contrast with textOnBackground and meetsAA, and the same tokens as ready-made CSS variables in css and as a Tailwind CSS v4 theme in tailwind.
 
 Resolve at onboarding and store the theme on the account, never at request time. Take the primary, the accent and the logo, and derive hover, active, disabled and muted shades with our own ramp rather than adopting every value. Check the contrast report before applying and adjust the colour until it passes rather than shipping unreadable text or discarding the brand. Test the result against both light and dark themes. Keep the stored theme when a refresh fails instead of blanking the account, and record whether a value was resolved, contrast-adjusted or customer-overridden.
 
@@ -47,6 +47,8 @@ curl -X GET "https://api.hydrafetch.com/v1/web/styleguide?domain=stripe.com" \
 ```
 
 `styleguide` reads the styles that actually get applied, so what comes back is what a visitor sees rather than what the stylesheet declares. You get colour roles, typography with real font families and weights, radius, spacing and shadow tokens, the webfonts in use, and a contrast check.
+
+If your product styles itself with CSS variables or Tailwind, the `css` and `tailwind` fields carry the same tokens in that form. Copy across only the variables you decided should follow the customer, such as `--color-accent` and `--font-heading`, rather than the whole block.
 
 ### 2. Take the logo that suits your surface
 

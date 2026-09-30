@@ -66,6 +66,8 @@ curl "https://api.hydrafetch.com/v1/web/styleguide?domain=hydrafetch.com" \
   -H "X-API-Key: hf_your_key"
 ```
 
+The same design also comes back ready to paste. `css` is a stylesheet with an `@font-face` rule for each webfont and a `:root` block of CSS variables for colours, fonts, the type scale, radius, shadows and spacing. `tailwind` holds the same variables as a Tailwind CSS v4 theme, so after pasting it classes such as `bg-accent`, `font-heading`, `text-h1`, `rounded-button` and `shadow-md` use the site's design. Only plain colours, lengths, font names and https font files are included, so nothing else from the page can reach your stylesheet.
+
 ## What it costs
 
 A resolved domain is **5 credits**, the same as schema extraction, because the work behind it is model-backed and processes real binary assets. A domain we cannot resolve costs nothing.

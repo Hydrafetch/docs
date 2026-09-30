@@ -4,6 +4,18 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="September 2026" tags={["Brand"]}>
+  ## Style guides you can paste
+
+  `/v1/web/styleguide` now returns the design it found as code as well as data.
+
+  - `css` is a stylesheet: an `@font-face` rule for each webfont and a `:root` block of CSS variables for colours, fonts, the type scale, radius, shadows and spacing
+  - `tailwind` is the same set of variables as a Tailwind CSS v4 theme, so classes such as `bg-accent`, `font-heading` and `text-h1` pick up the site's design
+  - Only plain colours, lengths, font names and https font files make it into either one, so a page cannot write anything else into your stylesheet
+
+  Webfont files are also more accurate. When a site served an italic and an upright file for the same weight, the italic one could be returned as the regular font; the upright file now wins. Style guides saved before this change are read again the next time you ask for them.
+</Update>
+
 <Update label="September 2026" tags={["Web Scraping"]}>
   ## Endpoints that only answer a POST
 
