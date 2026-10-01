@@ -233,5 +233,142 @@
       "twitter:card": "summary_large_image",
       "og:description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract with one API, one credit a page."
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/api-reference/web-extraction/extract-structured-data-from-urls",
+      "destination": "/api-reference/extract/extract-structured-data-from-urls",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/scrape-a-url",
+      "destination": "/api-reference/scrape/scrape-a-url",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/scrape-to-markdown",
+      "destination": "/api-reference/scrape/scrape-to-markdown",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/scrape-to-html",
+      "destination": "/api-reference/scrape/scrape-to-html",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/scrape-raw-html",
+      "destination": "/api-reference/scrape/scrape-raw-html",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/get-a-pages-links",
+      "destination": "/api-reference/scrape/get-a-pages-links",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/get-structured-data",
+      "destination": "/api-reference/scrape/get-structured-data",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/get-scrape-job-status",
+      "destination": "/api-reference/scrape/get-scrape-job-status",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/map-a-site",
+      "destination": "/api-reference/crawl-&-batch/map-a-site",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/start-a-crawl",
+      "destination": "/api-reference/crawl-&-batch/start-a-crawl",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/start-a-batch",
+      "destination": "/api-reference/crawl-&-batch/start-a-batch",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/get-crawl-status",
+      "destination": "/api-reference/crawl-&-batch/get-crawl-status",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/get-batch-status",
+      "destination": "/api-reference/crawl-&-batch/get-batch-status",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/list-webhook-deliveries-for-a-crawl",
+      "destination": "/api-reference/crawl-&-batch/list-webhook-deliveries-for-a-crawl",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/list-webhook-deliveries-for-a-batch",
+      "destination": "/api-reference/crawl-&-batch/list-webhook-deliveries-for-a-batch",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/search-the-web",
+      "destination": "/api-reference/search/search-the-web",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/harvest-a-pages-images",
+      "destination": "/api-reference/media/harvest-a-pages-images",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/screenshot-a-page",
+      "destination": "/api-reference/media/screenshot-a-page",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/resolve-a-brand",
+      "destination": "/api-reference/brand/resolve-a-brand",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/resolve-many-brands",
+      "destination": "/api-reference/brand/resolve-many-brands",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/search-brands",
+      "destination": "/api-reference/brand/search-brands",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/web-scraping/read-a-companys-design-system",
+      "destination": "/api-reference/brand/read-a-companys-design-system",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/map/map-a-site",
+      "destination": "/api-reference/crawl-&-batch/map-a-site",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/crawl/start-a-crawl",
+      "destination": "/api-reference/crawl-&-batch/start-a-crawl",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/crawl/start-a-batch",
+      "destination": "/api-reference/crawl-&-batch/start-a-batch",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/crawl/get-crawl-status",
+      "destination": "/api-reference/crawl-&-batch/get-crawl-status",
+      "permanent": true
+    },
+    {
+      "source": "/api-reference/crawl/get-batch-status",
+      "destination": "/api-reference/crawl-&-batch/get-batch-status",
+      "permanent": true
+    }
+  ]
 }
