@@ -4,6 +4,19 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Web Extraction"]}>
+  ## The right dates, and when a page was last updated
+
+  `metadata.publishedTime` now comes from the article itself, and a new `metadata.modifiedTime` says when the page was last updated.
+
+  - The publication date is read from what the page declares, then from the byline beside the title. A date in a related-posts card, a sidebar or a list of other articles is no longer taken as the page's own
+  - When the dates beside the title disagree, or the only date is labelled as an update, `publishedTime` is `null` rather than a guess
+  - `modifiedTime` is the date the page gives for its last update, from its declared markup or a date it labels "Last updated". It is `null` when the page does not say
+  - With `onlyMainContent: true`, an article keeps the short summary paragraph directly under its title. On announcements that paragraph usually carries the key facts
+
+  A wrong date is worse than no date, because you cannot tell it apart from a real one. Fewer pages now come back with a date, and far fewer come back with the wrong one.
+</Update>
+
 <Update label="September 2026" tags={["Brand"]}>
   ## Style guides you can paste
 
