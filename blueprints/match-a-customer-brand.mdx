@@ -48,7 +48,7 @@ curl -X GET "https://api.hydrafetch.com/v1/web/styleguide?domain=stripe.com" \
 
 `styleguide` reads the styles that actually get applied, so what comes back is what a visitor sees rather than what the stylesheet declares. You get colour roles, typography with real font families and weights, radius, spacing and shadow tokens, the webfonts in use, and a contrast check.
 
-If your product styles itself with CSS variables or Tailwind, the `css` and `tailwind` fields carry the same tokens in that form. Copy across only the variables you decided should follow the customer, such as `--color-accent` and `--font-heading`, rather than the whole block.
+If your product styles itself with CSS variables, Tailwind or shadcn/ui, the `css`, `tailwind` and `shadcn` fields carry the same tokens in that form, with a dark block when the customer's site has a dark theme. Copy across only the variables you decided should follow the customer, such as `--color-accent` and `--font-heading`, rather than the whole block.
 
 ### 2. Take the logo that suits your surface
 

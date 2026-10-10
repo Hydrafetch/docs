@@ -4,6 +4,47 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Brand"]}>
+  ## Style guides that capture the look, not only the tokens
+
+  `/v1/web/styleguide` now describes how a site is drawn and what it looks like in dark mode.
+
+  - `components` describes the treatment most panels share (border, corners, background, shadow and any decorative layer such as an offset dotted shadow), the top navigation bar, and whether panel titles sit on the border line, inside the panel or above it
+  - `dark` holds the colours a site switches to for visitors who prefer a dark theme. It is `null` when we checked and the site does not change, so you know not to invent a dark palette
+  - `shadcn` is the design under shadcn/ui variable names (`--background`, `--foreground`, `--primary`, `--card`, `--border` and the rest), with a `.dark` block when the site has one. `css` and `tailwind` gain a `prefers-color-scheme: dark` block in the same case
+  - A typeface published on Google Fonts now comes with its Google `stylesheet` link, even when the site hosts its own copy, and the exports load it from there. `files` only lists a site's own font files when there is no public source
+  - The button is the site's call to action, not a dropdown or tab that happens to be the largest control. `minWidth` and `minHeight` are the size it rendered at
+  - Two colours never share a name. A second shade of the same colour is called, for example, "Pale Blue (darker)"
+
+  Style guides saved before this change are read again the next time you ask for them.
+</Update>
+
+<Update label="October 2026" tags={["Web Extraction"]}>
+  ## More of the page, more often
+
+  Pages that used to come back thin now come back whole.
+
+  - Pages built from cards and tiles, such as product hubs and homepages, keep their cards even when the top of the page reads like a short article
+  - Pages that draw their content in the browser after they load, such as a list filled in from a template or an app that keeps its text in page data, are now loaded the way a browser loads them, so that content comes back
+  - A page we already have is no longer thrown away because a later attempt ran into a block page
+  - A rate limit is no longer mistaken for a block, and a short JSON reply is returned as the answer it is rather than retried as a thin page
+  - A sign-in page with a "verify you are human" box is returned as the page it is, not reported as blocked
+
+  None of this changes the response shape. You will see higher word counts on the pages that were affected, and fewer `blocked` results on pages that were never blocked.
+</Update>
+
+<Update label="October 2026" tags={["Brand"]}>
+  ## A subdomain answers for its company
+
+  A brand or logo lookup for a subdomain with no identity of its own, such as `promotions.acme.com`, now returns the company's brand instead of nothing.
+
+  - `domain` is the company's domain, and `queriedDomain` is the host you asked for, so you can tell the two apart
+  - A subdomain with its own name, description or logo keeps its own answer
+  - A customer site on a hosting platform never inherits the platform's brand
+
+  Previously the lookup returned no data until you passed the bare domain yourself.
+</Update>
+
 <Update label="October 2026" tags={["Web Extraction"]}>
   ## The right dates, and when a page was last updated
 
