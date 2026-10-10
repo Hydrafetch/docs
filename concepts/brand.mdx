@@ -70,7 +70,9 @@ The same design also comes back ready to paste. `css` is a stylesheet with an `@
 
 `shadcn` carries the same colours, radius and fonts under shadcn/ui variable names, ready to replace the `:root` block in a shadcn project's `globals.css`. When a site has a dark theme, `dark` lists its colours and every export gains a matching dark block. When it has none, `dark` is `null`.
 
-Tokens alone rarely make a site recognisable, so `components` describes how its parts are drawn: the border, corners and decorative shadow most panels share, the top navigation bar, and where panel titles sit. To match a site closely, look at a [screenshot](/api-reference/media/screenshot-a-page) of the page alongside the styleguide.
+Tokens alone rarely make a site recognisable, so `components` describes how its parts are drawn: the border, corners, padding and decorative shadow most panels share, the top navigation bar, tabs, any full-width band painted in a contrasting colour, and where panel titles sit. `button` and `secondaryButton` cover the two calls to action. Each of these carries a `css` string you can paste into a rule as it is. To match a site closely, look at a [screenshot](/api-reference/media/screenshot-a-page) of the page alongside the styleguide.
+
+Pass `url` instead of `domain` to read one page, such as a pricing page styled differently from the homepage. A domain's style guide is kept for 30 days and a single page's for 7. Pass `maxAge` in milliseconds to accept only a newer result, or `0` to read the page fresh.
 
 ## What it costs
 

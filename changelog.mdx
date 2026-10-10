@@ -9,12 +9,17 @@ icon: "/icons/rocket.svg"
 
   `/v1/web/styleguide` now describes how a site is drawn and what it looks like in dark mode.
 
-  - `components` describes the treatment most panels share (border, corners, background, shadow and any decorative layer such as an offset dotted shadow), the top navigation bar, and whether panel titles sit on the border line, inside the panel or above it
+  - `components` describes the treatment most panels share (border, corners, background, padding, text colour, shadow and any decorative layer such as an offset dotted shadow), the top navigation bar, how the selected and other tabs are drawn, a full-width band painted far from the page colour such as a dark hero, and whether panel titles sit on the border line, inside the panel or above it
+  - `secondaryButton` is the second call to action, painted differently from the first or only outlined
+  - Every button, panel, header and tab carries a `css` string of declarations you can paste into a rule, and `css`, `tailwind` and `shadcn` include the panel, header, tab, band and secondary colours as variables
+  - `url` reads one page instead of the homepage, for a section styled differently from the rest of the site, and `maxAge` sets how old a stored result may be. `maxAge: 0` reads the page fresh
   - `dark` holds the colours a site switches to for visitors who prefer a dark theme. It is `null` when we checked and the site does not change, so you know not to invent a dark palette
   - `shadcn` is the design under shadcn/ui variable names (`--background`, `--foreground`, `--primary`, `--card`, `--border` and the rest), with a `.dark` block when the site has one. `css` and `tailwind` gain a `prefers-color-scheme: dark` block in the same case
   - A typeface published on Google Fonts now comes with its Google `stylesheet` link, even when the site hosts its own copy, and the exports load it from there. `files` only lists a site's own font files when there is no public source
   - The button is the site's call to action, not a dropdown or tab that happens to be the largest control. `minWidth` and `minHeight` are the size it rendered at
   - Two colours never share a name. A second shade of the same colour is called, for example, "Pale Blue (darker)"
+  - Colours written in newer CSS formats such as `oklch()` are read as well. Sites built that way used to come back without text, border or button colours
+  - Body text size is the size most of the words are set in, not the size of the longest paragraph
 
   Style guides saved before this change are read again the next time you ask for them.
 </Update>
