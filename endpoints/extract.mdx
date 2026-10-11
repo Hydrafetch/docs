@@ -187,6 +187,14 @@ Any URL ending in `/*` is a **crawl scope**, not a literal address. Every page d
   Reuse a recent capture of each page if it's younger than this many milliseconds. Omit or set `0` to always fetch fresh. Capped at 7 days (604800000 ms).
 </ParamField>
 
+<ParamField body="location" type="object">
+  Fetch each page as if from a country (`country`, an ISO 3166 alpha-2 code) and with preferred languages (`languages`, most preferred first). For sites that change prices or content by region.
+</ParamField>
+
+<ParamField body="headers" type="object">
+  Extra request headers sent when fetching each page, as string key-value pairs. Use it to send the cookie a site uses to pick your store or delivery area, so prices and stock match what you see.
+</ParamField>
+
 ## Response fields
 
 <ResponseField name="data.results" type="object[]">

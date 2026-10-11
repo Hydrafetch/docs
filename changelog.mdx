@@ -4,6 +4,20 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Web Extraction"]}>
+  ## Extract for your own store, and product grids that keep every card
+
+  - `/v1/web/extract` takes `location` and `headers`, the same as `/v1/web/scrape`. A shop that prices by delivery area can now be extracted for yours by sending the cookie that picks your store
+  - On product and search grids, every card keeps its own name, size, price and delivery time. Before, a value repeated across cards, such as a second pack of the same product or a shared size, could drop out, and an extraction could pair a price with the wrong product
+  - Docs pages keep their code examples, including ones shown in tabs, placed under the paragraph that introduces them
+  - News articles come back as the story rather than the site's own announcements when a site shows a ticker of posts in its header
+  - A press release keeps its headline even when the page has no title
+  - Cookie banners and "Was this page helpful?" prompts no longer appear in the text
+  - A page that refuses access is reported as a refusal, with a clear reason, instead of being returned as content or as something worth retrying
+
+  None of this changes the response shape.
+</Update>
+
 <Update label="October 2026" tags={["Brand"]}>
   ## Style guides that capture the look, not only the tokens
 
