@@ -1,19 +1,25 @@
 ---
 title: "API keys"
-description: "Creating keys, rotating them, and what to do if one leaks."
+description: "Your default key, creating more, rotating them, and what to do if one leaks."
 ---
 
 An API key authenticates every call you make. Keys belong to the **workspace**, not to you personally, so a key keeps working when the person who created it leaves.
 
-## Creating a key
+## Your default key
 
-Create keys from the dashboard. A key looks like this:
+Every workspace starts with one secret key, made for you once you verify your email. It sits at the top of the API Keys page, and anyone in the workspace can reveal and copy it at any time. The dashboard playground uses it too, so you can try every endpoint without setting anything up.
+
+An admin can rotate it from the same page. Rotating gives you a new value straight away and the old one stops working at once, so update wherever it is used right after.
+
+## Creating more keys
+
+Create more keys from the dashboard when you want one per app or per environment, so you can revoke one without touching the others. A key looks like this:
 
 ```text
 hf_9Qvu23K6KuBhWx0ppLu8Tk_v5qbNr
 ```
 
-You see the full value once, at creation. We store only a hash, so we cannot show it to you again or recover it for you. If you lose it, create another and revoke the old one.
+You see an extra key's full value once, at creation. We store only a hash, so we cannot show it to you again or recover it for you. If you lose it, create another and revoke the old one.
 
 A workspace can hold up to **25 active keys**. Revoked keys do not count against that.
 
@@ -32,7 +38,7 @@ The same key also authenticates MCP, as a bearer token, so an agent can connect 
 
 ## Rotating a key
 
-Rotation is create, migrate, revoke, in that order:
+For any key other than the default, rotation is create, migrate, revoke, in that order:
 
 1. Create the new key.
 2. Deploy it wherever the old one is used.
@@ -78,7 +84,7 @@ A publishable key serves logos and nothing else. It cannot call `/v1/web/scrape`
 | Where it belongs | Server-side only | Fine in client-side HTML |
 | What it reaches | Every endpoint | The logo endpoint only |
 | Spends credits | Yes | No — logo serves have their own allowance |
-| Visible after creation | No, shown once | Yes, any time in the dashboard |
+| Visible after creation | The default key, yes. Others, shown once | Yes, any time in the dashboard |
 
 You can lock a publishable key to your own domains, which refuses requests whose `Referer`/`Origin` does not match. That stops a key lifted from your HTML being casually reused elsewhere. It is not access control — `Referer` is set by the client — and it does not apply to images already sitting in the CDN cache, so treat it as friction rather than a boundary.
 
