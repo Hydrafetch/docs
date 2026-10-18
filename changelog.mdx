@@ -4,6 +4,16 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Platform"]}>
+  ## Keys that expire, and secret keys locked to your servers
+
+  - A new key can expire after 30 days, 90 days or a year. Calls with an expired key are refused with a `401` that says when it expired
+  - A secret key can be locked to IP addresses and ranges, including IPv6. Calls from anywhere else are refused with a `403` that names the address they came from
+  - Both are set from the API Keys page, which now shows each key's expiry and allowed addresses
+
+  Existing keys are unchanged: they never expire and work from any address until you say otherwise. See [API keys](/help/api-keys).
+</Update>
+
 <Update label="October 2026" tags={["Web Extraction"]}>
   ## Extract for your own store, and product grids that keep every card
 

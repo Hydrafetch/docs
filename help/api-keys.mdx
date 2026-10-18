@@ -49,6 +49,20 @@ Revocation takes effect immediately, so revoking before step 3 will break whatev
 
 Rotate on a schedule you can actually keep, and rotate immediately whenever someone with access leaves.
 
+## Setting an expiry
+
+When you create a key you can choose when it stops working: never, or after 30 days, 90 days or a year. The API Keys page shows when each key expires, and marks it Expired once it has.
+
+A call with an expired key is refused with a `401` that says when the key expired. Create a new key to replace it; an expired key cannot be renewed. An expiry is useful for a key you hand to a contractor, a trial or a one-off script, so it cleans itself up if nobody remembers to revoke it.
+
+## Locking a secret key to IP addresses
+
+You can limit a secret key to the addresses your servers call from. Add them when you create the key, or later with **Edit IPs** on the API Keys page. Each entry is a single address such as `203.0.113.7` or a range such as `198.51.100.0/24`, and IPv6 works the same way. A key holds up to 50 entries.
+
+A call from any other address is refused with a `403` that names the address it came from, so you can see what to add. This applies to MCP as well as to the REST endpoints. A key with no addresses works from anywhere, which is the default.
+
+This is what makes a leaked secret key useless to whoever found it, so it is worth setting on any key that only ever runs from fixed servers. Leave it empty for keys used from laptops, serverless functions or anywhere else whose address changes.
+
 ## If a key leaks
 
 Revoke it first, ask questions second. A revoked key cannot be used again, and revocation is instant.

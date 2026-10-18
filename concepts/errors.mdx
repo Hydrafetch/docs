@@ -42,7 +42,7 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
     ```
   </Accordion>
   <Accordion title="401 — Unauthorized" icon="/icons/key.svg">
-    The `X-API-Key` header is missing, malformed, or revoked. The check runs before any work, so a rejected request never costs credits. See [Authentication](/authentication).
+    The `X-API-Key` header is missing, malformed, revoked, or the key has expired. The check runs before any work, so a rejected request never costs credits. See [Authentication](/authentication).
 
     ```json
     {
@@ -60,6 +60,17 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
       "statusCode": 402,
       "code": "INSUFFICIENT_CREDITS",
       "message": "Not enough credits to complete this request."
+    }
+    ```
+  </Accordion>
+  <Accordion title="403 — Forbidden" icon="/icons/shield.svg">
+    The key is valid, but it is locked to IP addresses and the call came from another one. The message names the address we saw, so you can add it under the key's allowed IPs in the dashboard. Nothing is charged. See [API keys](/help/api-keys#locking-a-secret-key-to-ip-addresses).
+
+    ```json
+    {
+      "statusCode": 403,
+      "code": "FORBIDDEN",
+      "message": "This API key can't be used from 192.0.2.10. Add it to the key's allowed IPs in the dashboard."
     }
     ```
   </Accordion>
@@ -130,7 +141,8 @@ Every error returns the same JSON shape with a standard HTTP status. There's one
 Read `code` to decide what to do, not the HTTP status alone:
 
 - **`VALIDATION_ERROR`** — fix the request; retrying as-is won't help.
-- **`UNAUTHORIZED`** — check the key.
+- **`UNAUTHORIZED`** — check the key, and whether it has expired.
+- **`FORBIDDEN`** — add the address in the message to the key's allowed IPs, or call from an address already on it.
 - **`INSUFFICIENT_CREDITS`** — top up, then retry.
 - **`NOT_FOUND`** — for `cacheOnly`, fall back to a live fetch if you want the page.
 - **`REQUEST_TIMEOUT`** — retry once; the background fetch usually makes the second call fast. Use `async: true` if you would rather not wait.

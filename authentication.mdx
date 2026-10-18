@@ -34,7 +34,19 @@ A request with a missing, malformed, or revoked key is rejected before any work 
 }
 ```
 
-Because the check happens up front, a rejected request never costs credits.
+A key that has passed its expiry date is refused the same way, with a message saying when it expired.
+
+A secret key locked to IP addresses refuses calls from anywhere else with a `403`, naming the address the call came from:
+
+```json
+{
+  "statusCode": 403,
+  "code": "FORBIDDEN",
+  "message": "This API key can't be used from 192.0.2.10. Add it to the key's allowed IPs in the dashboard."
+}
+```
+
+Because the check happens up front, a rejected request never costs credits. See [API keys](/help/api-keys) for setting an expiry and allowed IPs.
 
 ## Rotating a key
 
