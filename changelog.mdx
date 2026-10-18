@@ -4,6 +4,12 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Web Scraping"]}>
+  ## A final answer for pages we cannot read
+
+  When we cannot read a page, we now answer `422` with `UPSTREAM_UNREACHABLE` instead of a retryable `503`. The error's `details.retryAfterSeconds` says when asking again could give a different answer, and asking sooner returns the same answer straight away instead of making you wait for another attempt. Failures are still never charged.
+</Update>
+
 <Update label="October 2026" tags={["Platform"]}>
   ## Keys that expire, and secret keys locked to your servers
 
