@@ -1,0 +1,112 @@
+---
+title: "Rate a result"
+description: "Tell us when a result was accurate or wrong, so we can look at it."
+---
+
+`POST /v1/web/feedback` records whether a result was accurate. A rating of `bad` puts the request in front of the team with what you saw, so a page we read wrong gets looked at and fixed. Ratings are free, and rating the same request again replaces the earlier rating.
+
+## When to use it
+
+- A scrape left out part of the page, such as a price table or a list of job openings.
+- A result came back as a blocked or error page, or as content from the wrong page.
+- An agent noticed the content it received does not answer what it asked.
+
+Every result in the playground has the same thumbs up and thumbs down.
+
+## Which request you are rating
+
+Every response carries an `X-Request-Id` header, and the SDKs keep the latest one for you. Send that id as `requestId`. If you no longer have it, send the `url` instead and we rate your most recent request for that URL in the last 24 hours. Requests can be rated for 30 days.
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/feedback \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requestId": "01a15d07-9532-725b-8190-d179be81501a",
+    "rating": "bad",
+    "reasons": ["missing_content"],
+    "note": "The enterprise tier is missing from the pricing table"
+  }'
+```
+
+```ts Node
+const page = await hf.scrape('https://stripe.com/pricing');
+await hf.rateResult({
+  requestId: hf.lastRequestId,
+  rating: 'bad',
+  reasons: ['missing_content'],
+  note: 'The enterprise tier is missing from the pricing table',
+});
+```
+
+```python Python
+page = hf.scrape("https://stripe.com/pricing")
+hf.rate_result(
+    "bad",
+    request_id=hf.last_request_id,
+    reasons=["missing_content"],
+    note="The enterprise tier is missing from the pricing table",
+)
+```
+
+</CodeGroup>
+
+## Example response
+
+```json
+{
+  "data": {
+    "id": "01a15d2c-3b51-7c0e-9d1f-2a7b8c9d0e1f",
+    "requestId": "01a15d07-9532-725b-8190-d179be81501a",
+    "rating": "bad"
+  }
+}
+```
+
+## Fields
+
+<ParamField body="requestId" type="string">
+  The request to rate, from its `X-Request-Id` header. Give this or `url`.
+</ParamField>
+
+<ParamField body="url" type="string">
+  The URL that was read. Rates your most recent request for it in the last 24 hours. Give this or `requestId`.
+</ParamField>
+
+<ParamField body="rating" type="string" required>
+  `good` or `bad`.
+</ParamField>
+
+<ParamField body="reasons" type="string[]">
+  What was wrong, for a `bad` rating: `missing_content`, `wrong_content`, `blocked`, `slow`, `formatting` or `other`.
+</ParamField>
+
+<ParamField body="note" type="string">
+  What you expected to see, in your own words. Up to 500 characters.
+</ParamField>
+
+## Response fields
+
+<ResponseField name="data.id" type="string">
+  The rating's id.
+</ResponseField>
+
+<ResponseField name="data.requestId" type="string">
+  The request that was rated.
+</ResponseField>
+
+<ResponseField name="data.rating" type="string">
+  The rating you gave.
+</ResponseField>
+
+## From an agent
+
+The MCP server has a free `feedback` tool with the same fields. Every tool result includes `usage.requestId`, so an agent can rate the call it just made.
+
+## Billing
+
+Rating a result is free and does not need credits.

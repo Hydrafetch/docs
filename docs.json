@@ -58,7 +58,8 @@
               "concepts/brand",
               "concepts/caching",
               "concepts/jobs-and-webhooks",
-              "concepts/errors"
+              "concepts/errors",
+              "endpoints/feedback"
             ]
           },
           {

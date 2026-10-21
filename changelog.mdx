@@ -4,6 +4,18 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="October 2026" tags={["Platform"]}>
+  ## Rate a result
+
+  Tell us when a result was right or wrong. `POST /v1/web/feedback` takes a request id or a URL, a `good` or `bad` rating, optional reasons and a note, and a `bad` rating puts the request in front of the team. It is free.
+
+  - Every result in the playground has a thumbs up and a thumbs down, with a short form for what was off
+  - The MCP server has a free `feedback` tool, and every tool result now includes `usage.requestId`
+  - The Node, Python, Go, Rust, Ruby and PHP SDKs have a rate-result method and keep the latest request id
+
+  See [Rate a result](/endpoints/feedback).
+</Update>
+
 <Update label="October 2026" tags={["Web Scraping"]}>
   ## A final answer for pages we cannot read
 
