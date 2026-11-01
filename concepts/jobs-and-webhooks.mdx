@@ -113,7 +113,7 @@ You then track it one of two ways.
     }
     ```
 
-    `status` moves through `running` to `completed` (or `failed` / `cancelled`). Each entry in `pages` carries its own `status` and, once done, its scraped `data`.
+    `status` moves through `running` to `completed` (or `failed` / `cancelled`). Each entry in `pages` carries its own `status` and, once done, its scraped `data`. Results stay available for 90 days after the job last changes; after that the status call answers `404`.
   </Tab>
   <Tab title="Webhook">
     Register a `webhook` when you start the job and Hydrafetch calls you as it progresses — including the full status when it finishes — so you don't have to poll.

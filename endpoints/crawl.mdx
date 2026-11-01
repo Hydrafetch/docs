@@ -139,7 +139,7 @@ Add `includePaths` to hold it inside the section, and write the pattern so that 
 
 ## Poll for results
 
-Poll `GET /v1/web/crawl/{id}` for progress and per-page results.
+Poll `GET /v1/web/crawl/{id}` for progress and per-page results. Results stay available for 90 days after the crawl last changes; after that the call answers `404`.
 
 <CodeGroup>
 

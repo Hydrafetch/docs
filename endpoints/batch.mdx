@@ -104,7 +104,7 @@ The batch is accepted right away:
 
 ## Poll for results
 
-Poll `GET /v1/web/batch/{id}` for progress and per-URL results. The response shares the same shape as a crawl status, with `kind` set to `batch`.
+Poll `GET /v1/web/batch/{id}` for progress and per-URL results. The response shares the same shape as a crawl status, with `kind` set to `batch`. Results stay available for 90 days after the batch last changes; after that the call answers `404`.
 
 <CodeGroup>
 
