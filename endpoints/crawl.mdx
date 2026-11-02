@@ -89,7 +89,7 @@ Add `includePaths` to hold it inside the section, and write the pattern so that 
 { "url": "https://example.com/blog", "includePaths": ["^/blog"] }
 ```
 
-`["^/blog/.*"]` looks equivalent and is not. A starting URL loses its trailing slash, so `https://example.com/blog/` starts at the path `/blog`, which that pattern does not match. The crawl would then have no page to begin from, so we refuse the request instead of handing back a job that finishes with nothing in it.
+`["^/blog/"]` works the same way: a pattern written with the section's trailing slash still matches its starting page. If the patterns exclude the starting page anyway, the crawl has nowhere to begin, so we refuse the request instead of handing back a job that finishes with nothing in it.
 
 ## Request options
 
