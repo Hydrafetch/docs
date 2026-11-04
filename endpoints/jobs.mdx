@@ -1,0 +1,209 @@
+---
+title: "Jobs"
+description: "Search open jobs across company career sites, and see what changed in a company's hiring."
+---
+
+Hydrafetch keeps an index of open jobs read from company career sites and the hiring platforms companies post on. Every company is re-read every few days, so the index knows when a job opened and when it closed. Two endpoints read it:
+
+- `POST /v1/web/index/jobs/search` finds open jobs by the words in the job title, across every company.
+- `POST /v1/web/index/jobs/changes` reports what changed in specific companies' hiring since a date: what is open now, what opened, what closed, by department, seniority and location.
+
+Both answer from the index straight away, with no page fetched while you wait.
+
+## When to use it
+
+- You want everyone hiring for a role, like "data engineer" in Berlin, without visiting each company's careers page.
+- You track a list of companies and want to know who is growing a team, who froze hiring, and which senior roles just filled.
+- You feed an agent or a lead list that needs fresh, dated hiring facts rather than a one-off page read.
+
+To read one company's careers page right now, including a company we do not track yet, use [Scrape](/endpoints/scrape) instead.
+
+## Search open jobs
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/index/jobs/search \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "data engineer",
+    "location": "Berlin",
+    "postedWithinDays": 14,
+    "limit": 20
+  }'
+```
+
+```javascript Node
+import { Hydrafetch } from "@hydrafetch/node-sdk";
+
+const hf = new Hydrafetch({ apiKey: "hf_your_key_here" });
+const jobs = await hf.searchJobs("data engineer", {
+  location: "Berlin",
+  postedWithinDays: 14,
+  limit: 20,
+});
+jobs.forEach((j) => console.log(j.title, j.company, j.url));
+```
+
+```python Python
+from hydrafetch import Hydrafetch
+
+hf = Hydrafetch(api_key="hf_your_key_here")
+jobs = hf.search_jobs("data engineer", location="Berlin", postedWithinDays=14, limit=20)
+for job in jobs:
+    print(job["title"], job["company"], job["url"])
+```
+
+</CodeGroup>
+
+```json
+{
+  "data": [
+    {
+      "title": "Senior Data Engineer",
+      "company": "Acme",
+      "domain": "acme.com",
+      "board": "greenhouse",
+      "department": "Engineering",
+      "location": "Berlin, Germany",
+      "remote": false,
+      "employmentType": "Full-time",
+      "postedAt": "2026-11-01T00:00:00.000Z",
+      "firstSeenAt": "2026-11-01T06:00:00.000Z",
+      "url": "https://acme.com/careers/senior-data-engineer",
+      "applyUrl": null,
+      "pay": { "min": 70000, "max": 90000, "currency": "EUR", "interval": "year" }
+    }
+  ]
+}
+```
+
+<ParamField body="query" type="string" required>
+  Words that must appear in the job title, like `data engineer`. Each word matches whole words, so `engineer` also finds `engineers` and `engineering` but not `reengineer`.
+</ParamField>
+
+<ParamField body="location" type="string">
+  A city, region or country the job's location must mention, like `Berlin` or `Germany`.
+</ParamField>
+
+<ParamField body="remoteOnly" type="boolean" default="false">
+  Only jobs the employer marks as remote.
+</ParamField>
+
+<ParamField body="postedWithinDays" type="number">
+  Only jobs posted in the last N days, from 1 to 365. Jobs without a posted date count from when we first saw them.
+</ParamField>
+
+<ParamField body="limit" type="number" default="10">
+  How many jobs to return, from 1 to 100. Newest first.
+</ParamField>
+
+<ParamField body="includeDescriptions" type="boolean" default="false">
+  Include each job's description text when we hold it. Descriptions are filled in over time, so some jobs come back without one.
+</ParamField>
+
+`board` names the hiring platform the employer posts the job on, `firstSeenAt` is when we first saw it open, and `pay` is set only when the employer publishes it.
+
+## What changed in a company's hiring
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/index/jobs/changes \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domains": ["acme.com", "example.com"],
+    "since": "2026-10-01T00:00:00Z"
+  }'
+```
+
+```javascript Node
+const [acme] = await hf.hiringChanges("acme.com", "2026-10-01T00:00:00Z");
+console.log(acme.totals); // { open: 42, opened: 6, closed: 3 }
+```
+
+```python Python
+[acme] = hf.hiring_changes("acme.com", "2026-10-01T00:00:00Z")
+print(acme["totals"])  # {"open": 42, "opened": 6, "closed": 3}
+```
+
+</CodeGroup>
+
+```json
+{
+  "data": [
+    {
+      "domain": "acme.com",
+      "company": "Acme",
+      "lastReadAt": "2026-11-04T09:12:00.000Z",
+      "since": "2026-10-01T00:00:00.000Z",
+      "totals": { "open": 42, "opened": 6, "closed": 3 },
+      "byDepartment": { "Engineering": { "open": 18, "opened": 4, "closed": 1 } },
+      "bySeniority": { "senior": { "open": 12, "opened": 3, "closed": 1 } },
+      "byLocation": { "Berlin, Germany": { "open": 9, "opened": 2, "closed": 0 } },
+      "opened": [
+        {
+          "title": "Senior Data Engineer",
+          "department": "Engineering",
+          "location": "Berlin, Germany",
+          "seniority": "senior",
+          "board": "greenhouse",
+          "url": "https://acme.com/careers/senior-data-engineer",
+          "postedAt": "2026-11-01T00:00:00.000Z",
+          "firstSeenAt": "2026-11-01T06:00:00.000Z",
+          "closedAt": null
+        }
+      ],
+      "closed": [],
+      "truncated": false
+    }
+  ]
+}
+```
+
+<ParamField body="domains" type="string[]" required>
+  Company websites, like `acme.com`, up to 25 per call. A website or a full URL both work.
+</ParamField>
+
+<ParamField body="since" type="string" required>
+  Report changes since this time, as an ISO 8601 date, at most about 400 days back.
+</ParamField>
+
+<ParamField body="includeDescriptions" type="boolean" default="false">
+  Include the description text of each opened and closed job when we hold it.
+</ParamField>
+
+Only companies we have jobs for come back. A company we do not track yet is left out and costs nothing. `seniority` is read from the job title, and `opened` and `closed` list up to 200 jobs each, newest first; `truncated` is `true` when a company had more.
+
+## How fresh it is
+
+Each company is re-read every two to seven days, more often when it has more open jobs. A job counts as closed once a full read of its board no longer lists it, and `closedAt` is the time of that read, so a change shows up within that company's refresh interval. `lastReadAt` says when we last read the company.
+
+## Billing
+
+<ParamField path="Search" type="1 credit per 10 jobs returned">
+  A search that returns 15 jobs costs 2 credits. A search that finds nothing is free.
+</ParamField>
+
+<ParamField path="Changes" type="1 credit per company with jobs">
+  Companies we do not track yet come back empty and are not charged.
+</ParamField>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Search" icon="/icons/magnifier.svg" href="/endpoints/search">
+    Search the web for pages rather than jobs.
+  </Card>
+  <Card title="Credits" icon="/icons/coins.svg" href="/concepts/credits">
+    How every call is priced.
+  </Card>
+  <Card title="Brand" icon="/icons/building.svg" href="/concepts/brand">
+    Enrich the companies you find with their name, logo and description.
+  </Card>
+  <Card title="API Reference" icon="/icons/code.svg" href="/api-reference">
+    Every field of both endpoints.
+  </Card>
+</CardGroup>

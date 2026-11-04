@@ -41,6 +41,14 @@ Insufficient balance is caught up front. If your workspace can't cover a call, H
   Five credits for each page that returns data. Pages that yield nothing aren't charged.
 </ParamField>
 
+<ParamField path="Jobs search" type="1 credit per 10 jobs">
+  One credit for every 10 jobs returned, so 15 jobs cost 2. A search that finds nothing is free. See [Jobs](/endpoints/jobs).
+</ParamField>
+
+<ParamField path="Hiring changes" type="1 credit per company">
+  One credit for each company we have jobs for. Companies we do not track yet come back empty and are free.
+</ParamField>
+
 <ParamField path="Crawl / Batch" type="1 credit per page">
   One credit for each page scraped. The running total is reported on the job's `creditsUsed` as it progresses.
 </ParamField>

@@ -81,6 +81,12 @@
             "pages": [
               "endpoints/extract"
             ]
+          },
+          {
+            "group": "Data indexes",
+            "pages": [
+              "endpoints/jobs"
+            ]
           }
         ]
       },

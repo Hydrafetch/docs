@@ -4,6 +4,18 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="November 2026" tags={["Data indexes"]}>
+  ## Search open jobs and see who is hiring
+
+  Two new endpoints read our index of open jobs from company career sites and the hiring platforms companies post on. Every company is re-read every few days, so the index knows when a job opened and when it closed.
+
+  - `POST /v1/web/index/jobs/search` finds open jobs by the words in the title, with location, remote and posted-within filters. 1 credit per 10 jobs returned, free when nothing matches
+  - `POST /v1/web/index/jobs/changes` reports what changed in up to 25 companies' hiring since a date: open, opened and closed, by department, seniority and location, with the jobs themselves. 1 credit per company we have jobs for
+  - The MCP server has matching `jobs_search` and `company_hiring_changes` tools, the Node, Python, Go, Rust, Ruby and PHP SDKs have `searchJobs` and `hiringChanges`, and the LangChain integration has a job search tool
+
+  See [Jobs](/endpoints/jobs).
+</Update>
+
 <Update label="October 2026" tags={["Platform"]}>
   ## Rate a result
 
