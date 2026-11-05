@@ -4,6 +4,20 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="November 2026" tags={["Web Scraping"]}>
+  ## Search the news
+
+  `POST /v1/web/news` finds recent news articles about anything and returns them newest first, each with the outlet that published it, when it was published, a snippet, a thumbnail and a link to the publisher's own page. It is built for announcements: funding rounds, acquisitions, launches, leadership changes and layoffs.
+
+  - `timeRange` keeps results to the last hour, day, week or month, so there is no need to write dates into the query
+  - `includeDomains`, `excludeDomains` and `country` narrow where the news comes from
+  - `scrapeResults` also reads each article as clean data, at 1 extra credit per article
+  - 1 credit per search, free when nothing is found
+  - The MCP server has a matching `news` tool, the Node, Python, Go, Rust, Ruby and PHP SDKs have a news method, and the LangChain integration has a news search tool
+
+  See [News](/endpoints/news).
+</Update>
+
 <Update label="November 2026" tags={["Data indexes"]}>
   ## Search open jobs and see who is hiring
 
