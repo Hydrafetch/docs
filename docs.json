@@ -71,6 +71,7 @@
               "endpoints/crawl",
               "endpoints/batch",
               "endpoints/search",
+              "endpoints/news",
               "endpoints/media",
               "endpoints/logo"
             ]
