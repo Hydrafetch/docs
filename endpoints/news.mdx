@@ -109,6 +109,10 @@ for a in res.json()["data"]["results"]:
   Drop articles from these sites. Up to 15.
 </ParamField>
 
+<ParamField body="maxAge" type="number">
+  The oldest earlier answer to the same search you will accept, in milliseconds. By default we reuse an answer up to 5 minutes old for `hour`, 15 for `day` and 30 for `week` or `month`. Set `0` to always search fresh.
+</ParamField>
+
 <ParamField body="scrapeResults" type="boolean" default="false">
   When `true`, each article also comes back with its page read and returned as clean data, at **1 extra credit per article read**.
 </ParamField>

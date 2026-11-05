@@ -78,7 +78,7 @@ Blocked and very thin results are never kept, so a retry always fetches the page
 
 - `extract`, `images`, `screenshot` and `styleguide` take `maxAge` the same way, with `0` for fresh.
 - In a crawl, a batch or a search with `scrapeResults`, put `maxAge` inside `scrapeOptions` to apply it to every page.
-- [News](/endpoints/news) never answers from a copy: every call reads the news fresh.
+- [News](/endpoints/news) reuses a recent answer to the same search for a short time: 5 minutes for the `hour` window, 15 for `day` and 30 for `week` or `month`. Pass `maxAge: 0` to search fresh.
 
 <Card title="Next: Jobs & webhooks" icon="/icons/clock.svg" href="/concepts/jobs-and-webhooks">
   Waiting for a result, background jobs and completion webhooks.
