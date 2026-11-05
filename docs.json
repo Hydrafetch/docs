@@ -141,7 +141,8 @@
             "pages": [
               "help/account",
               "help/api-keys",
-              "help/team"
+              "help/team",
+              "help/data-retention"
             ]
           },
           {

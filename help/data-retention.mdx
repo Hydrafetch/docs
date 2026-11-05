@@ -1,0 +1,26 @@
+---
+title: "How long we keep your data"
+description: "What we store when you call the API, how long each kind of record is kept, and when it is deleted."
+---
+
+Every kind of data we keep has a fixed lifetime. When it runs out, the data is deleted automatically.
+
+| What | Kept for |
+| --- | --- |
+| Request history: each call, its status, cost and timing, as shown in the dashboard | 6 months |
+| The response we sent you for each call | 180 days |
+| The record of each page we read for you: address, status and quality | 180 days |
+| The page content as fetched | 30 days |
+| Crawl and batch results | 90 days after the job last changes |
+| Credit usage records | 2 years |
+| Account and billing records | As long as your account exists, and as long as the law requires afterwards |
+
+## What this means for you
+
+- **Cached answers.** A scrape can be answered from a recent copy of a page for up to 7 days, if you allow it with `maxAge`. See [Caching](/concepts/caching).
+- **Old calls in the dashboard.** After 30 days, a call still shows in your request history with the response we sent, but the page content as fetched is no longer available.
+- **Polling old jobs.** After 90 days, polling a crawl or batch answers `404`.
+
+## Deleting your account
+
+When you delete your account, we delete or de-identify the data tied to it, except records we are legally required to keep. See [Your account](/help/account).
