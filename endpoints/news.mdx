@@ -83,6 +83,13 @@ for a in res.json()["data"]["results"]:
 }
 ```
 
+## Writing a good query
+
+- **For one company, search its name on its own.** News sources match the words you send. "Acme raises funding round" brings back general funding stories from English outlets, and they can push the company's own coverage out. "Acme" alone returns the articles that name it, and you can pick the funding ones from their titles.
+- **Write the name the way its own press does.** A Chinese or Korean company is covered under its Chinese or Korean name. If you want one kind of event, add the word for it in that language, such as 融资 or 투자, not the English word.
+- **Use `timeRange` for recency.** Do not put a month or a year into the query.
+- **For a topic across companies, describe the event,** such as `startup raises series A` or `appoints chief executive`.
+
 ## Key options
 
 <ParamField body="query" type="string" required>
