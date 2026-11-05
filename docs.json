@@ -6,7 +6,7 @@
   "colors": {
     "primary": "#0E7490",
     "light": "#22D3EE",
-    "dark": "#22D3EE"
+    "dark": "#0E7490"
   },
   "appearance": {
     "default": "system"
@@ -44,7 +44,8 @@
             "pages": [
               "introduction",
               "quickstart",
-              "authentication"
+              "authentication",
+              "sdks"
             ]
           },
           {
@@ -85,6 +86,7 @@
           },
           {
             "group": "Data indexes",
+            "icon": "/icons/database.svg",
             "pages": [
               "endpoints/jobs"
             ]

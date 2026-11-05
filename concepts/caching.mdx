@@ -1,13 +1,15 @@
 ---
 title: "Caching"
-description: "Reuse recent captures to make scrapes faster and cheaper, or force a fresh fetch when you need the latest."
+description: "Reuse a recent copy of a page to get answers faster, or always fetch fresh when you need the latest."
 ---
 
-Hydrafetch keeps a recent capture of the pages it fetches. When you scrape a URL that already has a fresh capture, you can serve that instead of hitting the page again — the result comes back faster and cheaper. Three options on a scrape control this behavior.
+We keep a recent copy of the pages we read. When you scrape a URL we read recently, we can answer from that copy instead of fetching the page again. The answer comes back faster, and it costs the same as a fresh read.
+
+By default a scrape accepts a copy up to **2 days** old for a page and **1 hour** old for a feed. Three options change that.
 
 ## `maxAge`
 
-Serve from cache if a capture of the URL is younger than this many **milliseconds**. If the newest capture is older, or there is none, Hydrafetch fetches the page fresh.
+The oldest copy you will accept, in **milliseconds**. If our newest copy is older, or we have none, the page is fetched fresh.
 
 ```bash
 curl -X POST https://api.hydrafetch.com/v1/web/scrape \
@@ -20,16 +22,14 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
 ```
 
 <ParamField body="maxAge" type="number">
-  Freshness window in milliseconds. `3600000` accepts any capture from the last hour. Set `0` to always fetch fresh. Omit it to use the default window. Capped at 7 days (`604800000`).
+  `3600000` accepts any copy from the last hour. `0` always fetches fresh. Leave it out for the default. The most you can set is 7 days, `604800000`.
 </ParamField>
 
-<Note>
-  Higher `maxAge` means more cache hits — cheaper and faster, at the cost of freshness. Tune it to how fast the page you're reading actually changes.
-</Note>
+Pick it by how often the page changes. A price or a status page wants a short window or `0`. A documentation page can take the default.
 
 ## `cacheOnly`
 
-Only serve from cache, and never fetch. If there is no fresh capture to satisfy the request, Hydrafetch returns a `404` instead of going out to the page.
+Answer only from a copy, and never fetch. If there is no copy young enough, you get `404` instead.
 
 ```bash
 curl -X POST https://api.hydrafetch.com/v1/web/scrape \
@@ -41,41 +41,45 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
   }'
 ```
 
-Use it when you want a cached copy or nothing — for backfills, replays, or cost-sensitive lookups where a live fetch isn't acceptable.
+Use it for backfills and replays, where you want what we already have and nothing new.
 
 <Warning>
-  With `cacheOnly`, a cache miss is a `404` — no page is fetched. Handle that status in your client.
+  With `cacheOnly`, a missing copy is a `404` and no page is fetched. Handle that status in your code.
 </Warning>
 
 ## `storeInCache`
 
-Whether to persist this capture for later reuse. Defaults to `true`. Set it to `false` for one-off or sensitive fetches you don't want retained.
+Whether this read is kept as a copy for later calls. On by default. Turn it off for one-off or sensitive pages you do not want kept.
 
 <ParamField body="storeInCache" type="boolean" default="true">
-  Persist the capture so future calls can serve it. Keeping it on lets you re-read the same page later without paying to fetch it again.
+  Keep this read so later calls within their `maxAge` can be answered from it.
 </ParamField>
 
-## Spotting a cache hit
+## Telling a copy from a fresh read
 
-A result served from cache is flagged two ways on the response, so you always know what you got:
+A response from a copy says so in two places:
 
 ```json
 {
   "data": {
     "url": "https://example.com",
     "cached": true,
-    "usage": { "creditsUsed": 1, "creditsRemaining": 4999, "freshness": "cache" }
+    "usage": { "creditsUsed": 1, "creditsRemaining": 499, "freshness": "cache" }
   }
 }
 ```
 
 - `data.cached` is `true`.
-- `data.usage.freshness` is `"cache"` (versus `"fresh"` for a live fetch).
+- `data.usage.freshness` is `cache`. A live read says `fresh`.
 
-<Note>
-  `maxAge` also works on `extract` and `images` requests, with the same 7-day cap and the same `0`-means-fresh rule.
-</Note>
+Blocked and very thin results are never kept, so a retry always fetches the page again rather than repeating a bad copy.
+
+## Other endpoints
+
+- `extract`, `images`, `screenshot` and `styleguide` take `maxAge` the same way, with `0` for fresh.
+- In a crawl, a batch or a search with `scrapeResults`, put `maxAge` inside `scrapeOptions` to apply it to every page.
+- [News](/endpoints/news) never answers from a copy: every call reads the news fresh.
 
 <Card title="Next: Jobs & webhooks" icon="/icons/clock.svg" href="/concepts/jobs-and-webhooks">
-  How synchronous scrapes, async jobs, and completion webhooks work.
+  Waiting for a result, background jobs and completion webhooks.
 </Card>

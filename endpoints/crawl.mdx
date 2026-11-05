@@ -1,20 +1,18 @@
 ---
 title: "Crawl"
-description: "Discover and scrape a whole site as one asynchronous job."
+description: "Find and read every page of a site as one background job."
 ---
 
-Crawl points Hydrafetch at a starting URL, discovers the site's pages for you, and scrapes each one. It runs as a single asynchronous job: you get a `crawlId` back immediately, then poll it or register a webhook to collect the per-page results. One credit per page scraped.
+`POST /v1/web/crawl` starts from a URL, finds the site's pages and reads each one. It runs as a background job: you get a `crawlId` straight away, then poll it or let a webhook tell you as pages finish. 1 credit per page read.
 
-## When to use
+## When to use it
 
-- You want every page of a site (or a section of it) as clean data, and you do not have the URL list yourself.
-- The job is large enough that waiting on a single request is impractical.
+- You want every page of a site, or of one section, and you do not have the list of URLs.
+- The job is too big to wait for in one request.
 
-If you already have the exact URLs, use [Batch](/endpoints/batch) — no discovery needed. To preview which URLs a crawl would reach without scraping them, use [Map](/endpoints/map).
+If you already have the URLs, use [Batch](/endpoints/batch). To see which URLs a crawl would reach without reading them, use [Map](/endpoints/map).
 
-## Example request
-
-Send a `POST` to `/v1/web/crawl`. Scope the crawl with `limit`, `maxDepth`, and path filters, and control how each page is scraped with `scrapeOptions`.
+## Example
 
 <CodeGroup>
 
@@ -27,28 +25,23 @@ curl -X POST https://api.hydrafetch.com/v1/web/crawl \
     "limit": 100,
     "maxDepth": 2,
     "includePaths": ["^/blog"],
-    "excludePaths": ["^/tag"],
+    "excludePaths": ["^/blog/tag"],
     "scrapeOptions": { "formats": ["markdown", "links"] }
   }'
 ```
 
 ```javascript Node
-const res = await fetch("https://api.hydrafetch.com/v1/web/crawl", {
-  method: "POST",
-  headers: {
-    "X-API-Key": "hf_your_key_here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    url: "https://example.com/blog",
-    limit: 100,
-    maxDepth: 2,
-    includePaths: ["^/blog"],
-    excludePaths: ["^/tag"],
-    scrapeOptions: { formats: ["markdown", "links"] },
-  }),
+import { Hydrafetch } from "@hydrafetch/node-sdk";
+
+const hf = new Hydrafetch(process.env.HYDRAFETCH_API_KEY);
+const job = await hf.crawlAndWait("https://example.com/blog", {
+  limit: 100,
+  maxDepth: 2,
+  includePaths: ["^/blog"],
+  excludePaths: ["^/blog/tag"],
+  scrapeOptions: { formats: ["markdown", "links"] },
 });
-const { crawlId } = await res.json();
+job.pages.forEach((p) => console.log(p.url, p.status));
 ```
 
 ```python Python
@@ -62,7 +55,7 @@ res = requests.post(
         "limit": 100,
         "maxDepth": 2,
         "includePaths": ["^/blog"],
-        "excludePaths": ["^/tag"],
+        "excludePaths": ["^/blog/tag"],
         "scrapeOptions": {"formats": ["markdown", "links"]},
     },
 )
@@ -71,9 +64,7 @@ crawl_id = res.json()["crawlId"]
 
 </CodeGroup>
 
-## Example response
-
-The crawl is accepted right away:
+The crawl starts at once:
 
 ```json
 { "crawlId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
@@ -81,157 +72,131 @@ The crawl is accepted right away:
 
 ## Keeping a crawl inside one section
 
-A starting URL says where to begin, not where to stay. Discovery also uses the site's own published page list, which covers everything, so pointing a crawl at `https://example.com/blog` and setting nothing else will happily return pages from the rest of the site.
+A starting URL says where to begin, not where to stay. To find pages, a crawl also reads the site's published page list (its sitemap), which covers the whole site. So a crawl started at `https://example.com/blog` with nothing else set will also return pages from the rest of the site.
 
-Add `includePaths` to hold it inside the section, and write the pattern so that the starting page matches it too:
+To stay inside the section, add `includePaths`, written so the starting page matches it too:
 
 ```json
 { "url": "https://example.com/blog", "includePaths": ["^/blog"] }
 ```
 
-`["^/blog/"]` works the same way: a pattern written with the section's trailing slash still matches its starting page. If the patterns exclude the starting page anyway, the crawl has nowhere to begin, so we refuse the request instead of handing back a job that finishes with nothing in it.
+`["^/blog/"]`, with the trailing slash, works the same way. If your patterns would exclude the starting page, the crawl has nowhere to begin, so the request is refused instead of starting a job that finds nothing.
 
-## Request options
+## Options
 
 <ParamField body="url" type="string" required>
-  The site to start from. Must be `http(s)`.
+  Where to start. Must be http or https.
 </ParamField>
 
 <ParamField body="limit" type="number" default="100">
-  Maximum number of pages to scrape. 1–500.
+  The most pages to read, from 1 to 500.
 </ParamField>
 
-<ParamField body="maxDepth" type="number">
-  How many links deep from the starting page to follow. 0–10.
+<ParamField body="maxDepth" type="number" default="3">
+  How many links away from the starting page to follow, from 0 to 10.
 </ParamField>
 
 <ParamField body="includePaths" type="string[]">
-  Only follow URLs whose path matches every one of these patterns (e.g. `["^/blog"]`). Up to 50. **The patterns apply to the starting URL as well.** If they exclude it, the crawl has nowhere to begin, so the request is refused rather than returning an empty job.
+  Only follow URLs whose path matches every one of these patterns, such as `["^/blog"]`. Up to 50. **They apply to the starting URL too.**
 </ParamField>
 
 <ParamField body="excludePaths" type="string[]">
-  Skip URLs whose path matches any of these patterns (e.g. `["^/tag"]`). Up to 50. As with `includePaths`, these apply to the starting URL too.
+  Skip URLs whose path matches any of these patterns, such as `["^/blog/tag"]`. Up to 50. They also apply to the starting URL.
 </ParamField>
 
 <ParamField body="allowSubdomains" type="boolean" default="false">
-  Also follow links into subdomains of the starting site.
+  Also follow links into the site's subdomains.
 </ParamField>
 
 <ParamField body="allowExternalLinks" type="boolean" default="false">
-  Also follow links that lead off the starting site.
+  Also follow links that leave the site.
 </ParamField>
 
 <ParamField body="ignoreQueryParameters" type="boolean" default="false">
-  Treat URLs that differ only by query string as the same page.
+  Treat URLs that differ only in their query string as the same page.
 </ParamField>
 
 <ParamField body="sitemap" type="string" default="include">
-  Whether to seed discovery from the site's published page list: `skip` or `include`. Because that list covers the whole site, **starting from a section does not by itself limit the crawl to that section.** Use `includePaths` to do that.
+  Whether to use the site's published page list to find pages: `include` or `skip`. Because that list covers the whole site, starting from a section does not keep the crawl in that section. Use `includePaths` for that.
 </ParamField>
 
 <ParamField body="scrapeOptions" type="object">
-  How to scrape each page — `formats`, `onlyMainContent`, `includeTags`, `excludeTags`, `removeBase64Images`, `blockAds`, `waitFor`, `timeout`, `location`, `headers`, `preferStructure`, `maxAge`. Same options as a single [Scrape](/endpoints/scrape), with per-page formats limited to `markdown`, `html`, `rawHtml`, `links`, and `structured`.
+  How to read each page. The same options as a [Scrape](/endpoints/scrape), with formats limited to `markdown`, `html`, `rawHtml`, `links` and `structured`.
 </ParamField>
 
 <ParamField body="webhook" type="object">
-  Register a callback instead of polling. `webhook.url` receives progress and completion events; `webhook.headers` are extra headers sent with each callback (e.g. for authentication).
+  Have us call your URL as pages finish and when the job ends, instead of polling. See [Jobs & webhooks](/concepts/jobs-and-webhooks#crawl-and-batch).
 </ParamField>
 
-## Poll for results
+## Getting the results
 
-Poll `GET /v1/web/crawl/{id}` for progress and per-page results. Results stay available for 90 days after the crawl last changes; after that the call answers `404`.
+Poll `GET /v1/web/crawl/{id}` for progress and each finished page. Results stay available for 90 days after the crawl last changes. After that the call answers `404`.
 
-<CodeGroup>
-
-```bash cURL
+```bash
 curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43 \
   -H "X-API-Key: hf_your_key_here"
 ```
 
-```javascript Node
-const res = await fetch(
-  `https://api.hydrafetch.com/v1/web/crawl/${crawlId}`,
-  { headers: { "X-API-Key": "hf_your_key_here" } },
-);
-const status = await res.json();
-```
-
-```python Python
-import requests
-
-res = requests.get(
-    f"https://api.hydrafetch.com/v1/web/crawl/{crawl_id}",
-    headers={"X-API-Key": "hf_your_key_here"},
-)
-status = res.json()
-```
-
-</CodeGroup>
-
 ```json
 {
-  "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
-  "kind": "crawl",
-  "status": "running",
-  "seedUrl": "https://example.com",
-  "total": 100,
-  "completed": 42,
-  "failed": 1,
-  "creditsUsed": 42,
-  "pages": [
-    {
-      "url": "https://example.com/blog/post",
-      "status": "completed",
-      "depth": 1,
-      "discoveredVia": "sitemap",
-      "error": null,
-      "data": {
+  "data": {
+    "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+    "kind": "crawl",
+    "status": "running",
+    "seedUrl": "https://example.com/blog",
+    "total": 100,
+    "completed": 42,
+    "failed": 1,
+    "creditsUsed": 42,
+    "pages": [
+      {
         "url": "https://example.com/blog/post",
-        "finalUrl": "https://example.com/blog/post",
-        "status": 200,
-        "cached": false,
-        "metadata": { "title": "A post", "pageType": "article", "wordCount": 812 },
-        "usage": { "creditsUsed": 1, "creditsRemaining": 4993, "freshness": "fresh" },
-        "markdown": "# A post\n\n..."
+        "status": "completed",
+        "depth": 1,
+        "discoveredVia": "sitemap",
+        "error": null,
+        "data": {
+          "url": "https://example.com/blog/post",
+          "finalUrl": "https://example.com/blog/post",
+          "status": 200,
+          "cached": false,
+          "metadata": { "title": "A post", "pageType": "article", "wordCount": 812 },
+          "markdown": "# A post\n\n..."
+        }
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
-## Response fields
+<ResponseField name="data.status" type="string">The job's state: `running`, `completed`, `failed` or `cancelled`.</ResponseField>
+<ResponseField name="data.total" type="number">How many pages the job holds.</ResponseField>
+<ResponseField name="data.completed" type="number">Pages read so far.</ResponseField>
+<ResponseField name="data.failed" type="number">Pages that could not be read.</ResponseField>
+<ResponseField name="data.creditsUsed" type="number">Credits used so far, 1 per page read.</ResponseField>
+<ResponseField name="data.pages" type="object[]">
+  Each page with its `url`, `status` (`queued`, `running`, `completed` or `failed`), `depth`, `discoveredVia` and `data` once it is read. A failed page also has `error`, an `errorCode` and `retryable`, which says whether asking again could help. `requestedUrl` is the URL as you gave it, and appears only when it differs from `url` after we normalised it.
 
-<ResponseField name="id" type="string">The crawl id.</ResponseField>
-<ResponseField name="kind" type="string">`crawl` or `batch`.</ResponseField>
-<ResponseField name="status" type="string">Overall job state: `running`, `completed`, `failed`, or `cancelled`.</ResponseField>
-<ResponseField name="seedUrl" type="string">The starting URL.</ResponseField>
-<ResponseField name="total" type="number">Total pages in this job.</ResponseField>
-<ResponseField name="completed" type="number">Pages scraped so far.</ResponseField>
-<ResponseField name="failed" type="number">Pages that failed.</ResponseField>
-<ResponseField name="creditsUsed" type="number">Credits consumed so far. One per scraped page.</ResponseField>
-<ResponseField name="pages" type="object[]">
-  Per-page results, each with `url`, `status` (`queued`, `running`, `completed`, `failed`), `depth`, `discoveredVia`, `error`, and `data` (the scraped page, once completed).
-
-  `discoveredVia` tells you how a URL entered the job: `requested` for one you gave us (the crawl seed, or any batch entry), `sitemap` for one read from the site's sitemap, `link` for one followed from a page we had already fetched. It is the quickest way to see why a crawl returned the set it did, and whether raising the limit or the depth would find more.
+  `discoveredVia` says how the URL got into the job: `requested` for the starting URL, `sitemap` for one from the site's page list, and `link` for one followed from a page we read. It is the quickest way to see why a crawl returned what it did, and whether a higher `limit` or `maxDepth` would find more.
 </ResponseField>
 
-<Note>
-  A crawl costs one credit per page scraped, reflected in `creditsUsed`. Scope the job with `limit`, `maxDepth`, and path filters to keep spend predictable, and preview reach first with [Map](/endpoints/map).
-</Note>
+## Cost
+
+1 credit per page read. Pages that fail are free. Set `limit`, `maxDepth` and path filters to keep the cost predictable, and check the reach first with [Map](/endpoints/map).
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Crawl API reference" icon="/icons/code.svg" href="/api-reference">
-    Full request and response schema with a live playground.
-  </Card>
   <Card title="Map a site" icon="/icons/sitemap.svg" href="/endpoints/map">
-    Preview a crawl's scope without scraping.
+    See a crawl's reach before reading anything.
   </Card>
-  <Card title="Scrape a list of URLs" icon="/icons/bullet-list.svg" href="/endpoints/batch">
+  <Card title="Read a list of URLs" icon="/icons/bullet-list.svg" href="/endpoints/batch">
     When you already have the URLs.
   </Card>
-  <Card title="Scrape one URL" icon="/icons/file-content.svg" href="/endpoints/scrape">
-    The per-page primitive behind a crawl.
+  <Card title="Jobs & webhooks" icon="/icons/clock.svg" href="/concepts/jobs-and-webhooks">
+    Polling, webhooks and checking deliveries.
+  </Card>
+  <Card title="API reference" icon="/icons/code.svg" href="/api-reference">
+    The full schema, with a live playground.
   </Card>
 </CardGroup>

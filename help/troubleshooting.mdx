@@ -34,7 +34,13 @@ First, check the `quality` object on the response. It carries a confidence figur
 
 Some pages genuinely resist automated fetching. When we cannot deliver one, the response says so and **you are not billed for it**, so a failure costs you nothing but time.
 
-If a page that should work does not, send us the URL. This is the single most useful thing you can send us: extraction quality is measured against real pages, and a URL that comes back badly is what moves the number. Write to [support@hydrafetch.com](mailto:support@hydrafetch.com) with the URL, what you expected, and what came back.
+If a page that should work does not, [rate the result](/endpoints/feedback) as `bad` with a short note. It is free, and a person looks at every one. You can also send us the URL. This is the single most useful thing you can send us: extraction quality is measured against real pages, and a URL that comes back badly is what moves the number. Write to [support@hydrafetch.com](mailto:support@hydrafetch.com) with the URL, what you expected, and what came back.
+
+## I am getting 422 or 504
+
+`422` with `UPSTREAM_UNREACHABLE` means the site did not answer, or we could not read that page. It is about that URL, not about us, and asking again straight away gives the same answer. If the error has `retryAfterSeconds`, wait that long before trying again.
+
+`504` with `REQUEST_TIMEOUT` means a scrape took longer than 90 seconds. Retry once, since the page is often in our cache by then, or send `async: true` and poll. See [Errors](/concepts/errors).
 
 ## My crawl is slower than I expected
 
@@ -42,7 +48,9 @@ Crawls run as asynchronous jobs and pace themselves per host, because hammering 
 
 If you only need part of a site, `excludePaths` and a lower `maxDepth` will finish sooner and cost fewer credits. See [Crawl](/endpoints/crawl).
 
-Errors come back in one shape, and the request id is in it:
+## What to send when you write in
+
+Every error comes back in one shape, with the request id in it:
 
 ```json
 {
@@ -51,8 +59,6 @@ Errors come back in one shape, and the request id is in it:
   "meta": { "requestId": "20a4290e-c4af-47c8-8eab-b05fdf6ff66e" }
 }
 ```
-
-## What to send when you write in
 
 Include these and we can usually answer in one reply instead of three:
 

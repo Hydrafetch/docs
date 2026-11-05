@@ -1,90 +1,78 @@
 ---
 title: "Credits & billing"
-description: "One currency for every call, charged only on success — and every response tells you what it cost."
+description: "One currency for every call, charged only when you get a result, and every response says what it cost."
 ---
 
-Everything in Hydrafetch is priced in **credits**. There are no per-endpoint plans or separate meters to reconcile: a scrape, a crawl, a search, and an extraction all draw down the same balance. Your **workspace** holds that balance, and any key in the workspace spends from it.
+Every call is priced in **credits**. A scrape, a crawl, a search and an extraction all use the same balance, and there are no separate meters. Your **workspace** holds the balance, and every key in the workspace spends from it.
 
-## Charged only on success
+## You pay only for results
 
-Credits are deducted only when a call actually returns you data. If a request fails — a bad key, an invalid body, an unreachable page, a timeout — it costs nothing.
+A call is charged only when it gives you data. If it fails, it costs nothing. That covers a bad key, an invalid request, a page we could not read, a page behind a wall and a timeout.
 
 <Note>
-  Because failures are free, you can retry safely. You're never billed for a call that didn't produce a result.
+  Because failures are free, retrying is safe. You are never billed for a call that produced nothing.
 </Note>
 
-Insufficient balance is caught up front. If your workspace can't cover a call, Hydrafetch rejects it before doing any work and returns an insufficient-credits error — so you're never charged and no partial work runs.
+The balance is checked before any work starts. If your workspace cannot cover a call, it is refused straight away with `402` and nothing runs:
 
 ```json
 {
-  "statusCode": 402,
-  "code": "INSUFFICIENT_CREDITS",
-  "message": "Not enough credits to complete this request."
+  "success": false,
+  "error": { "code": "INSUFFICIENT_CREDITS", "message": "Insufficient credits" },
+  "meta": { "requestId": "019e8a3c-9f0b-7c12-88ab-1d2e3f4a5b6c" }
 }
 ```
 
 ## What each call costs
 
-<ParamField path="Scrape" type="1 credit base">
-  One credit for a standard scrape (Markdown, HTML, links, or structured data). Add **+1** if you request the `summary` format and **+4** if you request `json`. See [Formats](/concepts/formats).
-</ParamField>
+| Call | Credits |
+| --- | --- |
+| [Scrape](/endpoints/scrape) | 1. Add 1 for the `summary` format, 4 for `json`, and 5 for `brand` when a brand is found. See [Formats](/concepts/formats). |
+| [Map](/endpoints/map) | 1, however many URLs come back. Free when it finds none. |
+| [Crawl](/endpoints/crawl) and [Batch](/endpoints/batch) | 1 per page read |
+| [Search](/endpoints/search) | 1, plus 1 for each result read with `scrapeResults` |
+| [News](/endpoints/news) | 1, plus 1 for each article read with `scrapeResults`. Free when nothing is found. |
+| [Extract](/endpoints/extract) | 5 per page that returns data |
+| [Brand](/concepts/brand) | 5 per company found. Searching brands we already hold is free. |
+| [Styleguide](/concepts/brand) | 10 |
+| [Logo](/endpoints/logo) as JSON | 1 |
+| [Logo](/endpoints/logo) as an image | Counted against your plan's logo allowance, not credits |
+| [Screenshot](/endpoints/media) | 5 |
+| [Images](/endpoints/media) | 1 |
+| [Jobs search](/endpoints/jobs) | 1 per 10 jobs returned. Free when nothing matches. |
+| [Hiring changes](/endpoints/jobs) | 1 per company we have jobs for |
+| [Rate a result](/endpoints/feedback) | Free |
 
-<ParamField path="Map" type="1 credit">
-  One credit to enumerate a site's URLs, regardless of how many come back.
-</ParamField>
+A page served from our cache costs the same as a fresh read. The cache makes calls faster, not cheaper.
 
-<ParamField path="Search" type="1 credit + 1 per result scraped">
-  One credit for the query, plus one credit for each result whose page is actually fetched and returned. Turn off result scraping to pay just the single query credit.
-</ParamField>
+## Every response says what it cost
 
-<ParamField path="Extract" type="5 credits per page">
-  Five credits for each page that returns data. Pages that yield nothing aren't charged.
-</ParamField>
-
-<ParamField path="Jobs search" type="1 credit per 10 jobs">
-  One credit for every 10 jobs returned, so 15 jobs cost 2. A search that finds nothing is free. See [Jobs](/endpoints/jobs).
-</ParamField>
-
-<ParamField path="Hiring changes" type="1 credit per company">
-  One credit for each company we have jobs for. Companies we do not track yet come back empty and are free.
-</ParamField>
-
-<ParamField path="Crawl / Batch" type="1 credit per page">
-  One credit for each page scraped. The running total is reported on the job's `creditsUsed` as it progresses.
-</ParamField>
-
-<Note>
-  A crawl or batch that requests premium per-page formats is priced the same way a scrape is — the base page credit plus any format surcharge — for every page scraped.
-</Note>
-
-## Every response reports its cost
-
-Each scrape response carries a `usage` object telling you exactly what it consumed, how much you have left, and whether it came from cache:
+A scrape response has a `usage` object:
 
 ```json
 {
   "usage": {
     "creditsUsed": 1,
-    "creditsRemaining": 4999,
+    "creditsRemaining": 499,
     "freshness": "fresh"
   }
 }
 ```
 
 <ResponseField name="creditsUsed" type="number">
-  Credits this call consumed. The exact number that left your balance, charged only on success.
+  What this call took from your balance.
 </ResponseField>
 
 <ResponseField name="creditsRemaining" type="number">
-  Credits left in your workspace's balance after this call, so you can track spend without a separate lookup.
+  What is left in your workspace after this call.
 </ResponseField>
 
 <ResponseField name="freshness" type="string">
-  `fresh` if the page was fetched for this call, or `cache` if it was served from a recent capture. Cached results are cheaper and faster. See [Caching](/concepts/caching).
+  `fresh` when the page was fetched for this call, `cache` when it came from a recent copy. See [Caching](/concepts/caching).
 </ResponseField>
 
-For long-running jobs, poll the crawl or batch status and read `creditsUsed` for the total spent so far.
+For crawls and batches, the job's status shows `creditsUsed` so far as it runs.
 
 <Card title="Next: Caching" icon="/icons/bolt.svg" href="/concepts/caching">
-  Serve recent captures to cut cost and latency.
+  How recent copies make calls faster, and how to always fetch fresh.
 </Card>

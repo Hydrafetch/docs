@@ -286,7 +286,7 @@ icon: "/icons/rocket.svg"
   The MCP server now exposes the whole synchronous surface, and describes itself so you never have to guess what it can do.
 
   - New tools: `styleguide`, `screenshot` and `images`, joining `scrape`, `map`, `search`, `extract` and `brand`
-  - `GET /mcp/tools` lists every tool with its description, credit cost and full JSON Schema — no authentication required, so a client can see the capabilities before connecting
+  - `GET /mcp/tools` lists every tool with its description, credit cost and full JSON Schema, with no authentication required, so a client can see the capabilities before connecting
   - Tools cost exactly what the equivalent REST call costs
   - The new tools sit under the existing `web:scrape` scope, so an existing grant needs no re-authorising
 
@@ -325,7 +325,7 @@ icon: "/icons/rocket.svg"
   `preferStructure` keeps headings, lists and tables as real markdown. It was already on the REST API; it is now on the MCP tools too, so agents can ask for it.
 
   - `metadata.format` is now `metadata.structure`, reporting `markdown` or `plain`
-  - `plain` is not a failure — the default extractor optimises for capturing every word and wins on listing and forum pages — but if you wanted headings, retry with `preferStructure: true`
+  - `plain` is not a failure: the default extraction aims to capture every word, which suits listing and forum pages. If you wanted headings, retry with `preferStructure: true`
   - Available on `scrape`, `search` and `extract` over both REST and MCP
 </Update>
 
@@ -342,7 +342,7 @@ icon: "/icons/rocket.svg"
 <Update label="August 2026" tags={["Platform"]}>
   ## Errors you can branch on
 
-  Every error now returns the same envelope with a stable, machine-readable `code`. Branch on the code — the wording of `message` may change, the code won't. Each response also carries a `requestId` to quote if you need us to look something up.
+  Every error now returns the same envelope with a stable, machine-readable `code`. Branch on the code: the wording of `message` may change, the code won't. Each response also carries a `requestId` to quote if you need us to look something up.
 </Update>
 
 <Update label="July 2026" tags={["Web Extraction"]}>

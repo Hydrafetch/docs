@@ -1,9 +1,9 @@
 ---
 title: "Formats"
-description: "Choose exactly what a scrape returns — Markdown, HTML, links, the page's own structured data, a summary, or schema-shaped JSON."
+description: "Choose what a scrape returns: Markdown, HTML, links, the page's own structured data, a summary, or JSON in your schema."
 ---
 
-A scrape returns whatever you ask for. Set the `formats` array on the request to pick one or more outputs; omit it and you get clean Markdown. Each format you request shows up as its own field on the response `data`, so you can request several at once and read them side by side.
+A scrape returns the formats you ask for in the `formats` array. Leave it out and you get clean Markdown. Each format comes back as its own field on `data`, so you can ask for several in one call and read them side by side.
 
 ```bash
 curl -X POST https://api.hydrafetch.com/v1/web/scrape \
@@ -18,57 +18,61 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
 ## The formats
 
 <ParamField body="markdown" type="string" default="true">
-  Clean Markdown of the page's main content, with navigation, boilerplate, and cruft stripped. This is the default when `formats` is omitted. Returned on `data.markdown`.
+  The page's main content as clean Markdown, without menus, footers and other repeated parts of the site. This is what you get when `formats` is left out. Returned on `data.markdown`.
 </ParamField>
 
 <ParamField body="html" type="string">
-  The main content as cleaned HTML — the same content selection as Markdown, but with tags preserved. Use it when you need structure Markdown can't carry. Returned on `data.html`.
+  The same main content as cleaned HTML, with tags kept. Use it when you need structure Markdown cannot carry. Returned on `data.html`.
 </ParamField>
 
 <ParamField body="rawHtml" type="string">
-  The page's unmodified HTML, exactly as delivered. Nothing is cleaned or dropped. Returned on `data.rawHtml`.
+  The page's HTML exactly as it was delivered, with nothing removed. Returned on `data.rawHtml`.
 </ParamField>
 
 <ParamField body="links" type="object">
-  Every link on the page, split into `internal` (same site) and `external` (other sites). Returned on `data.links`.
+  Every link on the page, split into `internal` (the same site) and `external` (other sites). Returned on `data.links`.
 </ParamField>
 
 <ParamField body="structured" type="object">
-  The page's own machine-authored data — JSON-LD, microdata, OpenGraph, and RDFa — normalized for you. Returned on `data.structured`. No LLM is involved, so it's the cheapest and highest-fidelity way to get typed data a page already publishes about itself. See below.
+  The data the page publishes about itself for machines: JSON-LD, microdata, OpenGraph and RDFa, put into one consistent shape. No LLM is involved, so it is exact and costs nothing extra. Returned on `data.structured`. More below.
 </ParamField>
 
 <ParamField body="summary" type="string">
-  A concise, factual summary of the page, generated for you. Returned on `data.summary`. Adds one credit.
+  A short, factual summary of the page, written by an LLM. Returned on `data.summary`. Costs 1 extra credit.
 </ParamField>
 
 <ParamField body="json" type="object">
-  Schema- or prompt-shaped JSON, produced by reading the page against the instructions in `jsonOptions`. Returned on `data.json`. Adds four credits.
+  JSON shaped by a schema or a prompt you give in `jsonOptions`, read out of the page by an LLM. Returned on `data.json`. Costs 4 extra credits.
 </ParamField>
 
-## Structured data, in depth
+<ParamField body="brand" type="object">
+  The site's [brand record](/concepts/brand): name, logos, colours, fonts and socials. Returned on `data.brand`. Costs 5 extra credits when a brand is found, the same as calling Brand separately, and nothing extra when none is found.
+</ParamField>
 
-The `structured` format reads the data a page publishes about itself and hands it back in a consistent shape. Because it reflects what the page already declares, it's exact — no interpretation, no cost beyond the base scrape.
+## Structured data
 
-You get both a normalized view and the raw source:
+The `structured` format returns what the page already declares, for example a product's price or an article's author and date. Because it is copied rather than interpreted, it is exact.
+
+You get one merged list and the raw blocks it came from:
 
 <ResponseField name="entities" type="array">
-  One deduplicated list of typed entities gathered from every syntax on the page. Each entry has:
+  Every typed entity on the page, from every syntax, with duplicates removed. Each entry has:
 
   <Expandable title="entity">
     <ResponseField name="type" type="string">
-      The entity's type, e.g. `Product`, `Article`, `Organization`.
+      The entity's type, such as `Product`, `Article` or `Organization`.
     </ResponseField>
     <ResponseField name="source" type="string">
-      Where it came from: `json-ld`, `microdata`, `rdfa`, or `opengraph`.
+      Where it came from: `json-ld`, `microdata`, `rdfa` or `opengraph`.
     </ResponseField>
     <ResponseField name="properties" type="object">
-      The entity's properties, as published on the page.
+      Its properties, as the page published them.
     </ResponseField>
   </Expandable>
 </ResponseField>
 
-<ResponseField name="jsonLd / microdata / opengraph / rdfa" type="array">
-  The raw blocks for each syntax, exactly as found, for when you want the unmerged source.
+<ResponseField name="jsonLd, microdata, opengraph, rdfa" type="array">
+  The raw blocks for each syntax, exactly as found, if you want them unmerged.
 </ResponseField>
 
 ```json
@@ -90,12 +94,12 @@ You get both a normalized view and the raw source:
 ```
 
 <Note>
-  Prefer `structured` when a page already publishes what you need — product prices, article metadata, event details. Reach for `json` only when the data isn't declared on the page and has to be read out of the prose.
+  Try `structured` first when a page is likely to publish what you need, such as product prices, article details or event dates. Use `json` when the data is only in the page's text.
 </Note>
 
 ## Shaping the `json` format
 
-When you request `json`, tell Hydrafetch what shape you want with `jsonOptions`. Provide a `schema`, a `prompt`, or both — the schema fixes field names and types while the prompt guides what to pull.
+Tell us what you want in `jsonOptions`. Give a `schema`, a `prompt`, or both. The schema fixes the field names and types; the prompt says what to look for.
 
 ```bash
 curl -X POST https://api.hydrafetch.com/v1/web/scrape \
@@ -119,14 +123,14 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
 ```
 
 <Warning>
-  Requesting `json` without a `schema` or `prompt` in `jsonOptions` is a validation error. One of the two is required.
+  Asking for `json` without a `schema` or a `prompt` is a validation error. Give at least one.
 </Warning>
+
+To pull the same fields from many pages, with a confidence and a source for each field, use [Extract](/endpoints/extract) instead.
 
 ## PDFs
 
-Point `scrape` at a PDF and you get Markdown, the same as any web page. No separate endpoint and no extra credits: a PDF is one scrape.
-
-The document's structure survives. Headings come back as headings and tables come back as Markdown tables, rather than as a flat run of text in reading order.
+Point a scrape at a PDF and you get Markdown, the same as for a web page. There is no separate endpoint and no extra cost: a PDF is one scrape. Headings stay headings and tables stay tables.
 
 ```bash
 curl -sS --max-time 120 https://api.hydrafetch.com/v1/web/scrape \
@@ -137,21 +141,22 @@ curl -sS --max-time 120 https://api.hydrafetch.com/v1/web/scrape \
 ```
 
 <Warning>
-  **Scanned PDFs are not supported.** A scan is an image of a document with no text layer, so there is nothing to extract without OCR, which we do not run. You get an empty `markdown`, `complete: false`, `confidence: 0`, and a `warning` saying the document is a scan. Retrying will not change the answer. Text-based PDFs, including exports from Word, LaTeX and design tools, are fully supported.
+  **Scanned PDFs are not supported.** A scan is a picture of a document with no text in it, and reading it would need OCR, which we do not run. You get an empty `markdown`, `complete: false`, `confidence: 0`, and a `warning` that says the document is a scan. Asking again gives the same answer. PDFs that contain text, such as exports from Word, LaTeX or design tools, work fully.
 </Warning>
 
-## Formats compose
+## What formats cost
 
-Request as many formats as you like in a single call. Each returns on its own field, and the credit cost is the base scrape plus the surcharge for any premium formats you included.
+Ask for as many formats as you like in one call. The price is the base scrape plus any extra for the LLM formats.
 
 | Format | Cost |
 | --- | --- |
-| `markdown`, `html`, `rawHtml`, `links`, `structured` | Base scrape (1 credit) |
-| `summary` | +1 credit |
-| `json` | +4 credits |
+| `markdown`, `html`, `rawHtml`, `links`, `structured` | Included in the scrape (1 credit) |
+| `summary` | 1 extra credit |
+| `json` | 4 extra credits |
+| `brand` | 5 extra credits, only when a brand is found |
 
-So a call for `["markdown", "structured"]` costs 1 credit, `["markdown", "summary"]` costs 2, and `["markdown", "summary", "json"]` costs 6. Every response reports the exact total on `usage.creditsUsed`.
+So `["markdown", "structured"]` costs 1 credit, `["markdown", "summary"]` costs 2, and `["markdown", "summary", "json"]` costs 6. Every response states its total in `usage.creditsUsed`.
 
 <Card title="Next: Extraction quality" icon="/icons/badge-check.svg" href="/concepts/quality">
-  How every scrape reports how much to trust it — confidence, completeness, and blocked signals.
+  How each scrape says how far to trust it.
 </Card>

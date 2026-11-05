@@ -1,4 +1,4 @@
-/* Hydrafetch docs — a deliberately thin layer over the `aspen` theme.
+/* Hydrafetch docs: a deliberately thin layer over the `aspen` theme.
  *
  * This file used to be ~230 lines implementing a custom landing page
  * (.hf-hero, .hf-wrap, .hf-btn, gradient headings) on top of `mode: "custom"`.
@@ -32,6 +32,14 @@
   --hf-brand-soft: #e0f4f9;
   --hf-info-line: #bfe6f0;
 
+  --hf-brand-deep: #0b5c73;
+  --hf-paper: #fafcfd;
+  --hf-panel: #ffffff;
+  --hf-tint: #f4f9fb;
+  --hf-line-strong: #b6cbd4;
+  --hf-on-accent: #ffffff;
+  --hf-key-edge-soft: color-mix(in oklab, #0e7490 42%, #ffffff);
+
   --hf-r-control: 2px;
   --hf-r-intent: 4px;
   --hf-r-panel: 8px;
@@ -45,6 +53,13 @@
   --hf-well: #151e26;
   --hf-accent: #22d3ee;
   --hf-accent-hover: #3ddcf3;
+  --hf-brand-deep: #0e9fb5;
+  --hf-paper: #0a0f14;
+  --hf-panel: #0f161c;
+  --hf-tint: #0a0f14;
+  --hf-line-strong: #2e3f4b;
+  --hf-on-accent: #062028;
+  --hf-key-edge-soft: color-mix(in oklab, #22d3ee 42%, #0f161c);
 }
 
 /* docs.json's `fonts` has slots for heading and body only, so the mono face has
@@ -69,16 +84,108 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/* The API playground's "Try it" button ships a hardcoded Mintlify blue
-   (#3064E3) that no docs.json colour reaches, which puts a blue button in the
-   middle of a cyan site. */
-.tryit-button {
-  background: var(--hf-accent) !important;
+/* Keys. Buttons are the app's key: radius 2, a filled face with a deeper
+   border and a one-pixel inner highlight, and a dithered strip down the right
+   edge. Primary keys are the brand fill (teal with white text in light, cyan
+   with ink text in dark); secondary keys are the panel with a strong hairline.
+   The theme draws its own pills with rounded-xl utilities, so these rules need
+   !important to win. */
+.tryit-button,
+#topbar-cta-button > a,
+.navbar-link > a,
+#page-context-menu > button {
+  position: relative !important;
+  overflow: hidden !important;
   border-radius: var(--hf-r-control) !important;
+  font-weight: 500;
 }
 
-.tryit-button:hover {
+.tryit-button::after,
+#topbar-cta-button > a::after,
+.navbar-link > a::after,
+#page-context-menu-button::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 8px;
+  pointer-events: none;
+  background: repeating-conic-gradient(var(--hf-key-edge) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+}
+
+.tryit-button,
+#topbar-cta-button > a {
+  --hf-key-edge: var(--hf-paper);
+  padding-right: 22px !important;
+}
+
+.tryit-button,
+#topbar-cta-button > a > span.absolute {
+  background: var(--hf-accent) !important;
+  border: 1px solid var(--hf-brand-deep);
+  border-radius: var(--hf-r-control) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 1px 0 var(--hf-brand-deep);
+  opacity: 1 !important;
+}
+
+.tryit-button,
+.tryit-button *,
+#topbar-cta-button > a span,
+#topbar-cta-button > a svg {
+  color: var(--hf-on-accent) !important;
+}
+
+.tryit-button:hover,
+#topbar-cta-button > a:hover > span.absolute {
   background: var(--hf-accent-hover) !important;
+}
+
+.navbar-link > a,
+#page-context-menu > button {
+  --hf-key-edge: var(--hf-key-edge-soft);
+  border: 1px solid var(--hf-line-strong) !important;
+  background: var(--hf-panel) !important;
+  color: var(--hf-ink) !important;
+  box-shadow:
+    inset 0 1px 0 var(--hf-panel),
+    0 1px 0 var(--hf-line);
+}
+
+.navbar-link > a {
+  padding-right: 22px !important;
+}
+
+#page-context-menu-button {
+  padding-right: 18px !important;
+}
+
+#page-context-menu > button + button {
+  border-left: 0 !important;
+}
+
+.navbar-link > a:hover,
+#page-context-menu > button:hover {
+  border-color: var(--hf-text-3) !important;
+  background: var(--hf-tint) !important;
+}
+
+.tryit-button:active,
+#topbar-cta-button > a:active,
+.navbar-link > a:active,
+#page-context-menu > button:active {
+  transform: translateY(1px);
+}
+
+.tryit-button:focus-visible,
+#topbar-cta-button > a:focus-visible,
+.navbar-link > a:focus-visible,
+#page-context-menu > button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--hf-paper),
+    0 0 0 4px #0891b2;
 }
 
 /* Controls are radius 2 and panels are radius 8. The theme ships everything at

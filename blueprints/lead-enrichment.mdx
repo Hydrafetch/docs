@@ -29,7 +29,7 @@ The response shape: data with name, domain, description, tagline, naics, colors[
 
 Clean the input before spending: normalise each domain (lowercase, strip scheme, www, path and trailing slash), deduplicate after normalising, and drop free email provider domains, since enriching gmail.com returns the email provider rather than a company. Refresh on a long cycle of six to twelve months rather than nightly, because brands change slowly, and keep the existing record when a refresh fails rather than overwriting it with an empty one. Track the share of the list that resolved, and sample successes as well as failures, since a confidently wrong company is worse than a blank.
 
-Notes: authenticate with the X-API-Key header. A full record is 5 credits, a single logo is 1 and a brand search is 1, so do not resolve a record when only a mark is needed. Failed calls are free. Keep the API key on the server and never ship it in client code.
+Notes: authenticate with the X-API-Key header. A full record is 5 credits, a single logo is 1 and a brand search is free, so do not resolve a record when only a mark is needed. Failed calls are free. Keep the API key on the server and never ship it in client code.
 ```
 </Accordion>
 
@@ -79,7 +79,7 @@ Watch for the subsidiary problem. Enriching `youtube.com` gives you YouTube, whi
 
 ## Resolving a name instead of a domain
 
-When the list is company names, add a step. `GET /v1/web/brand/search?query=...` returns candidates, and 1 credit per lookup makes it cheap to run across the whole list.
+When the list is company names, add a step. `GET /v1/web/brand/search?query=...` returns candidates from brands we already hold, and it is free, so run it across the whole list.
 
 Names are ambiguous in a way domains are not. Several real companies share a name across countries and industries, so keep the match confidence and any other signal you have, like a country or an industry, and hold anything ambiguous for review rather than guessing.
 
@@ -106,7 +106,7 @@ Sample the successes too. A record that resolved to the wrong company is more da
 ## What it costs
 
 
-A full brand record is 5 credits. A single logo is 1. A brand search is 1.
+A full brand record is 5 credits. A single logo is 1. A brand search is free.
 
 The price is flat whether the record was already held or resolved fresh, so a list with repeats does not cost more per unique company than a list without them.
 

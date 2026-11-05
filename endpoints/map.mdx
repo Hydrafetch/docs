@@ -1,21 +1,19 @@
 ---
 title: "Map"
-description: "Fast, synchronous URL discovery for a site — without scraping content."
+description: "List a site's URLs in seconds, without reading the pages."
 ---
 
-Map enumerates a site's URLs quickly, without scraping any of them. It returns synchronously and costs one credit — the fastest way to see what pages a site has before committing to a crawl.
+`POST /v1/web/map` lists the URLs on a site without reading any of them. It answers in one call and costs 1 credit, which makes it the quickest way to see what a site has before you crawl it.
 
-## When to use
+## When to use it
 
-- You want to preview a [Crawl](/endpoints/crawl)'s scope before running it.
-- You need a list of a site's URLs to filter down and feed into a [Batch](/endpoints/batch).
-- You want to find pages matching a term (e.g. every URL containing `pricing`).
+- You want to see how big a site is before running a [Crawl](/endpoints/crawl).
+- You want a list of URLs to filter and then read with a [Batch](/endpoints/batch).
+- You want every URL that contains a word, such as every page with `pricing` in its address.
 
-Map returns URLs only — no page content. To get content, pass the URLs to Scrape, Batch, or Crawl.
+Map returns addresses only, not content. To read the pages, pass the URLs to Scrape, Batch or Crawl.
 
-## Example request
-
-Send a `POST` to `/v1/web/map`. Narrow the results with `search`, `limit`, and discovery options.
+## Example
 
 <CodeGroup>
 
@@ -31,119 +29,127 @@ curl -X POST https://api.hydrafetch.com/v1/web/map \
 ```
 
 ```javascript Node
-const res = await fetch("https://api.hydrafetch.com/v1/web/map", {
-  method: "POST",
-  headers: {
-    "X-API-Key": "hf_your_key_here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    url: "https://example.com",
-    search: "pricing",
-    limit: 1000,
-  }),
-});
-const { data } = await res.json();
-console.log(data.links);
+import { Hydrafetch } from "@hydrafetch/node-sdk";
+
+const hf = new Hydrafetch(process.env.HYDRAFETCH_API_KEY);
+const site = await hf.map("https://example.com", { search: "pricing", limit: 1000 });
+site.links.forEach((l) => console.log(l.url, l.lastmod));
 ```
 
 ```python Python
-import requests
+from hydrafetch import Hydrafetch
 
-res = requests.post(
-    "https://api.hydrafetch.com/v1/web/map",
-    headers={"X-API-Key": "hf_your_key_here"},
-    json={"url": "https://example.com", "search": "pricing", "limit": 1000},
-)
-print(res.json()["data"]["links"])
+hf = Hydrafetch()
+site = hf.map("https://example.com", search="pricing", limit=1000)
+for link in site["links"]:
+    print(link["url"], link["lastmod"])
 ```
 
 </CodeGroup>
-
-## Example response
 
 ```json
 {
   "data": {
     "url": "https://example.com",
     "links": [
-      "https://example.com/",
-      "https://example.com/pricing"
+      { "url": "https://example.com/pricing", "lastmod": "2026-10-28T00:00:00.000Z" },
+      { "url": "https://example.com/pricing/enterprise", "lastmod": null }
     ],
-    "count": 2
+    "count": 2,
+    "total": 2,
+    "truncated": false
   }
 }
 ```
 
-## Request options
+## Options
 
 <ParamField body="url" type="string" required>
-  The site whose URLs you want to enumerate. Must be `http(s)`.
-</ParamField>
-
-<ParamField body="includeLinks" type="boolean" default="false">
-  Also include same-site links found on the starting page, not just the site's page list.
+  The site to list. Must be http or https.
 </ParamField>
 
 <ParamField body="limit" type="number">
-  Maximum number of URLs to return. 1–5000. Results are ordered by how recently each page changed, so a limit gives you the **most recently updated** URLs rather than an even sample of the site. On a site where one kind of page changes constantly, such as a shop's product pages, a small limit can return that kind and nothing else. `sitemapInclude` is how you ask for the rest.
+  The most URLs to return, from 1 to 5000.
 </ParamField>
 
 <ParamField body="search" type="string">
-  Keep only discovered URLs containing this term (e.g. `"pricing"`). Up to 200 characters.
+  Keep only URLs that contain this word, such as `"pricing"`. Up to 200 characters.
 </ParamField>
 
 <ParamField body="sitemap" type="string">
-  Whether to use the site's published page list: `skip` it, `include` it alongside discovered links, or use it `only`.
+  How to use the site's published page list (its sitemap): `include` it alongside links found on the page, use it `only`, or `skip` it.
+</ParamField>
+
+<ParamField body="includeLinks" type="boolean" default="false">
+  Also add links found on the starting page, not only the site's page list.
 </ParamField>
 
 <ParamField body="sitemapInclude" type="string">
-  On sites that publish several page lists, only read the ones whose address contains one of these comma-separated terms. For example `"pages"` on a shop to reach its policy and information pages instead of its products.
+  For sites that publish several page lists, only read the lists whose address contains one of these comma-separated words. For example `"post"` to reach a blog's articles, or `"pages"` to reach a shop's information pages instead of its products.
 </ParamField>
 
 <ParamField body="sitemapExclude" type="string">
-  Skip page lists whose address contains any of these comma-separated terms. Compose it with `sitemapInclude`, for example include `"post"` and exclude `"tag,category,author"` to avoid tag and category archives.
+  Skip page lists whose address contains any of these comma-separated words. Combine it with `sitemapInclude`, for example include `"post"` and exclude `"tag,category,author"`.
 </ParamField>
 
 <ParamField body="order" type="string" default="newest">
-  Sort by how recently each page changed: `newest` first, or `oldest`. URLs with no recorded date sort last either way.
+  `newest` lists the most recently changed pages first, `oldest` the least recent, and `sitemap` keeps the order of the site's own list. Pages with no date come last.
 </ParamField>
 
 <ParamField body="includeSubdomains" type="boolean" default="false">
-  Also include URLs on subdomains of the site.
+  Also list URLs on the site's subdomains.
 </ParamField>
 
 <ParamField body="ignoreQueryParameters" type="boolean" default="false">
-  Treat URLs that differ only by query string as one.
+  Treat URLs that differ only in their query string as one URL.
+</ParamField>
+
+<ParamField body="before" type="string">
+  For paging through a large archive from newest to oldest: return only URLs last changed at or before this ISO 8601 time. See below.
+</ParamField>
+
+<ParamField body="offset" type="number">
+  Skip this many results, then return the next `limit`. Use it to page through sites whose page lists have no dates.
 </ParamField>
 
 ## Response fields
 
 <ResponseField name="data" type="object">
   <Expandable title="MapResult">
-    <ResponseField name="url" type="string">The site you requested.</ResponseField>
-    <ResponseField name="links" type="string[]">The site's discovered URLs.</ResponseField>
-    <ResponseField name="count" type="number">How many URLs were returned.</ResponseField>
+    <ResponseField name="url" type="string">The site you asked for.</ResponseField>
+    <ResponseField name="links" type="object[]">Each URL found, as `url` and `lastmod`: when the site's page list says the page last changed, or `null` when it does not say.</ResponseField>
+    <ResponseField name="count" type="number">How many URLs this response holds.</ResponseField>
+    <ResponseField name="total" type="number">How many URLs the whole list has. Use it to know when you have paged to the end.</ResponseField>
+    <ResponseField name="truncated" type="boolean">`true` when the site was too large to list completely in one go. `total` is then a lower bound, not the site's real size.</ResponseField>
   </Expandable>
 </ResponseField>
 
-<Note>
-  Map is one credit regardless of how many URLs come back, and it returns synchronously. It is the cheapest way to size up a site before a crawl or batch.
-</Note>
+## Paging through a large site
+
+`limit` returns the **most recently changed** pages first, not an even sample of the site. On a site where one kind of page changes all the time, such as a shop's product pages, a small limit can return only that kind. Use `sitemapInclude` to reach the rest.
+
+To get more than one page of results:
+
+- **When pages have dates**, pass the oldest `lastmod` from the previous response as `before`, and remove any URL you already have.
+- **When they do not**, step `offset` through `0`, `limit`, `2 × limit` and so on, until `offset + count` reaches `total`. Do not stop just because a page came back short.
+
+## Cost
+
+1 credit per call, however many URLs come back. A call that finds no URLs is free.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Map API reference" icon="/icons/code.svg" href="/api-reference">
-    Full request and response schema with a live playground.
-  </Card>
   <Card title="Crawl a whole site" icon="/icons/sitemap.svg" href="/endpoints/crawl">
-    Turn a mapped scope into scraped pages.
+    Read the pages you mapped.
   </Card>
-  <Card title="Scrape a list of URLs" icon="/icons/bullet-list.svg" href="/endpoints/batch">
-    Feed mapped URLs into a batch job.
+  <Card title="Read a list of URLs" icon="/icons/bullet-list.svg" href="/endpoints/batch">
+    Send the URLs you picked to a batch.
   </Card>
   <Card title="Scrape one URL" icon="/icons/file-content.svg" href="/endpoints/scrape">
-    Scrape any single discovered URL.
+    Read any single URL you found.
+  </Card>
+  <Card title="API reference" icon="/icons/code.svg" href="/api-reference">
+    The full schema, with a live playground.
   </Card>
 </CardGroup>

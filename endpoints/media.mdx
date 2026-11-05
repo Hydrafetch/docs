@@ -1,15 +1,13 @@
 ---
 title: "Media"
-description: "Harvest a page's images or capture a full-page screenshot."
+description: "List every image on a page, or take a screenshot of it."
 ---
 
-Two endpoints turn a page into media instead of text: **Images** lists every image on a page with its metadata, and **Screenshot** captures the rendered page as a PNG. Both are synchronous. Images costs 1 credit; a screenshot costs 5, because it always renders the page in full rather than reading it.
+Two endpoints turn a page into images instead of text. **Images** lists every image on a page with its details. **Screenshot** takes a picture of the page as a PNG. Both answer in the same call. Images costs 1 credit. A screenshot costs 5, because the page is always fully rendered.
 
 ## Images
 
-`POST /v1/web/images` harvests every image on a page and returns it with its metadata — resolved absolute source, alt text, and declared dimensions. Use it to build an image index, pull product photos, or find the largest asset on a page.
-
-### Example request
+`POST /v1/web/images` lists every image on a page with its full address, alt text and declared size. Use it to collect product photos, build an image index, or find the biggest picture on a page.
 
 <CodeGroup>
 
@@ -18,19 +16,6 @@ curl -X POST https://api.hydrafetch.com/v1/web/images \
   -H "X-API-Key: hf_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{ "url": "https://example.com" }'
-```
-
-```javascript Node
-const res = await fetch("https://api.hydrafetch.com/v1/web/images", {
-  method: "POST",
-  headers: {
-    "X-API-Key": "hf_your_key_here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ url: "https://example.com" }),
-});
-const { data } = await res.json();
-console.log(data.images);
 ```
 
 ```python Python
@@ -46,58 +31,33 @@ print(res.json()["data"]["images"])
 
 </CodeGroup>
 
-### Example response
-
 ```json
 {
   "data": {
     "url": "https://example.com",
     "finalUrl": "https://example.com/",
     "images": [
-      {
-        "src": "https://example.com/logo.png",
-        "alt": "Company logo",
-        "width": 320,
-        "height": 240
-      }
+      { "src": "https://example.com/logo.png", "alt": "Company logo", "width": 320, "height": 240 }
     ]
   }
 }
 ```
 
-### Options
-
 <ParamField body="url" type="string" required>
-  The URL to harvest images from. Must be `http(s)`.
+  The page to read. Must be http or https.
 </ParamField>
 
 <ParamField body="maxAge" type="number">
-  Serve from a recent capture of this URL if it's younger than this many milliseconds. Omit for the default window; `0` always fetches fresh. Capped at 7 days (604800000 ms).
+  Use a recent copy of the page if it is younger than this many milliseconds. `0` always reads fresh. At most 7 days. See [Caching](/concepts/caching).
 </ParamField>
 
-### Response fields
-
-<ResponseField name="data.url" type="string">
-  The URL you requested.
-</ResponseField>
-
-<ResponseField name="data.finalUrl" type="string">
-  The final URL after any redirects.
-</ResponseField>
-
-<ResponseField name="data.images" type="object[]">
-  Every image found on the page. Each has `src` (resolved to absolute), plus `alt`, `width`, and `height` — any of which may be `null` when the page doesn't declare it.
-</ResponseField>
-
----
+Each image has `src`, made into a full address, and `alt`, `width` and `height`, each `null` when the page does not say.
 
 ## Screenshot
 
-`POST /v1/web/screenshot` renders a page and captures it as a PNG, returned base64-encoded in the response. Use it for visual snapshots, archiving, or feeding a page's appearance to a vision model.
+`POST /v1/web/screenshot` renders a page and saves it as a PNG. You get back a public link to the image. Use it for visual snapshots, archives, or to show a page to a vision model.
 
-The capture is of the page a reader would see, not of everything the page puts on screen. Cookie banners are accepted, newsletter and anti-adblock interstitials are closed, ad and tracker requests never load, and bot-check widgets are removed so a shareable screenshot is not dominated by a checkbox asking whether you are human. A page that is nothing but a challenge is left alone, because a blank capture would read as success.
-
-### Example request
+The picture shows the page a reader would see. Cookie banners are accepted, newsletter and anti-adblock pop-ups are closed, ads and trackers never load, and bot-check boxes are hidden, so the screenshot is not mostly a box asking if you are human. A page that is nothing but a challenge is left as it is, because a blank picture would look like success.
 
 <CodeGroup>
 
@@ -109,22 +69,14 @@ curl -X POST https://api.hydrafetch.com/v1/web/screenshot \
 ```
 
 ```javascript Node
-import { writeFileSync } from "node:fs";
+import { Hydrafetch } from "@hydrafetch/node-sdk";
 
-const res = await fetch("https://api.hydrafetch.com/v1/web/screenshot", {
-  method: "POST",
-  headers: {
-    "X-API-Key": "hf_your_key_here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ url: "https://example.com", fullPage: true }),
-});
-const { data } = await res.json();
-writeFileSync("page.png", Buffer.from(data.image, "base64"));
+const hf = new Hydrafetch(process.env.HYDRAFETCH_API_KEY);
+const shot = await hf.screenshot("https://example.com", { fullPage: true });
+console.log(shot.screenshot);
 ```
 
 ```python Python
-import base64
 import requests
 
 res = requests.post(
@@ -132,14 +84,11 @@ res = requests.post(
     headers={"X-API-Key": "hf_your_key_here"},
     json={"url": "https://example.com", "fullPage": True},
 )
-data = res.json()["data"]
-with open("page.png", "wb") as f:
-    f.write(base64.b64decode(data["image"]))
+png_url = res.json()["data"]["screenshot"]
+png = requests.get(png_url).content
 ```
 
 </CodeGroup>
-
-### Example response
 
 ```json
 {
@@ -147,68 +96,89 @@ with open("page.png", "wb") as f:
     "url": "https://example.com",
     "finalUrl": "https://example.com/",
     "status": 200,
-    "image": "iVBORw0KGgoAAAANSUhEUgAA..."
+    "screenshot": "https://media.hydrafetch.com/screenshots/3f1c2a.png",
+    "screenshotType": "fullPage",
+    "width": 1920,
+    "height": 4210,
+    "cached": false
   }
 }
 ```
 
-<Note>
-  `image` is a base64-encoded PNG string. Decode it to bytes to write the file, as the examples above show.
-</Note>
-
 ### Options
 
 <ParamField body="url" type="string" required>
-  The URL to screenshot. Must be `http(s)`.
+  The page to capture. Must be http or https.
 </ParamField>
 
 <ParamField body="fullPage" type="boolean" default="false">
-  Capture the entire scrollable page instead of just the viewport.
+  Capture the whole scrollable page instead of only the first screen.
+</ParamField>
+
+<ParamField body="viewport" type="string" default="desktop">
+  The screen size to render at: `desktop` (1920 by 1080), `laptop`, `tablet` or `mobile`.
+</ParamField>
+
+<ParamField body="viewportWidth" type="number">
+  An exact screen width in pixels, from 320 to 3840. Overrides `viewport`.
+</ParamField>
+
+<ParamField body="viewportHeight" type="number">
+  An exact screen height in pixels, from 240 to 2160. Overrides `viewport`. With `fullPage`, the picture still covers the whole page.
 </ParamField>
 
 <ParamField body="waitFor" type="number">
-  Extra milliseconds to let the page settle before capture. Up to 30000.
+  Extra milliseconds to let the page settle before the picture, up to 30000.
 </ParamField>
 
 <ParamField body="timeout" type="number">
-  Overall time budget for the request, in milliseconds. Between 1000 and 100000. Defaults to 100000.
+  The time budget for the call in milliseconds, from 1000 to 100000.
+</ParamField>
+
+<ParamField body="maxAge" type="number">
+  Reuse a saved screenshot younger than this many milliseconds. The default is 7 days, so asking again for the same page and options returns the saved PNG at once with `cached: true`, without applying `waitFor`. Set `0` to take a new one.
 </ParamField>
 
 ### Response fields
 
-<ResponseField name="data.url" type="string">
-  The URL you requested.
+<ResponseField name="data.screenshot" type="string">
+  A public link to the PNG. It stays the same for the same URL and options.
 </ResponseField>
-
-<ResponseField name="data.finalUrl" type="string">
-  The final URL after any redirects.
+<ResponseField name="data.screenshotType" type="string">
+  `fullPage` or `viewport`.
 </ResponseField>
-
+<ResponseField name="data.width, data.height" type="number">
+  The image size in pixels.
+</ResponseField>
+<ResponseField name="data.cached" type="boolean">
+  `true` when a saved screenshot was reused.
+</ResponseField>
 <ResponseField name="data.status" type="number">
-  HTTP status of the captured page.
+  The HTTP status the page returned.
 </ResponseField>
 
-<ResponseField name="data.image" type="string">
-  The screenshot as a base64-encoded PNG string.
-</ResponseField>
+## Cost
 
-## Billing
+| Call | Credits |
+| --- | --- |
+| Images | 1 |
+| Screenshot, new or reused | 5 |
 
-Images costs **1 credit** and Screenshot costs **5**, charged only on success. Each response reports what it consumed. See [Credits](/concepts/credits).
+Failed calls are free. See [Credits](/concepts/credits).
 
 ## Related
 
 <CardGroup cols={2}>
   <Card title="Scrape" icon="/icons/file-content.svg" href="/endpoints/scrape">
-    Clean Markdown and structured data from a URL.
+    Clean Markdown and structured data from a page.
+  </Card>
+  <Card title="Brand data" icon="/icons/palette.svg" href="/concepts/brand">
+    A company's logos and colours, ready to use.
   </Card>
   <Card title="Caching" icon="/icons/history.svg" href="/concepts/caching">
-    How `maxAge` reuses a recent capture.
+    How `maxAge` reuses a recent copy.
   </Card>
-  <Card title="Credits" icon="/icons/coins.svg" href="/concepts/credits">
-    Pricing and charge-on-success.
-  </Card>
-  <Card title="API Reference" icon="/icons/code.svg" href="/api-reference">
-    Full `/v1/web/images` and `/v1/web/screenshot` schemas.
+  <Card title="API reference" icon="/icons/code.svg" href="/api-reference">
+    The full schemas, with a live playground.
   </Card>
 </CardGroup>

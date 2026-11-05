@@ -1,22 +1,22 @@
 ---
 title: "Extract"
-description: "Pull schema-shaped JSON from one or many pages, with per-field confidence and sources."
+description: "Get JSON in your schema out of one or many pages, with a confidence and a source for each field."
 ---
 
-`POST /v1/web/extract` turns pages into structured JSON. You describe the shape you want — a JSON Schema, a natural-language prompt, or both — and an LLM maps each page onto it. Point it at one URL, a list, or a whole crawl scope, and get back typed data instead of Markdown.
+`POST /v1/web/extract` turns pages into JSON in the shape you choose. Describe the shape with a JSON Schema, a plain-language prompt, or both, and an LLM reads each page into it. Point it at one URL, a list, or every page under a path.
 
-Extract is the premium tier. It's what you reach for when you don't just want the page cleaned, you want the specific facts out of it: a product's price and stock, a company's funding round, a directory's every listing.
+Use it when you want specific facts, not the whole page: a product's price and stock, a company's funding round, every listing in a directory.
 
 ## When to use it
 
-- You need typed fields, not prose — feed a schema and get exactly those keys back.
-- You want to extract the same shape from many pages, or from every page under a path.
-- You need to trust the result: return **per-field confidence** and the **exact passage** each value came from.
-- You want many pages collapsed into **one deduplicated collection**, one row per real-world entity.
+- You need typed fields, not prose. Give a schema and get exactly those keys back.
+- You want the same fields from many pages, or from every page under a path.
+- You need to check the result: each field can come back with a **confidence** and the **passage it came from**.
+- You want many pages combined into **one list without duplicates**, one row per real thing.
 
-## Example request
+## Example
 
-Extract a product's details from a single page, with confidence and sources turned on.
+Get a product's details from one page, with confidence and sources on.
 
 <CodeGroup>
 
@@ -40,61 +40,47 @@ curl -X POST https://api.hydrafetch.com/v1/web/extract \
 ```
 
 ```javascript Node
-const res = await fetch("https://api.hydrafetch.com/v1/web/extract", {
-  method: "POST",
-  headers: {
-    "X-API-Key": "hf_your_key_here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    urls: ["https://example.com/products/widget"],
-    schema: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        priceUsd: { type: "number" },
-        inStock: { type: "boolean" },
-      },
+import { Hydrafetch } from "@hydrafetch/node-sdk";
+
+const hf = new Hydrafetch(process.env.HYDRAFETCH_API_KEY);
+const out = await hf.extract("https://example.com/products/widget", {
+  schema: {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      priceUsd: { type: "number" },
+      inStock: { type: "boolean" },
     },
-    showConfidence: true,
-    showSources: true,
-  }),
+  },
+  showConfidence: true,
+  showSources: true,
 });
-const { data } = await res.json();
-console.log(data.results[0].data);
-console.log(data.results[0].fields);
+console.log(out.results[0].data, out.results[0].fields);
 ```
 
 ```python Python
-import requests
+from hydrafetch import Hydrafetch
 
-res = requests.post(
-    "https://api.hydrafetch.com/v1/web/extract",
-    headers={"X-API-Key": "hf_your_key_here"},
-    json={
-        "urls": ["https://example.com/products/widget"],
-        "schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "priceUsd": {"type": "number"},
-                "inStock": {"type": "boolean"},
-            },
+hf = Hydrafetch()
+out = hf.extract(
+    "https://example.com/products/widget",
+    schema={
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "priceUsd": {"type": "number"},
+            "inStock": {"type": "boolean"},
         },
-        "showConfidence": True,
-        "showSources": True,
     },
+    showConfidence=True,
+    showSources=True,
 )
-data = res.json()["data"]
-print(data["results"][0]["data"])
-print(data["results"][0]["fields"])
+print(out["results"][0]["data"], out["results"][0]["fields"])
 ```
 
 </CodeGroup>
 
-## Example response
-
-One entry in `results` per extracted page. With `showConfidence`, each result also carries a `fields` map: for every field, how certain the value is and the passage it was drawn from. With `showSources`, the concrete URLs that were extracted are listed at the top level.
+There is one entry in `results` per page. With `showConfidence`, each has a `fields` map giving, for every field, how sure we are and the passage it came from. With `showSources`, the pages that were actually read are listed in `sources`.
 
 ```json
 {
@@ -104,14 +90,8 @@ One entry in `results` per extracted page. With `showConfidence`, each result al
         "url": "https://example.com/products/widget",
         "data": { "name": "Widget", "priceUsd": 49, "inStock": true },
         "fields": {
-          "priceUsd": {
-            "confidence": 0.92,
-            "evidence": "Priced at $49.00 with free shipping."
-          },
-          "inStock": {
-            "confidence": 0.98,
-            "evidence": "In stock — ships today."
-          }
+          "priceUsd": { "confidence": 0.92, "evidence": "Priced at $49.00 with free shipping." },
+          "inStock": { "confidence": 0.98, "evidence": "In stock, ships today." }
         },
         "error": null
       }
@@ -121,20 +101,9 @@ One entry in `results` per extracted page. With `showConfidence`, each result al
 }
 ```
 
-## What makes it different
+## Every page under a path
 
-<CardGroup cols={2}>
-  <Card title="Per-field confidence + evidence" icon="/icons/shield.svg">
-    With `showConfidence`, every field comes back with a score from 0 to 1 and the exact source passage it was drawn from — so you can gate on trust instead of guessing.
-  </Card>
-  <Card title="Merge into one collection" icon="/icons/layers.svg">
-    With `mergeEntities`, results across many pages collapse into one deduplicated collection — one row per entity, each carrying the source URLs that contributed to it.
-  </Card>
-</CardGroup>
-
-## Crawl scope with `/*`
-
-Any URL ending in `/*` is a **crawl scope**, not a literal address. Every page discovered under that path is extracted and merged into the result. Mix literal URLs and scopes freely in the same `urls` list.
+A URL ending in `/*` means every page we find under that path, not a literal address. Each one is read and its results are added. You can mix plain URLs and paths in the same `urls` list.
 
 ```json
 {
@@ -145,91 +114,89 @@ Any URL ending in `/*` is a **crawl scope**, not a literal address. Every page d
 }
 ```
 
-<Warning>
-  A crawl scope can expand to many pages, and you're charged per page that returns data. Use `showSources` to see exactly which URLs were extracted, and keep `urls` tight.
-</Warning>
+One call reads at most **20 pages** after paths are expanded, so it costs at most 100 credits. Use `showSources` to see which pages were read. For more pages, run several calls or [crawl](/endpoints/crawl) first and extract from the pages you pick.
 
-## Key options
+## Options
 
 <ParamField body="urls" type="string[]" required>
-  The pages to extract from — up to 10 entries. Each must be an `http(s)` URL. A trailing `/*` marks a crawl scope: every page discovered under that path is extracted and merged in.
+  The pages to read, up to 10 entries. Each must be http or https. A trailing `/*` means every page under that path.
 </ParamField>
 
 <ParamField body="schema" type="object">
-  A JSON Schema describing the shape you want back. Optional if `prompt` is given. When both are present, the schema fixes the field names and types while the prompt guides what to pull.
+  A JSON Schema for the shape you want back. Optional if you give a `prompt`. With both, the schema fixes the field names and types and the prompt says what to look for.
 </ParamField>
 
 <ParamField body="prompt" type="string">
-  A natural-language instruction for what to extract, up to 2000 characters. Use with or instead of a schema.
+  What to extract, in plain language, up to 2000 characters. Use it with a schema or on its own.
 </ParamField>
 
 <ParamField body="enableWebSearch" type="boolean" default="false">
-  Pull in extra source pages by web-searching your prompt, to fill fields your URLs don't cover. Requires a `prompt`.
+  Search the web with your prompt and read up to 5 more pages, to fill fields your URLs do not cover. Needs a `prompt`.
 </ParamField>
 
 <ParamField body="showSources" type="boolean" default="false">
-  Return the concrete list of URLs that were actually extracted, after any wildcard and web-search expansion.
+  Return the list of pages that were actually read, after paths and web search are expanded.
 </ParamField>
 
 <ParamField body="showConfidence" type="boolean" default="false">
-  For each field, return a confidence score (0 to 1) and the exact source passage the value was drawn from.
+  For each field, return a confidence from 0 to 1 and the passage the value came from.
 </ParamField>
 
 <ParamField body="mergeEntities" type="boolean" default="false">
-  Merge the per-page results into one deduplicated collection — one row per entity, with its contributing source URLs — instead of a separate result per page.
+  Combine the results from every page into one list without duplicates, one row per thing, each with the pages it came from. Without it you get a separate result per page.
 </ParamField>
 
 <ParamField body="preferStructure" type="boolean" default="false">
-  Preserve document structure (headings, lists, tables) over prose density when reading the page. Good for listing and catalog pages.
+  Keep headings, lists and tables when reading the page. Good for listing and catalogue pages.
 </ParamField>
 
 <ParamField body="maxAge" type="number">
-  Reuse a recent capture of each page if it's younger than this many milliseconds. Omit or set `0` to always fetch fresh. Capped at 7 days (604800000 ms).
+  Use a recent copy of each page if it is younger than this many milliseconds. Leave it out or set `0` to always read fresh. At most 7 days.
 </ParamField>
 
 <ParamField body="location" type="object">
-  Fetch each page as if from a country (`country`, an ISO 3166 alpha-2 code) and with preferred languages (`languages`, most preferred first). For sites that change prices or content by region.
+  Read each page as if from another place: `country` is a two-letter code, `languages` lists preferred languages in order. For sites that change prices or content by region.
 </ParamField>
 
 <ParamField body="headers" type="object">
-  Extra request headers sent when fetching each page, as string key-value pairs. Use it to send the cookie a site uses to pick your store or delivery area, so prices and stock match what you see.
+  Extra headers sent to the site for each page, for example the cookie a shop uses to pick your store, so prices and stock match what you see.
 </ParamField>
 
 ## Response fields
 
 <ResponseField name="data.results" type="object[]">
-  One result per extracted page. Each has `url`, `data` (the extracted object, or `null` when nothing matched), and `error` (`null` on success). Includes `fields` when `showConfidence` is set.
+  One result per page, each with `url`, `data` (what was extracted, or `null` when nothing matched) and `error` (`null` on success). Includes `fields` when `showConfidence` is on.
 </ResponseField>
 
 <ResponseField name="data.results[].fields" type="object">
-  Per-field map keyed by field name, each with `confidence` (0–1) and `evidence` (the source passage). Present only when `showConfidence` is set.
+  For each field name, its `confidence` (0 to 1) and `evidence` (the passage it came from). Only with `showConfidence`.
 </ResponseField>
 
 <ResponseField name="data.sources" type="string[]">
-  The concrete URLs actually extracted, after wildcard and web-search expansion. Present only when `showSources` is set.
+  The pages actually read. Only with `showSources`.
 </ResponseField>
 
 <ResponseField name="data.collection" type="object[]">
-  The deduplicated collection, one row per entity. Each row has `data` (the unioned fields for that entity) and `sources` (every URL that contributed). Present only when `mergeEntities` is set.
+  The combined list, one row per thing. Each row has `data` (all its fields from every page) and `sources` (every page that added to it). Only with `mergeEntities`.
 </ResponseField>
 
-## Billing
+## Cost
 
-Extract costs **5 credits per page that returns data**. Pages that yield nothing aren't charged. A crawl scope or `enableWebSearch` can expand the page count, so the total scales with how many pages actually produce results — the response tells you which ones. See [Credits](/concepts/credits).
+5 credits per page that returns data. Pages that give nothing are free. A `/*` path or `enableWebSearch` can add pages, so the total depends on how many produce results, up to 20 pages per call. See [Credits](/concepts/credits).
 
 ## Related
 
 <CardGroup cols={2}>
   <Card title="Search" icon="/icons/magnifier.svg" href="/endpoints/search">
-    Find the pages to extract from when you don't have their URLs.
+    Find the pages to extract from.
   </Card>
   <Card title="Crawl" icon="/icons/sitemap.svg" href="/endpoints/crawl">
-    The site-discovery behind a `/*` extract scope, as a standalone job.
+    Read a whole site, then extract from the pages you need.
   </Card>
   <Card title="Formats" icon="/icons/layers.svg" href="/concepts/formats">
-    How extracted JSON compares to Markdown and structured formats.
+    The `structured` format, for data a page already publishes.
   </Card>
-  <Card title="API Reference" icon="/icons/code.svg" href="/api-reference">
-    Full `POST /v1/web/extract` schema and a live playground.
+  <Card title="API reference" icon="/icons/code.svg" href="/api-reference">
+    The full schema, with a live playground.
   </Card>
 </CardGroup>

@@ -1,13 +1,20 @@
 ---
 title: "Jobs & webhooks"
-description: "When calls return immediately, when they run as background jobs, and how to get results by polling or webhook."
+description: "Which calls answer straight away, which run as background jobs, and how to get results by polling or by webhook."
 ---
 
-Some calls finish in the moment; others run long enough to hand back a job you follow up on. Hydrafetch keeps the shape predictable: a synchronous result comes back as `{ data }`, and a job comes back as an id you poll — or a webhook that calls you when it's done.
+Most calls answer in the same request. Crawls and batches cover many pages, so they run as background jobs: you get an id back, then poll it or let a webhook tell you when it is done.
 
-## Scrape: synchronous by default
+| Call | What you get back |
+| --- | --- |
+| Scrape | `{ data }` once the page is read. Set `async: true` to get `{ jobId, status }` straight away instead. |
+| Map, Search, News, Extract, Brand, Screenshot, Images | `{ data }` once the work is done |
+| Crawl | Always `{ crawlId, status }`. Poll it or use a webhook. |
+| Batch | Always `{ batchId, status }`. Poll it or use a webhook. |
 
-A scrape waits for the result and returns it inline. You get `{ data }` with the formats you asked for.
+## Scrape
+
+A scrape waits for the page and returns it:
 
 ```json
 {
@@ -19,7 +26,9 @@ A scrape waits for the result and returns it inline. You get `{ data }` with the
 }
 ```
 
-If a scrape runs past the synchronous wait — or if you set `async: true` — it returns a job id instead, with a `201`:
+A scrape that waits gets up to **90 seconds**. If the page takes longer, the call fails with `504` and `REQUEST_TIMEOUT`, and costs nothing. It never turns into a job by itself, so you only ever handle one response shape.
+
+For pages you expect to be slow, such as heavy JavaScript apps, set `async: true`. The call answers at once with `201`:
 
 ```json
 {
@@ -28,7 +37,7 @@ If a scrape runs past the synchronous wait — or if you set `async: true` — i
 }
 ```
 
-Poll it until it's done:
+Then poll it:
 
 <CodeGroup>
 
@@ -47,25 +56,19 @@ const job = await res.json();
 
 </CodeGroup>
 
-The status response reports the job state and, once finished, the page:
-
 <ResponseField name="status" type="string">
-  `waiting`, `active`, `completed`, or `failed`.
+  `waiting`, `active`, `completed` or `failed`.
 </ResponseField>
 <ResponseField name="data" type="object">
-  The scraped page, present when `status` is `completed`.
+  The page, once `status` is `completed`.
 </ResponseField>
 <ResponseField name="error" type="string">
-  Set when `status` is `failed`.
+  Why it failed, when `status` is `failed`.
 </ResponseField>
 
-<Note>
-  Set `async: true` up front when you know a page is heavy — a JavaScript-rendered app, a long settle time — so your request never blocks waiting for it.
-</Note>
+## Crawl and batch
 
-## Crawl and batch: always async
-
-A crawl (discover and scrape a whole site) and a batch (scrape an explicit list of URLs) always run as background jobs. Starting one returns an id immediately with a `201`:
+A crawl finds and reads the pages of a site. A batch reads a list of URLs you give it. Both always run in the background. Starting one answers at once with `201`:
 
 <CodeGroup>
 
@@ -85,38 +88,40 @@ A crawl (discover and scrape a whole site) and a batch (scrape an explicit list 
 
 </CodeGroup>
 
-You then track it one of two ways.
+Then follow it in either of two ways. You can also use both.
 
 <Tabs>
   <Tab title="Poll">
-    Request the job's status endpoint for live progress and per-page results:
+    Ask for the job's status to see progress and each finished page:
 
     ```bash
     curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43 \
       -H "X-API-Key: hf_your_key_here"
     ```
 
-    Batches use `GET /v1/web/batch/{id}`. Both return the same status shape:
+    Batches use `GET /v1/web/batch/{id}`. Both answer in the same shape:
 
     ```json
     {
-      "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
-      "kind": "crawl",
-      "status": "running",
-      "total": 100,
-      "completed": 42,
-      "failed": 1,
-      "creditsUsed": 42,
-      "pages": [
-        { "url": "https://example.com/blog/post", "status": "completed", "depth": 1, "data": { } }
-      ]
+      "data": {
+        "id": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+        "kind": "crawl",
+        "status": "running",
+        "total": 100,
+        "completed": 42,
+        "failed": 1,
+        "creditsUsed": 42,
+        "pages": [
+          { "url": "https://example.com/blog/post", "status": "completed", "depth": 1, "data": { } }
+        ]
+      }
     }
     ```
 
-    `status` moves through `running` to `completed` (or `failed` / `cancelled`). Each entry in `pages` carries its own `status` and, once done, its scraped `data`. Results stay available for 90 days after the job last changes; after that the status call answers `404`.
+    `status` goes from `running` to `completed`, or ends as `failed` or `cancelled`. Each entry in `pages` has its own `status` and, once read, its `data`. Results stay available for 90 days after the job last changes. After that the status call answers `404`.
   </Tab>
   <Tab title="Webhook">
-    Register a `webhook` when you start the job and Hydrafetch calls you as it progresses — including the full status when it finishes — so you don't have to poll.
+    Add a `webhook` when you start the job, and we call your URL as pages finish and again when the job ends. You do not need to poll.
 
     ```bash
     curl -X POST https://api.hydrafetch.com/v1/web/crawl \
@@ -134,50 +139,44 @@ You then track it one of two ways.
       }'
     ```
 
-    Two events fire:
-
-    | Event | When |
+    | Event | When it is sent |
     | --- | --- |
-    | `crawl.page` / `batch.page` | Each time a page finishes — carries that page's `status` and scraped `data`. |
-    | `crawl.completed` / `batch.completed` | Once, when the job reaches a terminal state — carries the full status. |
+    | `crawl.page` or `batch.page` | Each time a page finishes, with that page's `status` and `data` |
+    | `crawl.completed` or `batch.completed` | Once, when the job ends, with the full job status |
 
     <ParamField body="webhook.url" type="string" required>
-      Where to POST events. Must be a **public** http(s) URL — private, loopback, and link-local addresses are rejected with a `400`.
+      Where we send events. It must be a **public** http or https address. Private, loopback and link-local addresses are refused with `400`.
     </ParamField>
     <ParamField body="webhook.events" type="string[]">
-      Which events to receive: `page`, `completed`, or both. Defaults to both. Use `["completed"]` if you only want the final result and not a call per page.
+      Which events you want: `page`, `completed` or both. Both by default. Use `["completed"]` to get only the final result.
     </ParamField>
     <ParamField body="webhook.headers" type="object">
-      Extra headers sent with each callback — use them to authenticate the request to your endpoint.
+      Extra headers sent with each call, for example to authenticate us to your endpoint.
     </ParamField>
     <ParamField body="webhook.secret" type="string">
-      A shared secret. When set, every callback is signed so you can verify it really came from Hydrafetch. See [Verifying a webhook](#verifying-a-webhook).
+      A shared secret. When set, every call is signed so you can check it came from us. See [Verifying a webhook](#verifying-a-webhook).
     </ParamField>
 
     <Note>
-      Deliveries are durable. If your endpoint is down or returns a non-2xx, we retry with exponential backoff (up to 6 attempts) rather than dropping the event.
-    </Note>
-
-    <Note>
-      The webhook and polling aren't exclusive. You can register a webhook and still poll the status endpoint whenever you want.
+      If your endpoint is down or answers with anything other than 2xx, we retry with growing gaps, up to 6 attempts.
     </Note>
   </Tab>
 </Tabs>
 
 ## Verifying a webhook
 
-Your webhook endpoint is a public URL, so anyone who finds it can POST to it. Set a `webhook.secret` and we sign every callback, letting you prove a request came from us and reject anything that didn't.
+Your webhook URL is public, so anyone who finds it can send to it. Set `webhook.secret` and we sign every call, so you can reject anything that did not come from us.
 
-Each signed delivery carries these headers:
+Each signed call carries these headers:
 
-| Header | What it is |
+| Header | What it holds |
 | --- | --- |
-| `X-Hydrafetch-Signature` | `t=<timestamp>,v1=<hmac>` — HMAC-SHA256 of `<timestamp>.<raw body>`, keyed with your secret |
-| `X-Hydrafetch-Timestamp` | Unix seconds at send time |
-| `X-Hydrafetch-Event` | The event, e.g. `crawl.completed` |
-| `X-Hydrafetch-Delivery` | Unique id for this delivery attempt |
+| `X-Hydrafetch-Signature` | `t=<timestamp>,v1=<hmac>`: an HMAC-SHA256 of `<timestamp>.<raw body>`, keyed with your secret |
+| `X-Hydrafetch-Timestamp` | Unix seconds when we sent it |
+| `X-Hydrafetch-Event` | The event, such as `crawl.completed` |
+| `X-Hydrafetch-Delivery` | A unique id for this attempt |
 
-To verify, recompute the HMAC over the **raw request body** — not a re-serialized version of the parsed JSON, which may produce different bytes and never match:
+To check a call, compute the HMAC over the **raw request body** exactly as received. Parsing the JSON and turning it back into text can change the bytes, and then it will never match.
 
 ```python
 import hashlib, hmac, time
@@ -186,61 +185,47 @@ def verify(raw_body: bytes, signature_header: str, secret: str, tolerance_s: int
     parts = dict(p.split("=", 1) for p in signature_header.split(","))
     timestamp, received = parts["t"], parts["v1"]
 
-    # Reject anything too old — this is what stops a captured call being replayed at you later.
     if abs(time.time() - int(timestamp)) > tolerance_s:
         return False
 
     expected = hmac.new(
         secret.encode(), f"{timestamp}.".encode() + raw_body, hashlib.sha256
     ).hexdigest()
-    return hmac.compare_digest(expected, received)  # constant-time
+    return hmac.compare_digest(expected, received)
 ```
 
 <Warning>
-  Compare signatures in constant time (`hmac.compare_digest`, `crypto.timingSafeEqual`) — a plain `==` leaks timing information. And always check the timestamp: a signature alone stays valid forever, so without a freshness window a captured delivery can be replayed at you.
+  Compare signatures with a constant-time function such as `hmac.compare_digest` or `crypto.timingSafeEqual`. A plain `==` can leak the secret through timing. Always check the timestamp too: without it, someone who captures a real call can send it to you again later.
 </Warning>
 
-The timestamp is signed along with the body, so an attacker cannot take a real delivery and re-send it under a fresh timestamp. If you don't set a secret, callbacks are still sent — just unsigned.
+The timestamp is signed together with the body, so nobody can resend a real call under a new timestamp. If you set no secret, calls are still sent, just unsigned.
 
-## Checking whether a delivery landed
+## Did my webhook arrive?
 
-A webhook that never arrives is the hardest kind of bug to chase from your side, so we keep the delivery history and expose it. Every callback we attempted for a job is listed, with its status, how many attempts we made, and what your endpoint returned last.
+We keep the history of every call we tried for a job: its status, how many attempts we made and what your endpoint answered last.
 
 ```bash
 curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43/deliveries \
   -H "X-API-Key: $HYDRAFETCH_API_KEY"
 ```
 
-Batches use the same shape at `GET /v1/web/batch/{id}/deliveries`.
+Batches use `GET /v1/web/batch/{id}/deliveries`.
 
 <ResponseField name="deliveries" type="object[]">
   <Expandable title="WebhookDelivery">
-    <ResponseField name="id" type="string">Delivery id.</ResponseField>
-    <ResponseField name="event" type="string">The event this delivery carried.</ResponseField>
+    <ResponseField name="id" type="string">The delivery's id.</ResponseField>
+    <ResponseField name="event" type="string">The event it carried.</ResponseField>
     <ResponseField name="status" type="string">`pending` while retries remain, `success` once delivered, `failed` once we gave up.</ResponseField>
-    <ResponseField name="attempts" type="number">How many delivery attempts have been made.</ResponseField>
-    <ResponseField name="responseStatus" type="number | null">The HTTP status your endpoint returned on the last attempt.</ResponseField>
+    <ResponseField name="attempts" type="number">How many attempts we have made.</ResponseField>
+    <ResponseField name="responseStatus" type="number | null">The HTTP status your endpoint returned last time.</ResponseField>
     <ResponseField name="error" type="string | null">Why the last attempt failed, if it did.</ResponseField>
-    <ResponseField name="deliveredAt" type="string | null">When the delivery succeeded (ISO 8601).</ResponseField>
-    <ResponseField name="createdAt" type="string">When the delivery was first created (ISO 8601).</ResponseField>
+    <ResponseField name="deliveredAt" type="string | null">When it was delivered, in ISO 8601.</ResponseField>
+    <ResponseField name="createdAt" type="string">When it was first created, in ISO 8601.</ResponseField>
   </Expandable>
 </ResponseField>
 
-A `failed` row with a `responseStatus` of 5xx usually means your endpoint was down when we called; one with a 4xx means we reached you and you rejected it — check the signature verification above before assuming the payload is wrong.
-
-## Which calls return what
-
-| Call | Response | If you ask for a job instead |
-| --- | --- | --- |
-| Scrape | `{ data }` inline, or `504` past 90s | `async: true` returns `{ jobId, status }` — poll `GET /v1/web/scrape/{id}` |
-| Map, Search, Extract | `{ data }` inline | — |
-| Crawl | Always `{ crawlId, status }` | Poll `GET /v1/web/crawl/{id}` or register a webhook |
-| Batch | Always `{ batchId, status }` | Poll `GET /v1/web/batch/{id}` or register a webhook |
-
-A single URL is always answered inline unless you opt out. Crawl and batch are jobs because they
-span many URLs and can run for minutes; one page cannot, so it does not get a second response shape
-you have to write code for.
+A `failed` delivery with a 5xx `responseStatus` usually means your endpoint was down. A 4xx means we reached you and your endpoint refused the call, so check your signature code before assuming the payload is wrong.
 
 <Card title="Next: Errors" icon="/icons/warning.svg" href="/concepts/errors">
-  The structured error model and every status you'll see.
+  Every error code, what it means and what to do.
 </Card>

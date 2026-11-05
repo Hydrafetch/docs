@@ -1,0 +1,123 @@
+---
+title: "SDKs"
+description: "Official libraries for Node, Python, Go, Rust, Ruby and PHP, plus LangChain, LlamaIndex and browser logo packages."
+---
+
+Every SDK is a thin layer over the same HTTP API, so anything in these docs works from any of them. Each one reads your key from the `HYDRAFETCH_API_KEY` environment variable when you do not pass one.
+
+## Server SDKs
+
+<CodeGroup>
+
+```bash Node
+npm install @hydrafetch/node-sdk
+```
+
+```bash Python
+pip install hydrafetch
+```
+
+```bash Go
+go get github.com/Hydrafetch/go-sdk
+```
+
+```bash Rust
+cargo add hydrafetch
+```
+
+```bash Ruby
+gem install hydrafetch
+```
+
+```bash PHP
+composer require hydrafetch/hydrafetch
+```
+
+</CodeGroup>
+
+The same first call in each:
+
+<CodeGroup>
+
+```ts Node
+import { Hydrafetch } from "@hydrafetch/node-sdk";
+
+const hf = new Hydrafetch(process.env.HYDRAFETCH_API_KEY);
+const page = await hf.scrape("https://example.com/article");
+console.log(page.markdown);
+```
+
+```python Python
+from hydrafetch import Hydrafetch
+
+hf = Hydrafetch()
+page = hf.scrape("https://example.com/article")
+print(page["markdown"])
+```
+
+```go Go
+hf, err := hydrafetch.New("")
+if err != nil {
+	log.Fatal(err)
+}
+page, err := hf.Scrape(context.Background(), "https://example.com/article", nil)
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println(page.Markdown)
+```
+
+```rust Rust
+let hf = hydrafetch::Client::from_env()?;
+let page = hf.scrape("https://example.com/article", None).await?;
+println!("{}", page.markdown.unwrap_or_default());
+```
+
+```ruby Ruby
+require "hydrafetch"
+
+hf = Hydrafetch::Client.new
+page = hf.scrape("https://example.com/article")
+puts page["markdown"]
+```
+
+```php PHP
+use Hydrafetch\Client;
+
+$hf = new Client();
+$page = $hf->scrape('https://example.com/article');
+echo $page['markdown'];
+```
+
+</CodeGroup>
+
+Each SDK's README lists every method with its credit cost:
+
+| Language | Package | Source |
+| --- | --- | --- |
+| Node and TypeScript | `@hydrafetch/node-sdk` | [github.com/Hydrafetch/node-sdk](https://github.com/Hydrafetch/node-sdk) |
+| Python | `hydrafetch` | [github.com/Hydrafetch/python-sdk](https://github.com/Hydrafetch/python-sdk) |
+| Go | `github.com/Hydrafetch/go-sdk` | [github.com/Hydrafetch/go-sdk](https://github.com/Hydrafetch/go-sdk) |
+| Rust | `hydrafetch` | [github.com/Hydrafetch/rust-sdk](https://github.com/Hydrafetch/rust-sdk) |
+| Ruby | `hydrafetch` | [github.com/Hydrafetch/ruby-sdk](https://github.com/Hydrafetch/ruby-sdk) |
+| PHP | `hydrafetch/hydrafetch` | [github.com/Hydrafetch/php-sdk](https://github.com/Hydrafetch/php-sdk) |
+
+## Agent frameworks
+
+| Framework | Package | What it gives you |
+| --- | --- | --- |
+| LangChain | `langchain-hydrafetch` | Tools for scrape, search, news, extract, brand and job search, a document loader and a search retriever |
+| LlamaIndex | `llama-index-readers-hydrafetch` | A reader that loads pages, maps and crawls as documents |
+
+For agents that speak MCP, connect to `https://api.hydrafetch.com/mcp` instead. It lists its tools at [`/mcp/tools`](https://api.hydrafetch.com/mcp/tools).
+
+## In the browser
+
+Logos are the one thing meant to be loaded from a web page. These packages build logo image URLs from a publishable key, which is safe to ship to the browser. Never put your secret API key in browser code.
+
+| Package | For |
+| --- | --- |
+| `@hydrafetch/client-sdk` | Logo URLs in any framework, with no dependencies and no network calls |
+| `@hydrafetch/react` | A `<Logo>` component and a provider for your publishable key |
+
+See [Logo](/endpoints/logo) for how logo images are served and billed.

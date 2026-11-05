@@ -141,7 +141,7 @@ Search and map are 1 credit each. Extract is 5 credits per URL, because it is mo
 
 A worked example: one operator, 200 branches in a city, full records. That is 1 credit to map and 1,000 to extract. Repeat it for the three or four operators that cover most of a category and you have the city, with fields no directory sells.
 
-For thousands of pages, use [`batch`](/endpoints/batch) rather than looping extract calls. It takes the same options, returns a job id, and calls a webhook when it finishes, so nothing sits waiting on a response.
+Extract reads at most 20 pages per call, so for thousands of pages, split the URL list into calls of 20 and run several at once. If you only need the page text, [`batch`](/endpoints/batch) reads thousands of pages as one background job and calls a webhook when it finishes, at 1 credit a page.
 
 Failed calls never cost credits, so the cheapest way to size any of this is to run step one and look at what comes back.
 
