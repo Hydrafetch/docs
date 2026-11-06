@@ -34,7 +34,7 @@ curl -X POST https://api.hydrafetch.com/v1/web/scrape \
 </ParamField>
 
 <ParamField body="structured" type="object">
-  The data the page publishes about itself for machines: JSON-LD, microdata, OpenGraph and RDFa, put into one consistent shape. No LLM is involved, so it is exact and costs nothing extra. Returned on `data.structured`. More below.
+  The data the page publishes about itself for machines: JSON-LD, microdata and OpenGraph, put into one consistent shape. No LLM is involved, so it is exact and costs nothing extra. Returned on `data.structured`. More below.
 </ParamField>
 
 <ParamField body="summary" type="string">
@@ -63,7 +63,7 @@ You get one merged list and the raw blocks it came from:
       The entity's type, such as `Product`, `Article` or `Organization`.
     </ResponseField>
     <ResponseField name="source" type="string">
-      Where it came from: `json-ld`, `microdata`, `rdfa` or `opengraph`.
+      Where it came from: `json-ld`, `microdata` or `opengraph`.
     </ResponseField>
     <ResponseField name="properties" type="object">
       Its properties, as the page published them.
@@ -71,7 +71,7 @@ You get one merged list and the raw blocks it came from:
   </Expandable>
 </ResponseField>
 
-<ResponseField name="jsonLd, microdata, opengraph, rdfa" type="array">
+<ResponseField name="jsonLd, microdata, opengraph" type="array">
   The raw blocks for each syntax, exactly as found, if you want them unmerged.
 </ResponseField>
 
@@ -87,8 +87,7 @@ You get one merged list and the raw blocks it came from:
     ],
     "jsonLd": [],
     "microdata": [],
-    "opengraph": [],
-    "rdfa": []
+    "opengraph": []
   }
 }
 ```
