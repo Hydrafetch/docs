@@ -75,7 +75,6 @@ for a in res.json()["data"]["results"]:
         "source": "Example News",
         "publishedAt": "2026-11-03T09:12:00.000Z",
         "snippet": "The startup raised $45 million to expand into Europe.",
-        "imageUrl": "https://example.com/images/acme.jpg",
         "data": null
       }
     ]
@@ -135,7 +134,7 @@ for a in res.json()["data"]["results"]:
 </ResponseField>
 
 <ResponseField name="data.results" type="object[]">
-  Articles, newest first. Each has `title`, `url` (the publisher's own page), `source` (the outlet), `publishedAt`, `snippet`, `imageUrl`, and `data`: the article read as clean data when `scrapeResults` is on, otherwise `null`.
+  Articles, newest first. Each has `title`, `url` (the publisher's own page), `source` (the outlet), `publishedAt`, `snippet` and `data`: the article read as clean data when `scrapeResults` is on, otherwise `null`.
 </ResponseField>
 
 `publishedAt` is exact when the listing gives a time. Some listings only say how long ago an article appeared, such as "2 days ago", and then `publishedAt` is worked out from that, so it can be off by up to that unit. An article listed more than once comes back once; when several outlets cover the same story, each outlet's article is its own result.
