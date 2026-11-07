@@ -16,7 +16,7 @@ Read that page, inspect this project's stack, then build the flow end to end.
 
 Add live web access to an agent using the Hydrafetch API.
 
-Two tools cover most needs: POST /v1/web/scrape with {url, formats: ["markdown"], onlyMainContent: true} to read one page, and POST /v1/web/search with {query, limit, scrapeResults} to find pages. Both are synchronous. An MCP server is also available, which exposes these as tools directly and authenticates with a Bearer token rather than X-API-Key.
+Two tools cover most needs: POST /v1/web/scrape with {url, formats: ["markdown"], onlyMainContent: true} to read one page, and POST /v1/web/search with {query, limit, scrapeResults} to find pages. Both answer synchronously; if the work needs more than 90 seconds they answer 202 with a jobId instead, polled at GET /v1/web/jobs/{id} until status is completed (result holds the normal body) or failed. An MCP server is also available, which exposes these as tools directly and authenticates with a Bearer token rather than X-API-Key.
 
 Ask me before writing code:
 - Which agent framework, and are we adding tools to an existing loop or starting one?

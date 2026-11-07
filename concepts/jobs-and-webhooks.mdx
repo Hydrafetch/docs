@@ -3,52 +3,40 @@ title: "Jobs & webhooks"
 description: "Which calls answer straight away, which run as background jobs, and how to get results by polling or by webhook."
 ---
 
-Most calls answer in the same request. Crawls and batches cover many pages, so they run as background jobs: you get an id back, then poll it or let a webhook tell you when it is done.
+Every call answers in the same request when it can. Crawls and batches cover many pages, so they always run as background jobs: you get an id back, then poll it or let a webhook tell you when it is done.
 
 | Call | What you get back |
 | --- | --- |
-| Scrape | `{ data }` once the page is read. Set `async: true` to get `{ jobId, status }` straight away instead. |
-| Map, Search, News, Extract, Brand, Screenshot, Images | `{ data }` once the work is done |
+| Scrape, Map, Search, News, Extract, Brand, Brand logo, Styleguide, Screenshot, Images, Jobs | `{ data }` once the work is done, or a job id if it needs more than the wait. See below. |
 | Crawl | Always `{ crawlId, status }`. Poll it or use a webhook. |
 | Batch | Always `{ batchId, status }`. Poll it or use a webhook. |
 
-## Scrape
+## When a call needs more time
 
-A scrape waits for the page and returns it:
+A call waits for its result for up to **90 seconds**, or for your `timeout` if you set a shorter one. Almost every call finishes well inside that and returns `200` with `{ data }`, exactly as you would expect.
 
-```json
-{
-  "data": {
-    "url": "https://example.com",
-    "status": 200,
-    "markdown": "# Example Domain\n\n..."
-  }
-}
-```
-
-A scrape that waits gets up to **90 seconds**. If the page takes longer, the call fails with `504` and `REQUEST_TIMEOUT`, and costs nothing. It never turns into a job by itself, so you only ever handle one response shape.
-
-For pages you expect to be slow, such as heavy JavaScript apps, set `async: true`. The call answers at once with `201`:
+A few take longer, usually a heavily protected page or a large extraction. Instead of failing, the call answers `202 Accepted` with a job id, and the work carries on for up to **5 minutes**:
 
 ```json
 {
   "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43",
-  "status": "queued"
+  "status": "running",
+  "poll": "/v1/web/jobs/019f3c09-6fae-740f-9257-10c2b6af7f43"
 }
 ```
 
-Then poll it:
+Then poll it until `status` is `completed` or `failed`:
 
 <CodeGroup>
 
 ```bash cURL
-curl https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+curl https://api.hydrafetch.com/v1/web/jobs/019f3c09-6fae-740f-9257-10c2b6af7f43 \
   -H "X-API-Key: hf_your_key_here"
 ```
 
 ```javascript Node
 const res = await fetch(
-  "https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "https://api.hydrafetch.com/v1/web/jobs/019f3c09-6fae-740f-9257-10c2b6af7f43",
   { headers: { "X-API-Key": "hf_your_key_here" } },
 );
 const job = await res.json();
@@ -57,14 +45,22 @@ const job = await res.json();
 </CodeGroup>
 
 <ResponseField name="status" type="string">
-  `waiting`, `active`, `completed` or `failed`.
+  `running`, `completed` or `failed`.
 </ResponseField>
-<ResponseField name="data" type="object">
-  The page, once `status` is `completed`.
+<ResponseField name="result" type="object">
+  Once `completed`: exactly the body the call would have returned had it answered in time, `{ data }` included.
 </ResponseField>
-<ResponseField name="error" type="string">
-  Why it failed, when `status` is `failed`.
+<ResponseField name="error" type="object">
+  Once `failed`: the `code`, `message` and HTTP `status` the call would have answered with, plus any `details`.
 </ResponseField>
+
+A job is charged once, when it completes, and a failed job costs nothing, the same as a call that answered straight away. Results are kept for an hour after the job ends.
+
+<Tip>
+  The SDKs and the MCP server handle this for you. An SDK method that gets a `202` polls the job and returns the result as if the call had answered directly. An MCP tool that runs out of time returns the job id, and the `job_status` tool fetches the result.
+</Tip>
+
+To skip the wait entirely, send `async: true` on a scrape. The call answers `202` with the job id at once.
 
 ## Crawl and batch
 

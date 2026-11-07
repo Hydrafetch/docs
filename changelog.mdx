@@ -5,6 +5,20 @@ icon: "/icons/rocket.svg"
 ---
 
 <Update label="November 2026" tags={["Web Scraping"]}>
+  ## Slow calls hand back a job instead of timing out
+
+  Every call still answers in the same request when it can, and almost every call does. When one needs more than 90 seconds, usually a heavily protected page, it no longer fails with `504`. It answers `202` with a job id and keeps working for up to 5 minutes.
+
+  - Poll `GET /v1/web/jobs/{id}` until `status` is `completed`, when `result` holds exactly the response the call would have returned, or `failed`, when `error` says why
+  - Charged once when the job completes, and nothing when it fails, the same as before
+  - Your `timeout` now sets how long the call waits before handing back the job id
+  - The Node, Python, Go, Rust, Ruby and PHP SDKs follow the job for you, so a method call still returns the result
+  - MCP tools that run out of time return the job id, and the new `job_status` tool fetches the result
+
+  See [Jobs & webhooks](/concepts/jobs-and-webhooks#when-a-call-needs-more-time).
+</Update>
+
+<Update label="November 2026" tags={["Web Scraping"]}>
   ## Search the news
 
   `POST /v1/web/news` finds recent news articles about anything and returns them newest first, each with the outlet that published it, when it was published, a snippet, a thumbnail and a link to the publisher's own page. It is built for announcements: funding rounds, acquisitions, launches, leadership changes and layoffs.

@@ -40,7 +40,7 @@ If a page that should work does not, [rate the result](/endpoints/feedback) as `
 
 `422` with `UPSTREAM_UNREACHABLE` means the site did not answer, or we could not read that page. It is about that URL, not about us, and asking again straight away gives the same answer. If the error has `retryAfterSeconds`, wait that long before trying again.
 
-`504` with `REQUEST_TIMEOUT` means a scrape took longer than 90 seconds. Retry once, since the page is often in our cache by then, or send `async: true` and poll. See [Errors](/concepts/errors).
+`504` with `REQUEST_TIMEOUT` means the work ran past its 5 minute limit. A call that only needs more than 90 seconds answers `202` with a job id instead, so this is rare. Retry once later. See [Errors](/concepts/errors).
 
 ## My crawl is slower than I expected
 

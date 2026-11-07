@@ -52,7 +52,7 @@ Every failure returns the same JSON shape with a standard HTTP status, so there 
 | 422 | `INVALID_INPUT` | The page is too large or too slow to process safely | Try a smaller page or a more specific URL. |
 | 429 | `TOO_MANY_REQUESTS` | Your workspace went over its per-minute request limit | Wait for `Retry-After`, then retry. See below. |
 | 503 | `SERVICE_UNAVAILABLE` | Something needed for this call is busy or down on our side | Retry after a short wait, or after `retryAfterSeconds` when given. |
-| 504 | `REQUEST_TIMEOUT` | A scrape took longer than 90 seconds | Retry once, or use `async: true`. See below. |
+| 504 | `REQUEST_TIMEOUT` | The work ran past its 5 minute limit | Retry once later. See below. |
 | 500 | `INTERNAL_SERVER_ERROR` | An unexpected error on our side | Retry with backoff. If it keeps happening, contact support with the `requestId`. |
 
 ## A page we cannot read
@@ -87,7 +87,7 @@ Wait for `Retry-After` instead of a fixed delay.
 
 ## Timeouts
 
-A scrape that waits for its result gets 90 seconds. Past that it fails with `504` and `REQUEST_TIMEOUT`. The read usually carries on in the background, so the page is often in our cache by the time you retry. Pages that hit this are almost always heavily protected. To avoid waiting at all, send `async: true` and poll the job. See [Jobs & webhooks](/concepts/jobs-and-webhooks).
+A call waits for its result for up to 90 seconds, or your `timeout`. Past that it does not fail: it answers `202` with a job id and keeps working for up to 5 minutes. Only work that runs past those 5 minutes fails, and the job then reports `REQUEST_TIMEOUT` with status `504`. It costs nothing. Pages that hit this are almost always heavily protected. See [Jobs & webhooks](/concepts/jobs-and-webhooks#when-a-call-needs-more-time).
 
 ## Errors inside a job
 

@@ -136,7 +136,7 @@ The response holds the formats you asked for. `metadata` and `usage` are always 
 </ParamField>
 
 <ParamField body="timeout" type="number">
-  The time budget for the call in milliseconds, from 1000 to 100000.
+  How long to wait for the page before answering with a job id instead, in milliseconds, from 1000 to 100000. The wait is at most 90 seconds either way. See [Waiting for a result](#waiting-for-a-result).
 </ParamField>
 
 <ParamField body="location" type="object">
@@ -172,7 +172,7 @@ The response holds the formats you asked for. `metadata` and `usage` are always 
 ### Waiting
 
 <ParamField body="async" type="boolean" default="false">
-  Answer at once with a job id instead of waiting for the page. Poll `GET /v1/web/scrape/{id}`.
+  Answer at once with a job id instead of waiting for the page. Poll `GET /v1/web/jobs/{id}`.
 </ParamField>
 
 ## Response fields
@@ -213,24 +213,24 @@ These take the same options as `/v1/web/scrape` and return the same response, wi
 
 ## Waiting for a result
 
-A scrape waits for the page and returns it, for up to **90 seconds**. Past that it fails with `504` and `REQUEST_TIMEOUT`, and costs nothing. It never turns into a job by itself, so one URL always means one response shape: the page, or an error saying why not. The read usually carries on in the background, so a retry often comes back quickly from our cache.
+A scrape waits for the page and returns it, for up to **90 seconds**, or your `timeout` if it is shorter. Almost every page is back well inside that.
 
-<Note>
-  Set your own client timeout below 90 seconds if you want to give up sooner. Anything longer will never be reached.
-</Note>
-
-To skip the wait, send `async: true`. You get a job id at once:
+A page that needs longer, usually a heavily protected one, does not fail. The call answers `202` with a job id, and the read carries on for up to 5 minutes:
 
 ```json
-{ "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
+{
+  "jobId": "019f3c09-6fae-740f-9257-10c2b6af7f43",
+  "status": "running",
+  "poll": "/v1/web/jobs/019f3c09-6fae-740f-9257-10c2b6af7f43"
+}
 ```
 
-Then poll it:
+Poll it until `status` is `completed`, when `result` holds exactly the response above, or `failed`, when `error` says why:
 
 <CodeGroup>
 
 ```bash cURL
-curl https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+curl https://api.hydrafetch.com/v1/web/jobs/019f3c09-6fae-740f-9257-10c2b6af7f43 \
   -H "X-API-Key: hf_your_key_here"
 ```
 
@@ -238,7 +238,7 @@ curl https://api.hydrafetch.com/v1/web/scrape/019f3c09-6fae-740f-9257-10c2b6af7f
 import requests
 
 res = requests.get(
-    f"https://api.hydrafetch.com/v1/web/scrape/{job_id}",
+    f"https://api.hydrafetch.com/v1/web/jobs/{job_id}",
     headers={"X-API-Key": "hf_your_key_here"},
 )
 job = res.json()
@@ -246,7 +246,7 @@ job = res.json()
 
 </CodeGroup>
 
-The job's `status` is `waiting`, `active`, `completed` or `failed`, with `data` once completed or `error` if it failed.
+To skip the wait, send `async: true` and you get the job id at once. The SDKs poll for you, so a method call simply returns the page. See [Jobs & webhooks](/concepts/jobs-and-webhooks#when-a-call-needs-more-time).
 
 ## Cost
 
