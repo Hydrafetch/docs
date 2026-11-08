@@ -19,6 +19,12 @@ icon: "/icons/rocket.svg"
 </Update>
 
 <Update label="November 2026" tags={["Web Scraping"]}>
+  ## A search that finds nothing is free
+
+  `POST /v1/web/search` no longer charges when nothing is found, the same as news and jobs search. A narrow query that has no results now answers with an empty list instead of a retryable `503`.
+</Update>
+
+<Update label="November 2026" tags={["Web Scraping"]}>
   ## Search the news
 
   `POST /v1/web/news` finds recent news articles about anything and returns them newest first, each with the outlet that published it, when it was published, a snippet, a thumbnail and a link to the publisher's own page. It is built for announcements: funding rounds, acquisitions, launches, leadership changes and layoffs.
