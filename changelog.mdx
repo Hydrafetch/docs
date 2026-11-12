@@ -4,6 +4,17 @@ description: "What's new in the Hydrafetch API."
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="November 2026" tags={["Brand"]}>
+  ## Brands carry contact details and a meta description
+
+  `GET /v1/web/brand` now returns these whenever the company's own site publishes them:
+
+  - `metaDescription`, the site's meta description word for word
+  - `phone`, `address` and `foundedYear`
+
+  Brand names are also found more often: a site whose title never states its name is now read from its copyright line and from the words that spell its domain.
+</Update>
+
 <Update label="November 2026" tags={["Web Scraping"]}>
   ## Keep cookie banners and popups, or read every page in a browser
 

@@ -30,6 +30,14 @@ curl "https://api.hydrafetch.com/v1/web/brand?domain=stripe.com" \
   How the company describes itself. Also `legalName` and a contact `email` when the site publishes them.
 </ResponseField>
 
+<ResponseField name="metaDescription" type="string">
+  The site's own meta description, word for word.
+</ResponseField>
+
+<ResponseField name="phone, address, foundedYear" type="string, object, number">
+  Contact details and founding year, only when the company's own site publishes them. `address` has `street`, `city`, `region`, `postalCode` and `country`; any of them can be null.
+</ResponseField>
+
 <ResponseField name="assets" type="array">
   Logos and images. Each has a `kind` (`wordmark`, `symbol`, `favicon` or `backdrop`), a `variant` (`light`, `dark` or `mono`) saying which background it works on, its `format` and `resolution`, the colours inside it, and a `blurhash` you can show as a placeholder while the image loads.
 </ResponseField>
@@ -62,7 +70,7 @@ The `sources` object says, for each field, where its value came from. "The site 
 | --- | --- | --- |
 | `declared` | The site said it, in JSON-LD, OpenGraph or microdata | Highest |
 | `harvested` | We processed the actual image, or read it from the site's own CSS | High |
-| `inferred` | A model worked it out from the page | Useful, but never presented as fact |
+| `inferred` | Worked out rather than read, such as a name taken from the domain | Useful, but never presented as fact |
 | `external` | Another data source, not the site itself | Depends on the source |
 
 A field can also have a `confidence`. Together they let you choose a fallback instead of showing something wrong: a low-confidence colour can give way to your own default, while a `declared` logo is safe to use.
