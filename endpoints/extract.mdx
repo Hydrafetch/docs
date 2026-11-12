@@ -155,7 +155,7 @@ One call reads at most **20 pages** after paths are expanded, so it costs at mos
 </ParamField>
 
 <ParamField body="location" type="object">
-  Read each page as if from another place: `country` is a two-letter code, `languages` lists preferred languages in order. For sites that change prices or content by region.
+  Read each page as if from another place: `country` is `"us"` or `"de"`, `languages` lists preferred languages in order. For sites that change prices or content by region. Any other country is refused with a `400` before any page is read.
 </ParamField>
 
 <ParamField body="headers" type="object">

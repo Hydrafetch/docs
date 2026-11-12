@@ -5,6 +5,18 @@ icon: "/icons/rocket.svg"
 ---
 
 <Update label="November 2026" tags={["Web Scraping"]}>
+  ## Read pages from the United States or Germany
+
+  `location.country` now decides where a page is read from, for sites that change prices, currency or content by the reader's country. It works on scrape, extract, crawl, batch and search with `scrapeResults`.
+
+  - `"us"` reads from the United States and `"de"` from Germany
+  - Any other country answers `400` with the supported codes and charges nothing, before any page is read
+  - Leave it out and nothing changes
+
+  See the `location` option on [Scrape](/endpoints/scrape).
+</Update>
+
+<Update label="November 2026" tags={["Web Scraping"]}>
   ## Slow calls hand back a job instead of timing out
 
   Every call still answers in the same request when it can, and almost every call does. When one needs more than 90 seconds, usually a heavily protected page, it no longer fails with `504`. It answers `202` with a job id and keeps working for up to 5 minutes.

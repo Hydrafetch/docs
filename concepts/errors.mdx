@@ -42,7 +42,7 @@ Every failure returns the same JSON shape with a standard HTTP status, so there 
 
 | Status | Code | What happened | What to do |
 | --- | --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | The request did not pass validation, for example a missing `url` or `json` without `jsonOptions` | Fix the request. Sending it again unchanged will fail again. |
+| 400 | `VALIDATION_ERROR` | The request did not pass validation, for example a missing `url`, `json` without `jsonOptions`, or a `location.country` we do not read from | Fix the request. Sending it again unchanged will fail again. |
 | 401 | `UNAUTHORIZED` | The key is missing, wrong, revoked or expired | Check the key. See [Authentication](/authentication). |
 | 402 | `INSUFFICIENT_CREDITS` | Your workspace has no credits left for this call | Top up or upgrade, then retry. |
 | 403 | `FORBIDDEN` | The key is locked to IP addresses and the call came from another one | Call from an allowed address, or add this one. See [API keys](/help/api-keys). |
