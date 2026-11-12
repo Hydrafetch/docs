@@ -5,6 +5,19 @@ icon: "/icons/rocket.svg"
 ---
 
 <Update label="November 2026" tags={["Web Scraping"]}>
+  ## Keep cookie banners and popups, or read every page in a browser
+
+  New options decide what happens to page clutter, on scrape, crawl, batch, search with `scrapeResults` and screenshots.
+
+  - `dismissCookies` removes cookie and consent banners, on by default. Set it to `false` to keep them
+  - `dismissPopups` closes newsletter and promotion popups, on by default. Set it to `false` to keep them
+  - `render: true` always reads the page in a browser, so whatever its scripts add after load is included
+  - `blockAds` now covers ads and tracking only
+
+  Nothing changes unless you set them.
+</Update>
+
+<Update label="November 2026" tags={["Web Scraping"]}>
   ## Read pages from the United States or Germany
 
   `location.country` now decides where a page is read from, for sites that change prices, currency or content by the reader's country. It works on scrape, extract, crawl, batch and search with `scrapeResults`.

@@ -126,7 +126,19 @@ The response holds the formats you asked for. `metadata` and `usage` are always 
 </ParamField>
 
 <ParamField body="blockAds" type="boolean" default="true">
-  Remove common ad and tracking elements.
+  Remove ads and tracking elements.
+</ParamField>
+
+<ParamField body="dismissCookies" type="boolean" default="true">
+  Remove cookie and consent banners. Set `false` to keep them. A banner the site adds with scripts after the page loads is kept only when the page is rendered, so pair it with `render: true`.
+</ParamField>
+
+<ParamField body="dismissPopups" type="boolean" default="true">
+  Close newsletter and promotion popups when the page is rendered. Set `false` to keep them.
+</ParamField>
+
+<ParamField body="render" type="boolean" default="false">
+  Always read the page in a browser, as a visitor sees it once its scripts have run. By default a page is read in a browser only when its HTML is not enough. Browser reads count toward how many your plan runs at once; past that you get a `429`, so retry with backoff.
 </ParamField>
 
 ### How the page is fetched

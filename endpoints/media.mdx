@@ -139,6 +139,14 @@ png = requests.get(png_url).content
   Reuse a saved screenshot younger than this many milliseconds. The default is 7 days, so asking again for the same page and options returns the saved PNG at once with `cached: true`, without applying `waitFor`. Set `0` to take a new one.
 </ParamField>
 
+<ParamField body="dismissCookies" type="boolean" default="true">
+  Accept cookie and consent banners before the capture. Set `false` to capture them.
+</ParamField>
+
+<ParamField body="dismissPopups" type="boolean" default="true">
+  Clear popups and overlays covering the page before the capture. Set `false` to capture them.
+</ParamField>
+
 ### Response fields
 
 <ResponseField name="data.screenshot" type="string">
