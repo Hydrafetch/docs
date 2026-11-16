@@ -48,6 +48,8 @@ Every failure returns the same JSON shape with a standard HTTP status, so there 
 | 403 | `FORBIDDEN` | The key is locked to IP addresses and the call came from another one | Call from an allowed address, or add this one. See [API keys](/help/api-keys). |
 | 403 | `WORKSPACE_BANNED` | The workspace has been suspended | Contact support. |
 | 404 | `NOT_FOUND` | The job id does not exist, a `cacheOnly` scrape had no copy, or the page itself says it does not exist | For `cacheOnly`, fetch live instead. For a missing page, check the URL. |
+| 409 | `IDEMPOTENCY_IN_PROGRESS` | A call with the same `Idempotency-Key` is still running | Wait for `Retry-After`, then send it again to get its answer. See below. |
+| 409 | `IDEMPOTENCY_KEY_REUSED` | The `Idempotency-Key` was already used for a different request | Use a new key for a new request. |
 | 422 | `UPSTREAM_UNREACHABLE` | The site did not answer, or we could not read that page | Do not retry before `retryAfterSeconds`. See below. |
 | 422 | `INVALID_INPUT` | The page is too large or too slow to process safely | Try a smaller page or a more specific URL. |
 | 429 | `TOO_MANY_REQUESTS` | Your workspace went over its per-minute request limit | Wait for `Retry-After`, then retry. See below. |
@@ -84,6 +86,27 @@ Every response carries headers that tell you where you stand:
 | `Retry-After` | `17` | On a `429`, the seconds to wait before retrying |
 
 Wait for `Retry-After` instead of a fixed delay.
+
+## Retrying safely
+
+A network can drop the connection after we finished the work but before you got the answer. Retrying then would run the call again and charge for it again. To retry without that risk, send an `Idempotency-Key` header on any `POST`: a unique string of up to 255 visible characters, the same on every retry of that call.
+
+```bash
+curl https://api.hydrafetch.com/v1/web/scrape \
+  -H "X-API-Key: $HYDRAFETCH_API_KEY" \
+  -H "Idempotency-Key: 7c4f1e2a-order-1042" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+For 12 hours after the first call:
+
+- A repeat returns the first answer again, with the same status and `X-Request-Id`, and an `Idempotent-Replayed: true` header. Nothing runs and nothing is charged.
+- A repeat that arrives while the first call is still running gets `409` with `IDEMPOTENCY_IN_PROGRESS` and a `Retry-After`. Send it again after that wait.
+- The same key with a different body gets `409` with `IDEMPOTENCY_KEY_REUSED`.
+- A call that failed is not remembered, so retrying it with the same key makes a fresh attempt. Failed calls are never charged.
+
+A call that answered `202` with a job replays that same job id, so a retried crawl, batch or long scrape never starts twice. The official SDKs send a key for every `POST` and reuse it on their own retries.
 
 ## Timeouts
 
