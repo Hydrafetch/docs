@@ -1,6 +1,7 @@
 ---
-title: "Crawl"
-description: "Find and read every page of a site as one background job."
+title: "Crawl API: read every page of a website"
+sidebarTitle: "Crawl"
+description: "Start from one URL and get every page of a site as clean markdown, as one background job with progress, limits and webhooks."
 ---
 
 `POST /v1/web/crawl` starts from a URL, finds the site's pages and reads each one. It runs as a background job: you get a `crawlId` straight away, then poll it or let a webhook tell you as pages finish. 1 credit per page read.

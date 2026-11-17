@@ -1,6 +1,7 @@
 ---
-title: "Search"
-description: "Search the web and get ranked results, optionally with each page read as clean data."
+title: "Search API: web search with the pages read"
+sidebarTitle: "Search"
+description: "Search the web and get ranked results with titles, URLs and snippets. Optionally read each result and get its full text as clean markdown in the same call."
 ---
 
 `POST /v1/web/search` runs a query against the web and returns ranked results. Turn on `scrapeResults` and every result also comes back with its page read and cleaned, so one call turns a question into documents your model can use.

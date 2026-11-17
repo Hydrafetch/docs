@@ -1,6 +1,7 @@
 ---
-title: "Batch"
-description: "Read a list of URLs you choose as one background job."
+title: "Batch API: scrape a list of URLs in one job"
+sidebarTitle: "Batch"
+description: "Send a list of URLs you already have and read them all as one background job, with results in the order you sent them."
 ---
 
 `POST /v1/web/batch` reads a list of URLs you give it, as one background job. There is no discovery: you choose exactly which pages. You get a `batchId` straight away, then poll it or let a webhook tell you as pages finish. 1 credit per page read.

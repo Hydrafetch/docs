@@ -1,6 +1,7 @@
 ---
-title: "News"
-description: "Find recent news articles about anything, newest first, each with its outlet and publish time."
+title: "News API: recent articles on a company or topic"
+sidebarTitle: "News"
+description: "Find recent news articles about a company or a topic, newest first, each with its outlet and publish time. Optionally read the full articles in the same call."
 ---
 
 `POST /v1/web/news` finds news articles about a query and returns them newest first. Every article comes with the outlet that published it and when it was published, and each link points at the publisher's own page. Turn on `scrapeResults` and each article also comes back read as clean data.

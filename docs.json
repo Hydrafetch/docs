@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
   "name": "Hydrafetch",
-  "description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract with one API, one credit a page.",
+  "description": "A web data API for developers and AI agents. Give it a URL or a query and get back clean markdown and structured data, over one API and an MCP server.",
   "colors": {
     "primary": "#0E7490",
     "light": "#22D3EE",
@@ -242,7 +242,7 @@
       "og:type": "website",
       "og:site_name": "Hydrafetch Docs",
       "twitter:card": "summary_large_image",
-      "og:description": "Turn any URL into clean Markdown and structured data your model can use. Scrape, crawl, search and extract with one API, one credit a page."
+      "og:description": "A web data API for developers and AI agents. Give it a URL or a query and get back clean markdown and structured data, over one API and an MCP server."
     }
   },
   "redirects": [
