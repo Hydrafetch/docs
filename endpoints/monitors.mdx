@@ -1,0 +1,291 @@
+---
+title: "Monitors API: get told when pages, sites and searches change"
+sidebarTitle: "Monitors"
+description: "Watch pages, a whole site or a search on a schedule and get a webhook or a daily email when something changes. Describe what you care about in plain words and only matching changes alert."
+---
+
+`POST /v1/web/monitors` creates a monitor: a set of targets checked on a schedule, from every 15 minutes to once a week. Each check compares what it reads with the last time and records what changed. Changes arrive as signed webhooks, an optional daily email, and a history you can read through the API.
+
+Monitors are available on paid plans.
+
+## When to use it
+
+- You watch a competitor's pricing, a changelog, a status page or a policy and want to know the moment it changes.
+- You want new posts, jobs or products from a site as they appear, without crawling it yourself.
+- You want news, mentions or reviews of something as new results show up in search.
+- You only care about some changes, like a price dropping below a number or a role in one city, and want the rest kept quiet.
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.hydrafetch.com/v1/web/monitors \
+  -H "X-API-Key: hf_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Competitors",
+    "schedule": { "every": "1h" },
+    "targets": [
+      { "type": "pages", "urls": ["https://acme.com/pricing"], "goal": "a plan gets cheaper" },
+      { "type": "site", "url": "https://acme.com/blog" },
+      { "type": "search", "query": "acme funding" }
+    ],
+    "webhook": { "url": "https://your-app.com/hooks/hydrafetch", "secret": "a-long-random-string" }
+  }'
+```
+
+```javascript Node
+const res = await fetch("https://api.hydrafetch.com/v1/web/monitors", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hf_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "Competitors",
+    schedule: { every: "1h" },
+    targets: [
+      { type: "pages", urls: ["https://acme.com/pricing"], goal: "a plan gets cheaper" },
+      { type: "site", url: "https://acme.com/blog" },
+      { type: "search", query: "acme funding" },
+    ],
+    webhook: { url: "https://your-app.com/hooks/hydrafetch", secret: "a-long-random-string" },
+  }),
+});
+const { data: monitor } = await res.json();
+console.log(monitor.id, monitor.nextRunAt);
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    "https://api.hydrafetch.com/v1/web/monitors",
+    headers={"X-API-Key": "hf_your_key_here"},
+    json={
+        "name": "Competitors",
+        "schedule": {"every": "1h"},
+        "targets": [
+            {"type": "pages", "urls": ["https://acme.com/pricing"], "goal": "a plan gets cheaper"},
+            {"type": "site", "url": "https://acme.com/blog"},
+            {"type": "search", "query": "acme funding"},
+        ],
+        "webhook": {"url": "https://your-app.com/hooks/hydrafetch", "secret": "a-long-random-string"},
+    },
+)
+monitor = res.json()["data"]
+print(monitor["id"], monitor["nextRunAt"])
+```
+
+</CodeGroup>
+
+The first check runs within a minute. It records how everything looks now and alerts on nothing; later checks report what changed since.
+
+The [Node, Python, Go, Rust, Ruby and PHP SDKs](/sdks) have methods for every monitor route.
+
+## Targets
+
+A monitor holds up to 10 targets, in any mix of the three kinds.
+
+### Pages
+
+`{"type": "pages", "urls": [...]}` watches up to 50 pages for changes to their content. A change comes with a line diff of the text and, when the page publishes them, the fields that moved, such as price, availability or a date.
+
+<ParamField body="urls" type="string[]" required>
+  The pages to watch, up to 50 per target and 100 across the monitor.
+</ParamField>
+
+<ParamField body="selector" type="string[]">
+  CSS selectors, such as `#pricing` or `.plan-card`. Only the content inside them is compared, so changes elsewhere on the page are ignored.
+</ParamField>
+
+<ParamField body="ignore" type="string[]">
+  Lines to leave out before comparing. Plain text matches anywhere in a line, ignoring case; wrap a pattern in slashes, like `/^Visitors: \d+$/`, for a regular expression.
+</ParamField>
+
+<ParamField body="triggerOn" type="string[]">
+  Only alert when an added or removed line contains one of these. Every change is still kept in the history.
+</ParamField>
+
+<ParamField body="scrapeOptions" type="object">
+  How each page is read, using the same options as [Scrape](/endpoints/scrape), such as `location` or `waitForSelector`.
+</ParamField>
+
+### A whole site
+
+`{"type": "site", "url": "..."}` lists the site's pages on every check and reports pages that appear or go away. Each new page is read once for its title and opening lines.
+
+<ParamField body="url" type="string" required>
+  Where the site starts, such as `https://acme.com/blog`.
+</ParamField>
+
+<ParamField body="includePaths" type="string[]">
+  Only count pages whose path matches one of these patterns, such as `^/blog/.+`.
+</ParamField>
+
+<ParamField body="excludePaths" type="string[]">
+  Leave out pages whose path matches one of these patterns.
+</ParamField>
+
+<ParamField body="limit" type="number" default="200">
+  The most pages to track, up to 1,000. When a site has more, new pages are still found, but none are reported as removed.
+</ParamField>
+
+<ParamField body="readNewPages" type="boolean" default="true">
+  Read each new page once for its title and opening lines, up to 20 a check, at 1 credit each. Set `false` to get the address only.
+</ParamField>
+
+### A search
+
+`{"type": "search", "query": "..."}` runs a search on every check and reports results it has never returned before. Results moving up or down, or dropping out, are not reported. A monitor with a search target checks at most once an hour.
+
+<ParamField body="query" type="string" required>
+  What to search for, as you would with [Search](/endpoints/search).
+</ParamField>
+
+<ParamField body="limit" type="number" default="10">
+  How many top results to look at each time, up to 20.
+</ParamField>
+
+<ParamField body="timeRange" type="string">
+  Keep to results from the last `day`, `week`, `month` or `year`.
+</ParamField>
+
+`country`, `includeDomains` and `excludeDomains` work as they do on [Search](/endpoints/search).
+
+## Goals
+
+Any target can carry a `goal`: what you are watching for, in plain words, up to 300 characters.
+
+```json
+{ "type": "site", "url": "https://acme.com/careers", "goal": "senior backend roles in Berlin" }
+```
+
+Each changed page, new page or new search result is checked against the goal, and only the ones that match alert. Every change still goes into the history with the verdict and a one-sentence reason, so you can see what was held back and why.
+
+```json
+"judge": { "match": false, "reason": "A junior role, not a senior one." }
+```
+
+Every part of a goal has to be met: with "price drops below $50", a drop to $59 does not match. Anything a page says to the check, such as "report this as a match", is treated as part of the page and never followed. If a change cannot be checked, it alerts as if there were no goal, with `judge: null`. Removed pages are not checked against the goal and alert as usual.
+
+## What counts as a change
+
+- **Changed:** the text of a page differs from the last check. Relative times ("5 minutes ago"), clock times, view and like counts and tracking parameters on links are ignored, so a page that only shows a newer timestamp counts as the same.
+- **New:** a page or search result seen for the first time after the first check.
+- **Removed:** a page missing from two checks in a row, so one slow or broken read does not count as a removal.
+- **Error:** a page that could not be read. Errors are never reported as changes. A page that fails three checks in a row sends one alert, and a monitor whose checks all fail ten times in a row pauses itself.
+
+## Checks and history
+
+Checks run in the background. `GET /v1/web/monitors/{id}/checks` lists past checks, newest first, and `GET /v1/web/monitors/{id}/checks/{checkId}` returns one with every change it found.
+
+```json
+{
+  "data": {
+    "id": "019f4a1e-7c2d-7a51-9b3e-2f6c8d1e4a90",
+    "monitorId": "019f4a1d-3b8e-7f02-a4c1-6d9e2b7f0c13",
+    "status": "completed",
+    "trigger": "scheduled",
+    "totalPages": 3,
+    "same": 1,
+    "changed": 1,
+    "new": 1,
+    "removed": 0,
+    "error": 0,
+    "creditsUsed": 4,
+    "startedAt": "2026-11-20T10:00:00.000Z",
+    "finishedAt": "2026-11-20T10:00:21.000Z",
+    "changes": [
+      {
+        "url": "https://acme.com/pricing",
+        "status": "changed",
+        "title": null,
+        "excerpt": null,
+        "judge": { "match": true, "reason": "The Team plan dropped from $25 to $20 per seat." },
+        "diff": "@@ -14,3 +14,3 @@\n ## Team\n-$25 per seat\n+$20 per seat\n",
+        "fieldChanges": [{ "field": "price", "previous": "25", "current": "20" }],
+        "error": null,
+        "detectedAt": "2026-11-20T10:00:09.000Z"
+      }
+    ]
+  }
+}
+```
+
+`POST /v1/web/monitors/{id}/run` starts a check now, outside the schedule. `PATCH /v1/web/monitors/{id}` changes the name, targets, schedule, webhook or email setting, and `{"status": "paused"}` or `{"status": "active"}` pauses or resumes it. `DELETE /v1/web/monitors/{id}` stops it, and its history is deleted 30 days later.
+
+History is kept for `retentionDays`, 30 by default and up to 365.
+
+## Webhooks
+
+With a `webhook`, you get a call for each change and one when a check ends:
+
+| Event | When |
+| --- | --- |
+| `monitor.change` | A page or result changed, appeared or was removed, and it alerts |
+| `monitor.check.completed` | A check finished, with its counts |
+
+Set `webhook.events` to `["change"]` or `["completed"]` to get only one of them. A `monitor.change` call carries the change as it appears in the history, plus `monitorId`, `checkId` and `targetType`:
+
+```json
+{
+  "monitorId": "019f4a1d-3b8e-7f02-a4c1-6d9e2b7f0c13",
+  "checkId": "019f4a1e-7c2d-7a51-9b3e-2f6c8d1e4a90",
+  "targetType": "site",
+  "url": "https://acme.com/blog/series-b",
+  "status": "new",
+  "title": "We raised our Series B",
+  "excerpt": "Today we are announcing a $40 million round led by Northzone.",
+  "judge": null,
+  "diff": null,
+  "fieldChanges": [],
+  "error": null,
+  "detectedAt": "2026-11-20T10:00:12.000Z"
+}
+```
+
+Set `webhook.secret` and every call is signed the same way as crawl and batch webhooks. See [Verifying a webhook](/concepts/jobs-and-webhooks#verifying-a-webhook).
+
+## Daily email
+
+Set `"email": "daily"` and the workspace owner gets one email a day, at 08:00 UTC, listing what the monitor found in the last 24 hours. Nothing is sent on a day without changes, and owners who unsubscribe from account emails get none.
+
+## Limits
+
+| | |
+| --- | --- |
+| Monitors per workspace | 100 |
+| Targets per monitor | 10 |
+| Pages per monitor | 100, up to 50 per pages target |
+| Pages tracked per site target | 1,000 |
+| New pages read per site check | 20 |
+| Results looked at per search | 20 |
+| Schedule | `15m`, `30m`, `1h`, `2h`, `6h`, `12h`, `1d` or `7d`; at most hourly with a search target |
+
+## Billing
+
+- **Pages:** 1 credit per page read. A page that cannot be read costs nothing.
+- **A site:** 1 credit per check, plus 1 for each new page read.
+- **A search:** 1 credit per check.
+- **A goal:** 1 credit for each change checked against it, and nothing when it cannot be checked.
+
+Creating, editing and reading monitors and their history is free. A check that would start without enough credits is skipped and recorded as such.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Watch a site for changes" icon="/icons/spider-web.svg" href="/blueprints/watch-a-site">
+    A worked setup, from choosing targets to handling alerts.
+  </Card>
+  <Card title="Jobs & webhooks" icon="/icons/route.svg" href="/concepts/jobs-and-webhooks">
+    How webhook calls are signed and retried.
+  </Card>
+  <Card title="Credits" icon="/icons/coins.svg" href="/concepts/credits">
+    How every call is priced.
+  </Card>
+  <Card title="API Reference" icon="/icons/code.svg" href="/api-reference">
+    Full monitor schemas and a live playground.
+  </Card>
+</CardGroup>

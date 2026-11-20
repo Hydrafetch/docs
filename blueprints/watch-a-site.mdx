@@ -1,6 +1,6 @@
 ---
 title: "Watch a site for changes"
-description: "Re-read a set of pages on a schedule and get told what changed, rather than polling by hand."
+description: "Get told when pages, a whole site or a search change, with the diff in the alert and only the changes you care about."
 ---
 
 <Note>
@@ -14,100 +14,99 @@ https://docs.hydrafetch.com/blueprints/watch-a-site
 
 Read that page, inspect this project's stack, then build the flow end to end.
 
-Build a change monitor over a small set of URLs using the Hydrafetch API.
+Set up change monitoring with the Hydrafetch Monitors API.
 
-Per run: POST /v1/web/batch with {urls, scrapeOptions: {formats: ["markdown"], maxAge: 0}}. It is asynchronous, returning a batchId to poll at GET /v1/web/batch/{id}, or attach a webhook and receive the result instead.
+Create a monitor once: POST /v1/web/monitors with {name, schedule: {every}, targets, webhook: {url, secret}}. Targets are {type: "pages", urls}, {type: "site", url} or {type: "search", query}, each with an optional plain-words goal. Then receive webhooks: monitor.change for each change and monitor.check.completed when a check ends. Verify the X-Hydrafetch-Signature header on every call.
 
 Ask me before writing code:
-- Which pages, and how often should they be re-read?
-- Where does the previous version live so we can diff against it?
-- What counts as a change worth alerting on, and what is noise to normalise away first?
+- Which pages, sites or searches, and how often should they be checked?
+- What counts as a change worth alerting on? That becomes a goal, a triggerOn list or a selector.
 - Where should the alert go: email, Slack, a webhook of our own?
-- Should a page that starts failing be reported as a change, and after how many consecutive failures?
+- Should the workspace owner also get the daily email?
 
-The response shape: data.pages[] each with url, status, error, errorCode, and data holding markdown, finalUrl and metadata (title, wordCount).
+The change payload carries url, status (changed, new, removed or error), diff, fieldChanges, title, excerpt and judge (the goal verdict and its reason). Show the diff or the title and excerpt in the alert, not just the URL.
 
-Store the previous markdown itself rather than a hash, so the alert can show a real diff instead of just saying that something moved. Normalise before comparing: strip dates, relative timestamps, rotating counters and build hashes, and collapse whitespace, or the watch fires every run and gets muted. Compare the markdown, not the html. Treat a page that fails several consecutive runs as removed, but never on a single failure. Record every run including the quiet ones, so a watch that silently broke can be told apart from a site that is stable.
-
-Notes: authenticate with the X-API-Key header. 1 credit per page read, failures are free. Set maxAge to 0 so a stored copy cannot answer a monitoring run. Daily is almost always enough, and reading a site hourly is how you become a problem for it. Keep the API key on the server and never ship it in client code.
+Notes: authenticate with the X-API-Key header. Monitors are on paid plans. 1 credit per page read, 1 per site or search check, 1 per new page read on a site, 1 per change checked against a goal; unreadable pages are free. Daily is almost always enough. Keep the API key and the webhook secret on the server.
 ```
 </Accordion>
 
-Pricing pages move. Competitors quietly add a feature. A supplier changes their terms. You want to know when, without a person checking every week.
+Pricing pages move. Competitors quietly add a feature, publish a post or open a role. A supplier changes their terms. You want to know when, without a person checking every week.
 
-There is no change endpoint. There is something better: fetches that are cheap when nothing moved, so a scheduled re-read is affordable and you diff the results yourself.
+A [monitor](/endpoints/monitors) does the watching: it checks your targets on a schedule, works out what changed, and calls your webhook with the change.
 
 ## The pipeline
 
-### 1. Pick the pages, once
+### 1. Pick what to watch
 
-Use `map` to list the site, and keep the handful that actually matter. Watching a whole site produces noise; watching a pricing page and a features page produces signal.
+There are three kinds of target, and picking the right one is most of the job.
 
-### 2. Re-read them on your schedule
+- **Pages** when you care about what a page says: a pricing page, a changelog, terms of service. You get a diff of the text.
+- **A site** when you care about what gets published: a blog, a careers section, a product catalogue. You get each new page with its title and opening lines, and pages that go away.
+- **A search** when you care about what others say: coverage, mentions, reviews. You get results that were never there before.
 
-Run a `batch` over the watched URLs from your own cron, and set `maxAge` to control how stale a stored copy may be before we go back to the origin.
+A handful of pages you chose produces signal. Watching everything produces a feed nobody reads.
+
+### 2. Create the monitor
 
 ```bash
-curl -X POST https://api.hydrafetch.com/v1/web/batch \
+curl -X POST https://api.hydrafetch.com/v1/web/monitors \
   -H "X-API-Key: $HYDRAFETCH_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"urls": ["https://example.com/pricing", "https://example.com/features"],
-       "scrapeOptions": {"formats": ["markdown"], "maxAge": 0}}'
+  -d '{
+    "name": "Rival watch",
+    "schedule": { "every": "1d" },
+    "targets": [
+      { "type": "pages", "urls": ["https://rival.io/pricing", "https://rival.io/terms"] },
+      { "type": "site", "url": "https://rival.io/blog", "includePaths": ["^/blog/.+"] }
+    ],
+    "webhook": { "url": "https://your-app.com/hooks/hydrafetch", "secret": "'"$WEBHOOK_SECRET"'" }
+  }'
 ```
 
-Set `maxAge` to `0` when the whole point is to see the current state. Leave it high when you are rebuilding an index and a day old copy is fine.
+The first check runs within a minute and records how everything looks today. From then on, each check reports what changed since the last one.
 
-### 3. Normalise before you compare
+### 3. Receive the change
 
-This is the step that decides whether anyone still reads your alerts in a month.
+Each change arrives as a `monitor.change` call. Verify the signature first, as described in [Verifying a webhook](/concepts/jobs-and-webhooks#verifying-a-webhook), then use the `status`:
 
-A page changes on every single request for reasons that have nothing to do with the content: a rotating testimonial, a "trusted by 4,312 teams" counter, a copyright year, a build hash in a footer, a relative timestamp reading "3 hours ago". Diff the raw text and every one of those fires an alert, and a channel that cries wolf daily gets muted in a week.
+- `changed`: show the `diff`, and `fieldChanges` when a price or availability moved.
+- `new`: show the `title` and `excerpt`, with a link to the `url`.
+- `removed`: the page was missing from two checks in a row.
+- `error`: the page could not be read three checks in a row.
 
-Strip them before comparing. Drop anything matching a date or time pattern, collapse runs of whitespace, and remove the lines you have already seen change without meaning anything. Keep the list of exclusions in code next to the watch, because it grows every time a new false positive appears.
-
-Compare the cleaned Markdown rather than the HTML. HTML changes constantly and means nothing: a reordered script tag, a rotated asset hash, a session id. The Markdown changes when the words change, which is the thing you actually wanted to be told about.
-
-### 4. Treat a failure as a change too
-
-A page that stops answering is news. If a URL you have watched for six months starts returning a 404, that is a product that got retired or a page that moved, and it is usually more interesting than an edited sentence.
-
-Every batch result carries a per-page `status`, and a failed page carries an `error` and an `errorCode`. Report those rather than skipping them, but do not treat one bad run as a deletion. A page has to fail two or three consecutive runs before it is gone, otherwise a momentary blip reads as a removal.
-
-### 5. Get told, instead of polling
-
-Attach a webhook to the batch and receive the results when they land, rather than holding a polling loop open. See [Jobs and webhooks](/concepts/jobs-and-webhooks) for the delivery shape and retry behaviour.
+`monitor.check.completed` arrives once a check ends, with its counts. Use it for a summary, or to notice a watch that went quiet.
 
 ## Making the alert worth reading
 
-An alert saying "example.com/pricing changed" is a task, not information. The reader still has to open two tabs and compare them by eye, and after the third such alert they stop.
+An alert saying "rival.io/pricing changed" is a task, not information. Every change already carries the diff or the new page's opening lines, so put that in the message.
 
-Store the previous Markdown itself, not a hash of it. A hash tells you something changed and nothing about what, which turns every alert into an investigation. With the previous version in hand you can show a real diff in the message.
+Then cut what you do not care about, before it reaches anyone.
 
-Send the diff, trimmed to the changed lines with a little surrounding context. For most watches that is three or four lines, and it is the difference between an alert someone acts on and one they archive.
+- **A goal** in plain words, like `a plan gets cheaper` or `senior roles in Berlin`, alerts only on changes that match it and keeps the rest in the history with the reason it was held back. 1 credit per change checked.
+- **`selector`** compares only part of a page, such as `#pricing`, so a new footer link or a rotating testimonial never fires.
+- **`triggerOn`** alerts only when a changed line contains a word you name, like `price` or `/sold out/i`.
+- **`ignore`** leaves out lines that change without meaning anything.
 
-Say what did not change too, at least in a weekly summary. Silence is ambiguous: it reads the same whether nothing moved or the watch quietly broke three weeks ago.
+Relative times, clock times, view counts and tracking parameters are ignored already, so a page that only shows a newer "updated 5 minutes ago" counts as unchanged.
 
 ## Knowing the watch still works
 
-A monitor that fails silently is worse than no monitor, because you believe you are covered.
+A watch that fails silently is worse than none, because you believe you are covered.
 
-Record every run, not just the ones that found something. If a watch has reported no changes for a month, check that it is still running and still fetching successfully rather than assuming the site is stable.
+Monitors report their own health. A page that cannot be read three checks in a row sends an `error` alert instead of staying quiet, and a monitor whose checks fail ten times in a row pauses itself with `pausedReason: "failing"` and says so in its last `monitor.check.completed` call. Every check, including the quiet ones, is in `GET /v1/web/monitors/{id}/checks`, so a month without changes can be told apart from a month without checks.
 
-Watch the fetch quality as well as the content. A page that starts coming back with a much lower `wordCount` than usual has probably started serving a consent wall or a login page rather than losing most of its content, and diffing that against last week produces a spectacular and completely useless alert.
-
-Re-run discovery occasionally. A `map` every month or so catches the pages that appeared since you picked your list, which is how a competitor's new pricing tier gets noticed rather than missed because it lives at a URL you never knew existed.
+A site target lists the site again on every check, so a page at a URL you never knew existed still gets noticed.
 
 ## What it costs
 
-1 credit per page read. Watching six pages daily is 6 credits a day, or about 180 a month.
+- Six pages checked daily: 6 credits a day, about 180 a month.
+- A blog checked daily: 1 credit a day, plus 1 for each new post read.
+- A goal adds 1 credit for each change it checks, not for every check, so on a quiet page it costs almost nothing.
 
-Discovery is 1 credit per `map`, so a monthly re-check of the URL list is a rounding error against the watching itself.
+Pages that cannot be read are free.
 
 ## What to watch for
 
-Daily is almost always enough. Nobody's pricing page changes hourly, and reading it hourly is how you become a problem for someone else's site.
+Daily is almost always enough. Nobody's pricing page changes hourly, and the shortest schedules are for status pages and stock, not for terms of service. A monitor with a search target checks at most once an hour.
 
-Watch few pages deliberately rather than a whole site automatically. Ten pages you chose produce signal; four hundred pages you crawled produce a feed nobody reads.
-
-Set `maxAge` to `0` when the whole point is to see the current state. Leaving the default means a stored copy can answer, which is right for indexing and wrong for monitoring.
-
+Start without a goal for a week, read what the monitor reports, then add a goal or a `selector` for the noise you actually saw. Guessing the noise in advance usually filters out the change you wanted.

@@ -159,6 +159,10 @@ Then follow it in either of two ways. You can also use both.
   </Tab>
 </Tabs>
 
+## Monitors
+
+[Monitors](/endpoints/monitors#webhooks) send `monitor.change` for each change and `monitor.check.completed` when a check ends, signed the same way as below.
+
 ## Verifying a webhook
 
 Your webhook URL is public, so anyone who finds it can send to it. Set `webhook.secret` and we sign every call, so you can reject anything that did not come from us.

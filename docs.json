@@ -90,6 +90,13 @@
             "pages": [
               "endpoints/jobs"
             ]
+          },
+          {
+            "group": "Monitoring",
+            "icon": "/icons/bell.svg",
+            "pages": [
+              "endpoints/monitors"
+            ]
           }
         ]
       },
