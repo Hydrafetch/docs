@@ -4,6 +4,30 @@ description: "What changed in the Hydrafetch API and when: new endpoints, new fi
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="November 2026" tags={["Monitors"]}>
+  ## Monitors: get told when pages, sites and searches change
+
+  `POST /v1/web/monitors` checks what you point it at on a schedule, from every 15 minutes to once a week, and tells you what changed.
+
+  - **Pages** report text that changed, as a line diff, plus fields such as price and availability when the page publishes them
+  - **A whole site** reports pages that appear or go away, each new page with its title and opening lines
+  - **A search** reports results it has never returned before, so ranking shuffles stay quiet
+  - **A goal in plain words**, such as `a plan gets cheaper` or `senior roles in Berlin`, alerts only on changes that match, and every change keeps the verdict and a one-sentence reason
+  - `selector`, `ignore` and `triggerOn` limit a page to the part and the words you care about. Relative times, view counts and tracking links are ignored on their own
+  - A page counts as removed only after two missed checks, and a page that cannot be read is never reported as a change
+  - Changes arrive as signed `monitor.change` and `monitor.check.completed` webhooks, an optional daily email to the workspace owner, and a check history in the API
+  - 1 credit per page read, 1 per site or search check plus 1 per new page read, and 1 per change checked against a goal. Pages that cannot be read are free
+  - The Node, Python, Go, Rust, Ruby and PHP SDKs have methods for every monitor route
+
+  Monitors are available on paid plans. See [Monitors](/endpoints/monitors) and the [Watch a site](/blueprints/watch-a-site) blueprint.
+</Update>
+
+<Update label="November 2026" tags={["Web Scraping"]}>
+  ## A site that moved is read where it lands
+
+  When a domain now redirects to a different company's site, scrape returns the page it lands on instead of failing as blocked, and the result's `warning` names the new domain, such as "This site now redirects to newcompany.com, so the result is the page it sends visitors to there."
+</Update>
+
 <Update label="November 2026" tags={["Web Scraping", "Crawl"]}>
   ## Wait for an element, read as a phone, cancel jobs, and crawls stay in their section
 
