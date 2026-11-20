@@ -148,6 +148,14 @@ The response holds the formats you asked for. `metadata` and `usage` are always 
   Extra milliseconds to let the page settle before reading it, from 0 to 30000.
 </ParamField>
 
+<ParamField body="waitForSelector" type="string">
+  A CSS selector, such as `.price` or `#results`. The page is read in a browser once an element matching it exists. If it never appears within the time budget, you get what the page showed by then, with `quality.complete` set to `false` and a `warning` saying the element never appeared. Up to 500 characters.
+</ParamField>
+
+<ParamField body="mobile" type="boolean" default="false">
+  Read the page as a phone would: a phone-sized screen, touch and a mobile browser. Use it for sites that show phones different content. The page is read in a browser.
+</ParamField>
+
 <ParamField body="timeout" type="number">
   How long to wait for the page before answering with a job id instead, in milliseconds, from 1000 to 100000. The wait is at most 90 seconds either way. See [Waiting for a result](#waiting-for-a-result).
 </ParamField>

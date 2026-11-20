@@ -73,15 +73,15 @@ The crawl starts at once:
 
 ## Keeping a crawl inside one section
 
-A starting URL says where to begin, not where to stay. To find pages, a crawl also reads the site's published page list (its sitemap), which covers the whole site. So a crawl started at `https://example.com/blog` with nothing else set will also return pages from the rest of the site.
+A crawl stays inside the section of the site its starting URL is in. A crawl started at `https://example.com/blog` reads `/blog` and the pages under it, even though the site's published page list (its sitemap) covers the whole site. A crawl started at the homepage covers the whole site.
 
-To stay inside the section, add `includePaths`, written so the starting page matches it too:
+To read the whole site from a deeper starting page, set `crawlEntireDomain`:
 
 ```json
-{ "url": "https://example.com/blog", "includePaths": ["^/blog"] }
+{ "url": "https://example.com/blog", "crawlEntireDomain": true }
 ```
 
-`["^/blog/"]`, with the trailing slash, works the same way. If your patterns would exclude the starting page, the crawl has nowhere to begin, so the request is refused instead of starting a job that finds nothing.
+`includePaths` replaces the section with your own patterns, written so the starting page matches them too, such as `["^/blog", "^/news"]`. If your patterns would exclude the starting page, the crawl has nowhere to begin, so the request is refused instead of starting a job that finds nothing.
 
 ## Options
 
@@ -105,6 +105,10 @@ To stay inside the section, add `includePaths`, written so the starting page mat
   Skip URLs whose path matches any of these patterns, such as `["^/blog/tag"]`. Up to 50. They also apply to the starting URL.
 </ParamField>
 
+<ParamField body="crawlEntireDomain" type="boolean" default="false">
+  Read the whole site instead of only the section the starting URL is in. See [Keeping a crawl inside one section](#keeping-a-crawl-inside-one-section).
+</ParamField>
+
 <ParamField body="allowSubdomains" type="boolean" default="false">
   Also follow links into the site's subdomains.
 </ParamField>
@@ -118,7 +122,7 @@ To stay inside the section, add `includePaths`, written so the starting page mat
 </ParamField>
 
 <ParamField body="sitemap" type="string" default="include">
-  Whether to use the site's published page list to find pages: `include` or `skip`. Because that list covers the whole site, starting from a section does not keep the crawl in that section. Use `includePaths` for that.
+  Whether to use the site's published page list to find pages: `include` or `skip`. Pages it lists outside the crawl's section are left out.
 </ParamField>
 
 <ParamField body="scrapeOptions" type="object">
@@ -180,6 +184,15 @@ curl https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f4
 
   `discoveredVia` says how the URL got into the job: `requested` for the starting URL, `sitemap` for one from the site's page list, and `link` for one followed from a page we read. It is the quickest way to see why a crawl returned what it did, and whether a higher `limit` or `maxDepth` would find more.
 </ResponseField>
+
+## Cancelling a crawl
+
+`DELETE /v1/web/crawl/{id}` stops a running crawl. Pages already read keep their results and their charge. Pages not yet read are marked `cancelled` and cost nothing. Cancelling a crawl that already finished returns its status unchanged.
+
+```bash
+curl -X DELETE https://api.hydrafetch.com/v1/web/crawl/019f3c09-6fae-740f-9257-10c2b6af7f43 \
+  -H "X-API-Key: hf_your_key_here"
+```
 
 ## Cost
 

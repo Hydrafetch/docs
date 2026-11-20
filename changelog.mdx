@@ -4,6 +4,24 @@ description: "What changed in the Hydrafetch API and when: new endpoints, new fi
 icon: "/icons/rocket.svg"
 ---
 
+<Update label="November 2026" tags={["Web Scraping", "Crawl"]}>
+  ## Wait for an element, read as a phone, cancel jobs, and crawls stay in their section
+
+  - **Crawls stay in their section.** A crawl started at `/blog` now reads `/blog` and the pages under it instead of the whole site. Set `crawlEntireDomain: true` for the old behaviour, or use `includePaths`
+  - **Cancel a crawl or batch** with `DELETE /v1/web/crawl/{id}` or `DELETE /v1/web/batch/{id}`. Pages not yet read cost nothing
+  - **Batches skip bad URLs.** Entries that are not valid URLs come back in `invalidUrls` instead of failing the whole batch
+  - **`waitForSelector`** reads the page once an element exists, for content that loads late. If it never appears, the result says so
+  - **`mobile: true`** reads the page as a phone would
+  - **Map works on sites with no sitemap**, by also searching the site when its starting page links to only a few pages
+  - Public Google Docs, Sheets, Slides and Drive share links are read as their documents
+  - Pages declaring their character set only inside the HTML are decoded correctly
+  - A PDF with some scanned pages keeps the text of the rest, and says how many pages had no text
+  - A page that marks part of itself as for subscribers carries a warning that the text may stop there
+  - More images are found on pages that load them lazily or by screen size, and links are returned for Markdown, text and PDF results
+
+  Options work on scrape, and through `scrapeOptions` on crawl and batch.
+</Update>
+
 <Update label="November 2026" tags={["Brand"]}>
   ## Brands carry contact details and a meta description
 

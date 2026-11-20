@@ -77,6 +77,8 @@ The batch starts at once:
 { "batchId": "019f3c09-6fae-740f-9257-10c2b6af7f43", "status": "queued" }
 ```
 
+Entries that are not valid http or https URLs are skipped instead of failing the whole batch. They come back in `invalidUrls`, which is absent when every URL was valid. A batch with no valid URL at all is refused with a `400`.
+
 ## Options
 
 <ParamField body="urls" type="string[]" required>
@@ -124,6 +126,10 @@ curl https://api.hydrafetch.com/v1/web/batch/019f3c09-6fae-740f-9257-10c2b6af7f4
   }
 }
 ```
+
+## Cancelling a batch
+
+`DELETE /v1/web/batch/{id}` stops a running batch. URLs already read keep their results and their charge. The rest are marked `cancelled` and cost nothing. Cancelling a batch that already finished returns its status unchanged.
 
 ## Cost
 
